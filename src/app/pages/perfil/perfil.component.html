@@ -1,0 +1,162 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <!-- Sidebar -->
+  <app-sidebar [userId]="userId" [jugadorNombre]="profile.nombre" [jugadorFoto]="profile.foto_perfil" [role]="userRole"
+    activePage="perfil">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Control</span>
+        <span class="separator">/</span>
+        <span class="current">Mi Perfil</span>
+      </div>
+
+      <div class="user-profile">
+        <div class="user-info">
+          <span class="name">{{ profile.nombre }}</span>
+          <span class="role">Perfil</span>
+        </div>
+        <div class="avatar-circle" *ngIf="!profile.foto_perfil">{{ profile.nombre?.charAt(0) || 'U' }}</div>
+        <img class="avatar-circle" *ngIf="profile.foto_perfil" [src]="profile.foto_perfil" style="object-fit: cover;">
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="dashboard-grid">
+
+      <!-- Nike Header simplified (optional, or just title) -->
+      <!-- Keeping the design the user worked on, but wrapped -->
+
+      <div class="profile-container animate-up">
+
+        <!-- Avatar & Role -->
+        <div class="avatar-section">
+          <div class="avatar-wrapper" (click)="fileInput.click()">
+            <img [src]="profile.foto_perfil || 'assets/images/placeholder_avatar.png'"
+              (error)="profile.foto_perfil = 'assets/images/placeholder_avatar.png'" alt="Avatar" />
+            <div class="edit-overlay">
+              <span class="camera-icon">📷</span>
+            </div>
+          </div>
+          <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none">
+          <span class="role-badge">{{ profile.rol || 'JUGADOR' }}</span>
+
+          <!-- Moved Save Button Here for Grid Layout -->
+          <div class="save-btn-container">
+            <button class="save-btn" (click)="guardarCambios()" [disabled]="isLoading">
+              <span *ngIf="isLoading" class="spinner"></span>
+              <span *ngIf="!isLoading">GUARDAR</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. Datos Personales -->
+        <div class="section-card personal-card">
+          <h3 class="section-title">
+            <span class="icon">👤</span> Datos Personales
+          </h3>
+          <div class="nike-input-group">
+
+            <div class="nike-item">
+              <label>Nombre Completo</label>
+              <input type="text" [(ngModel)]="profile.nombre" placeholder="Tu nombre">
+            </div>
+
+            <div class="nike-item disabled">
+              <label>Email (Usuario)</label>
+              <input type="text" [(ngModel)]="profile.usuario" disabled>
+            </div>
+
+            <div class="nike-item">
+              <label>Teléfono</label>
+              <input type="tel" [(ngModel)]="profile.telefono" placeholder="+56 9 ...">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 2. Redes Sociales -->
+        <div class="section-card social-card">
+          <h3 class="section-title">
+            <span class="icon">🌐</span> Redes Sociales
+          </h3>
+          <div class="nike-input-group">
+
+            <div class="nike-item">
+              <label>Instagram</label>
+              <input type="text" [(ngModel)]="profile.instagram" placeholder="@usuario">
+            </div>
+
+            <div class="nike-item">
+              <label>Facebook</label>
+              <input type="text" [(ngModel)]="profile.facebook" placeholder="Perfil o página">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3. Dirección -->
+        <div class="section-card address-card">
+          <h3 class="section-title">
+            <span class="icon">📍</span> Dirección
+          </h3>
+          <div class="nike-input-group">
+
+            <div class="nike-item">
+              <label>Región</label>
+              <select [(ngModel)]="direccion.region" (change)="updateComunas()">
+                <option value="" disabled selected>Selecciona región</option>
+                <option *ngFor="let r of regions" [value]="r.name">{{ r.name }}</option>
+              </select>
+            </div>
+
+            <div class="nike-item">
+              <label>Comuna</label>
+              <select [(ngModel)]="direccion.comuna" [disabled]="!direccion.region">
+                <option value="" disabled selected>Selecciona comuna</option>
+                <option *ngFor="let c of filteredComunas" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+
+            <div class="nike-item">
+              <label>Calle</label>
+              <input type="text" [(ngModel)]="direccion.calle" placeholder="Ej: Av. Providencia">
+            </div>
+
+            <div class="form-row">
+              <div class="nike-item">
+                <label>N°</label>
+                <input type="text" [(ngModel)]="direccion.numero_casa" placeholder="123">
+              </div>
+              <div class="nike-item">
+                <label>Referencia</label>
+                <input type="text" [(ngModel)]="direccion.referencia" placeholder="Depto, Block...">
+              </div>
+            </div>
+
+            <div class="nike-item" style="margin-top: 10px;">
+              <label>Ubicación GPS (Para filtrado)</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="btn-location" (click)="getCurrentLocation()">
+                  📍 Autodetectar Ubicación
+                </button>
+                <span *ngIf="direccion.latitud" style="font-size: 12px; color: #10b981; font-weight: 600;">
+                  ✅ Coordenadas listas
+                </span>
+              </div>
+              <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">Necesario para aparecer en
+                búsquedas por cercanía.</small>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>

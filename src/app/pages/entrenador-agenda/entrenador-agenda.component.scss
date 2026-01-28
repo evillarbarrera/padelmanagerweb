@@ -1,0 +1,351 @@
+@use '../../theme/colors.scss' as *;
+
+// Dashboard Grid
+.dashboard-grid {
+  padding: 32px 40px;
+  max-width: 1300px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+// Hero Section
+.hero-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+// PREMIUM TABS (Day Selector)
+.segment-wrapper {
+  margin-bottom: 40px;
+}
+
+.nike-segment-days {
+  display: flex;
+  background: #fff;
+  border-radius: 20px;
+  padding: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  gap: 8px;
+  justify-content: center;
+
+  .segment-button {
+    flex: 1;
+    min-width: 80px;
+    max-width: 120px;
+    padding: 12px;
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    border: 1px solid transparent;
+
+    .day-name {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .day-date {
+      display: block;
+      font-size: 20px;
+      font-weight: 900;
+      color: #111;
+    }
+
+    .dot-indicator {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 6px;
+      height: 6px;
+      background: #ef4444;
+      border-radius: 50%;
+    }
+
+    // Checked State
+    &.checked {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+
+      .day-name {
+        color: #111;
+      }
+    }
+
+    &:hover {
+      background: #fafafa;
+    }
+  }
+}
+
+// Loading & Empty States
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+
+  // .spinner use global styles
+
+  p {
+    color: #888;
+  }
+}
+
+.empty-state {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+}
+
+// AGENDA LIST
+.agenda-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  animation: slideInUp 0.6s ease;
+  width: 100%;
+}
+
+// SESSION CARD
+.session-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s;
+  border: 1px solid #f0f0f0;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  // Header
+  .card-header {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f8f8f8;
+    background: #fafafa;
+
+    .time-badge {
+      font-weight: 800;
+      color: #111;
+      font-size: 16px;
+    }
+
+    .status-tag {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &.pendiente {
+        background: #fffbeb;
+        color: #d97706;
+      }
+
+      &.confirmada,
+      &.activo {
+        background: #ecfdf5;
+        color: #059669;
+      }
+
+      &.cancelado {
+        background: #fef2f2;
+        color: #dc2626;
+      }
+    }
+  }
+
+  // Body
+  .card-body {
+    padding: 24px;
+
+    // Individual
+    .player-profile {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+
+      .avatar-circle-small {
+        width: 48px;
+        height: 48px;
+        background: #f3f4f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+
+      .player-details {
+        h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 700;
+        }
+
+        p {
+          font-size: 12px;
+          color: #666;
+        }
+      }
+    }
+
+    // Grupal
+    .grupal-info {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      .grupal-header {
+        display: flex;
+        gap: 8px;
+
+        .tipo-badge {
+          background: #eff6ff;
+          color: #2563eb;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 700;
+        }
+
+        .categoria {
+          background: #fdf4ff;
+          color: #c026d3;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+      }
+
+      .cupos-info {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .inscritos-list {
+        margin-top: 8px;
+
+        .inscritos-title {
+          font-size: 11px;
+          text-transform: uppercase;
+          color: #888;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+
+        .inscritos-avatars {
+          display: flex;
+          gap: 8px;
+
+          .inscrito-avatar {
+            width: 32px;
+            height: 32px;
+            background: #eff6ff;
+            border: 2px solid #2563eb;
+            color: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 800;
+          }
+        }
+      }
+    }
+
+    .pack-row {
+      margin-top: 16px;
+
+      .pack-label {
+        background: #f3f4f6;
+        color: #4b5563;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+    }
+  }
+
+  // Footer
+  .card-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #f8f8f8;
+    text-align: right;
+
+    .action-btn.cancel {
+      background: transparent;
+      border: 1px solid #fee2e2;
+      color: #ef4444;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #ef4444;
+        color: #fff;
+      }
+    }
+  }
+
+  // Special Style for Grupal
+  &.pack-grupal {
+    border-left: 5px solid #2563eb;
+
+    .card-header {
+      background: #eff6ff;
+      border-bottom-color: rgba(37, 99, 235, 0.1);
+    }
+  }
+}
+
+// Animation
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Media Queries
+@media (max-width: 768px) {
+  .dashboard-grid {
+    padding: 20px 16px;
+  }
+
+  .nike-segment-days {
+    justify-content: flex-start;
+  }
+}

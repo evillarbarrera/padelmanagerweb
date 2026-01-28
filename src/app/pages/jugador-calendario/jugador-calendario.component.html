@@ -1,0 +1,189 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <!-- Sidebar -->
+  <app-sidebar [userId]="userId" [jugadorNombre]="jugadorNombre" [jugadorFoto]="jugadorFoto" activePage="calendario">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Control</span>
+        <span class="separator">/</span>
+        <span class="current">{{ vistaActual === 'activas' ? 'Mis Reservas' : 'Historial' }}</span>
+      </div>
+
+      <div class="user-profile">
+        <div class="user-info">
+          <span class="name">{{ jugadorNombre }}</span>
+          <span class="role">Perfil</span>
+        </div>
+        <div class="avatar-circle" *ngIf="!jugadorFoto">{{ jugadorNombre.charAt(0) }}</div>
+        <img class="avatar-circle" *ngIf="jugadorFoto" [src]="jugadorFoto" style="object-fit: cover;">
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="dashboard-grid">
+
+      <!-- Page Actions / Tabs -->
+      <div class="page-header">
+        <h2 class="section-title">Mis Clases</h2>
+        <div class="view-toggles">
+          <button class="btn-toggle" [class.active]="vistaActual === 'activas'" (click)="cambiarVista('activas')">
+            📋 Activas
+          </button>
+          <button class="btn-toggle" [class.active]="vistaActual === 'historial'" (click)="cambiarVista('historial')">
+            🕰 Historial
+          </button>
+        </div>
+      </div>
+
+      <!-- VISTA 1: ACTIVAS -->
+      <div *ngIf="vistaActual === 'activas'" class="animate-fade-in">
+
+        <div *ngIf="isLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando tus reservas...</p>
+        </div>
+
+        <div *ngIf="!isLoading && reservasFuturas.length === 0" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>No tienes reservas activas</h3>
+          <p>Agenda tu próxima clase para comenzar a entrenar.</p>
+          <button class="btn-secondary-action" (click)="irAReservas()">Agendar Nueva Clase</button>
+        </div>
+
+        <div *ngIf="!isLoading && reservasFuturas.length > 0" class="reservations-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Entrenador</th>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let reserva of paginatedReservas">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar-small">{{ reserva.nombre_entrenador?.charAt(0) ||
+                      reserva.entrenador_nombre?.charAt(0) || 'E' }}</div>
+                    <span class="font-medium">{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</span>
+                  </div>
+                </td>
+                <td>{{ reserva.fecha | date: 'dd MMM yyyy' }}</td>
+                <td>{{ (reserva.hora_inicio | slice:0:5) }} - {{ (reserva.hora_fin | slice:0:5) }}</td>
+                <td>
+                  <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
+                    {{ reserva.estado }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn-icon danger" title="Cancelar" (click)="cancelarReserva(reserva)"
+                    [disabled]="reserva.estado !== 'reservado'">
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mobile-cards">
+            <div *ngFor="let reserva of paginatedReservas" class="reserva-card-mobile">
+              <div class="card-header-mobile">
+                <span class="date">{{ reserva.fecha | date: 'dd MMM' }}</span>
+                <span class="status-badge" [class]="reserva.estado?.toLowerCase()">{{ reserva.estado }}</span>
+              </div>
+              <div class="card-body-mobile">
+                <h3>{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</h3>
+                <p>{{ reserva.hora_inicio | slice:0:5 }} - {{ reserva.hora_fin | slice:0:5 }}</p>
+              </div>
+              <div class="card-actions-mobile">
+                <button class="btn-text danger" (click)="cancelarReserva(reserva)">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-controls" *ngIf="totalPages > 1">
+            <button class="btn-page" (click)="prevPage()" [disabled]="currentPage === 1">Anterior</button>
+            <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
+            <button class="btn-page" (click)="nextPage()" [disabled]="currentPage === totalPages">Siguiente</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA 2: HISTORIAL -->
+      <div *ngIf="vistaActual === 'historial'" class="animate-fade-in">
+
+        <div *ngIf="isLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando historial...</p>
+        </div>
+
+        <div *ngIf="!isLoading && reservasPasadas.length === 0" class="empty-state">
+          <div class="empty-icon">📜</div>
+          <h3>Sin Historial</h3>
+          <p>Aún no tienes clases finalizadas.</p>
+        </div>
+
+        <div *ngIf="!isLoading && reservasPasadas.length > 0" class="reservations-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Entrenador</th>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let reserva of paginatedReservas">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar-small">{{ reserva.nombre_entrenador?.charAt(0) ||
+                      reserva.entrenador_nombre?.charAt(0) || 'E' }}</div>
+                    <span class="font-medium">{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</span>
+                  </div>
+                </td>
+                <td>{{ reserva.fecha | date: 'dd MMM yyyy' }}</td>
+                <td>{{ (reserva.hora_inicio | slice:0:5) }} - {{ (reserva.hora_fin | slice:0:5) }}</td>
+                <td>
+                  <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
+                    {{ reserva.estado }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mobile-cards">
+            <div *ngFor="let reserva of paginatedReservas" class="reserva-card-mobile past">
+              <div class="card-header-mobile">
+                <span class="date">{{ reserva.fecha | date: 'dd MMM' }}</span>
+                <span class="status-badge" [class]="reserva.estado?.toLowerCase()">{{ reserva.estado }}</span>
+              </div>
+              <div class="card-body-mobile">
+                <h3>{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</h3>
+                <p>{{ reserva.hora_inicio | slice:0:5 }} - {{ reserva.hora_fin | slice:0:5 }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-controls" *ngIf="totalPages > 1">
+            <button class="btn-page" (click)="prevPage()" [disabled]="currentPage === 1">Anterior</button>
+            <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
+            <button class="btn-page" (click)="nextPage()" [disabled]="currentPage === totalPages">Siguiente</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

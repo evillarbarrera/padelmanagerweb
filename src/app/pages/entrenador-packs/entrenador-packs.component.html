@@ -1,0 +1,202 @@
+<div class="admin-layout">
+  <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+    activePage="packs">
+  </app-sidebar>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Entrenador</span>
+        <span class="separator">/</span>
+        <span class="current">Gestionar Packs</span>
+      </div>
+
+      <div class="user-profile frc">
+        <div class="user-info">
+          <span class="name">{{ coachNombre }}</span>
+          <span class="role">Entrenador</span>
+        </div>
+        <div class="avatar-circle">
+          <img *ngIf="coachFoto" [src]="coachFoto"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-text">
+          <h2>Mis Packs de Entrenamiento</h2>
+          <p>Crea y gestiona tus paquetes de clases</p>
+        </div>
+        <button class="add-btn" (click)="toggleFormulario()">
+          {{ mostrarFormulario ? '✕ Cancelar' : '+ Crear Nuevo Pack' }}
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-section">
+        <span class="search-icon">🔍</span>
+        <input [(ngModel)]="filtro" type="text" placeholder="Buscar pack..." class="search-input" />
+      </div>
+
+      <!-- Create/Edit Form -->
+      <div class="form-wrapper animate-down" *ngIf="mostrarFormulario">
+        <div class="form-header">
+          <h3>{{ nuevoPack.id ? 'Editar Pack' : 'Crear Nuevo Pack' }}</h3>
+        </div>
+
+        <form (ngSubmit)="crearPack()" class="pack-form">
+          <div class="form-grid">
+            <!-- Name -->
+            <div class="form-group span-2">
+              <label>Nombre del Pack</label>
+              <input [(ngModel)]="nuevoPack.nombre" name="nombre" type="text" placeholder="Ej: Pack Principiantes"
+                class="form-input" />
+            </div>
+
+            <!-- Type -->
+            <div class="form-group">
+              <label>Tipo</label>
+              <select [(ngModel)]="nuevoPack.tipo" name="tipo" class="form-input">
+                <option value="individual">Individual</option>
+                <option value="grupal">Grupal</option>
+              </select>
+            </div>
+
+            <!-- Sessions -->
+            <div class="form-group">
+              <label>Sesiones Totales</label>
+              <input [(ngModel)]="nuevoPack.sesiones_totales" name="sesiones" type="number" placeholder="4"
+                class="form-input" />
+            </div>
+
+            <!-- Group Specific Fields -->
+            <ng-container *ngIf="nuevoPack.tipo === 'grupal'">
+              <div class="form-group">
+                <label>Capacidad Mínima</label>
+                <input [(ngModel)]="nuevoPack.capacidad_minima" name="cap_min" type="number" min="2" max="6"
+                  class="form-input" />
+              </div>
+              <div class="form-group">
+                <label>Capacidad Máxima</label>
+                <input [(ngModel)]="nuevoPack.capacidad_maxima" name="cap_max" type="number" min="2" max="6"
+                  class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label>Día de Clase</label>
+                <select [(ngModel)]="nuevoPack.dia_semana" name="dia" class="form-input">
+                  <option [ngValue]="1">Lunes</option>
+                  <option [ngValue]="2">Martes</option>
+                  <option [ngValue]="3">Miércoles</option>
+                  <option [ngValue]="4">Jueves</option>
+                  <option [ngValue]="5">Viernes</option>
+                  <option [ngValue]="6">Sábado</option>
+                  <option [ngValue]="0">Domingo</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Hora Inicio</label>
+                <input [(ngModel)]="nuevoPack.hora_inicio" name="hora" type="time" class="form-input" />
+              </div>
+
+              <div class="form-group span-2">
+                <label>Categoría</label>
+                <input [(ngModel)]="nuevoPack.categoria" name="categoria" type="text"
+                  placeholder="Ej: Intermedio, Avanzado" class="form-input" />
+              </div>
+            </ng-container>
+
+            <!-- Duration -->
+            <div class="form-group">
+              <label>Duración (min)</label>
+              <input [(ngModel)]="nuevoPack.duracion_sesion_min" name="duracion" type="number" placeholder="60"
+                class="form-input" />
+            </div>
+
+            <!-- Price -->
+            <div class="form-group">
+              <label>Precio ($)</label>
+              <input [(ngModel)]="nuevoPack.precio" name="precio" type="number" placeholder="0" class="form-input" />
+            </div>
+
+            <!-- Description -->
+            <div class="form-group span-full">
+              <label>Descripción</label>
+              <textarea [(ngModel)]="nuevoPack.descripcion" name="descripcion" placeholder="Detalles del pack..."
+                class="form-textarea"></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            {{ nuevoPack.id ? 'Guardar Cambios' : 'Crear Pack' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Cargando packs...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && packsFiltrados.length === 0" class="empty-state">
+        <div class="empty-icon">📦</div>
+        <p>{{ filtro ? 'Sin resultados' : 'No tienes packs creados aún.' }}</p>
+      </div>
+
+      <!-- Packs List -->
+      <div class="packs-grid" *ngIf="!isLoading && packsFiltrados.length > 0">
+        <div class="pack-card animate-up" *ngFor="let pack of packsFiltrados; let i = index"
+          [style.animation-delay]="(i * 0.05) + 's'" [class.grupal]="pack.tipo === 'grupal'">
+
+          <div class="pack-header">
+            <h3>{{ pack.nombre }}</h3>
+            <span class="pack-badge" [class.grupal-badge]="pack.tipo === 'grupal'">
+              {{ pack.tipo | uppercase }}
+            </span>
+          </div>
+
+          <div class="pack-body">
+            <div class="info-row">
+              <span class="label">Sesiones:</span>
+              <span class="val">{{ pack.sesiones_totales }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Duración:</span>
+              <span class="val">{{ pack.duracion_sesion_min }} min</span>
+            </div>
+
+            <!-- Group Info -->
+            <div class="group-info" *ngIf="pack.tipo === 'grupal'">
+              <div class="info-row">
+                <span class="label">Cupos:</span>
+                <span class="val status-indicator"
+                  [ngClass]="{'full': pack.cupos_ocupados >= pack.capacidad_maxima, 'open': pack.cupos_ocupados < pack.capacidad_maxima}">
+                  {{ pack.cupos_ocupados || 0 }} / {{ pack.capacidad_maxima }}
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="label">Horario:</span>
+                <span class="val">{{ pack.hora_inicio | slice:0:5 }}</span>
+              </div>
+            </div>
+
+            <div class="price-tag">${{ pack.precio | number }}</div>
+            <p class="desc" *ngIf="pack.descripcion">{{ pack.descripcion }}</p>
+          </div>
+
+          <div class="pack-footer">
+            <button class="action-btn edit" (click)="editarPack(pack)">Editar</button>
+            <button class="action-btn delete" (click)="eliminarPack(pack.id)">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

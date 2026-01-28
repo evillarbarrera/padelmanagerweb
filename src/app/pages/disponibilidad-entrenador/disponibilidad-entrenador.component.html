@@ -1,0 +1,100 @@
+<div class="admin-layout">
+  <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+    activePage="disponibilidad">
+  </app-sidebar>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Entrenador</span>
+        <span class="separator">/</span>
+        <span class="current">Disponibilidad</span>
+      </div>
+
+      <div class="user-profile frc">
+        <div class="user-info">
+          <span class="name">{{ coachNombre }}</span>
+          <span class="role">Entrenador</span>
+        </div>
+        <div class="avatar-circle">
+          <img *ngIf="coachFoto" [src]="coachFoto"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-text">
+          <h2>Configurar Disponibilidad</h2>
+          <p>Selecciona los bloques horarios en los que deseas dar clases</p>
+        </div>
+
+        <button class="save-btn-desktop" (click)="guardarDisponibilidad()">
+          💾 Guardar Cambios
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Cargando disponibilidad...</p>
+      </div>
+
+      <ng-container *ngIf="!isLoading">
+        <!-- Day Tabs (Horizontal Scroll) -->
+        <div class="day-tabs-wrapper animate-down">
+          <div class="day-tabs">
+            <div *ngFor="let dia of dias" class="day-tab" [class.active]="diaSeleccionado === dia.fecha"
+              (click)="seleccionarDia(dia.fecha)">
+              <span class="day-name">{{ dia.nombre | slice:0:3 }}</span>
+              <span class="day-date">{{ dia.fecha | date:'dd' }}</span>
+              <div class="indicator" *ngIf="diaSeleccionado === dia.fecha"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toolbar (Select All) -->
+        <div class="toolbar animate-down">
+          <div class="selection-info">
+            {{ bloquesActuales.length }} bloques disponibles
+          </div>
+          <div class="actions">
+            <button class="text-btn" (click)="seleccionarTodos()" *ngIf="!todosSeleccionados">
+              ✅ Seleccionar Todo
+            </button>
+            <button class="text-btn danger" (click)="deseleccionarTodos()" *ngIf="todosSeleccionados">
+              ✕ Deseleccionar Todo
+            </button>
+          </div>
+        </div>
+
+        <!-- Blocks Grid -->
+        <div class="blocks-grid animate-up">
+          <div *ngFor="let bloque of bloquesActuales" class="block-card" [class.selected]="bloque.seleccionado"
+            [class.occupied]="bloque.ocupado" (click)="toggleBloque(bloque)">
+
+            <span class="time">{{ bloque.hora_inicio }}</span>
+
+            <div class="status-icon" *ngIf="bloque.ocupado; else checkIcon">
+              🔒
+            </div>
+            <ng-template #checkIcon>
+              <div class="check-circle"></div>
+            </ng-template>
+
+            <div class="occupied-label" *ngIf="bloque.ocupado">Ocupado</div>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </main>
+
+  <!-- Mobile Floating Action Button -->
+  <button class="fab-save mobile-only" (click)="guardarDisponibilidad()">
+    💾
+  </button>
+</div>

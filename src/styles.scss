@@ -1,0 +1,210 @@
+/* ==========================================
+   SHARED ADMIN LAYOUT STYLES
+   ========================================== */
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background-color: var(--bg-primary, #f3f4f6);
+  color: var(--text-main, #111827);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+/* Sidebar Styles moved to SidebarComponent */
+/* The .sidebar class is now encapsulated in app-sidebar */
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+/* Top Header */
+.top-header {
+  height: 80px;
+  /* Increased from 64px */
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  .breadcrumbs {
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+
+    .current {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .separator {
+      margin: 0 8px;
+      opacity: 0.5;
+    }
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+
+    .user-info {
+      text-align: right;
+
+      .name {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-main);
+      }
+
+      .role {
+        display: block;
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+    }
+
+    .avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent-blue, #2563eb);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      object-fit: cover;
+    }
+  }
+}
+
+/* Dashboard Grid Wrapper */
+.dashboard-grid {
+  padding: 32px 40px;
+  max-width: 1300px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--card-border);
+    height: auto;
+
+    .sidebar-nav,
+    .sidebar-footer {
+      display: none;
+    }
+  }
+
+  .main-content {
+    overflow: visible;
+  }
+
+  .top-header {
+    padding: 0 16px;
+  }
+
+  .dashboard-grid {
+    padding: 20px 16px;
+  }
+}
+
+/* ==========================================
+   SWEETALERT2 OVERRIDES (Global)
+   ========================================== */
+body.swal2-shown .swal2-container {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.swal2-popup {
+  border-radius: 24px !important;
+  padding: 32px !important;
+  font-family: 'Inter', sans-serif !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+
+  .swal2-title {
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    color: #111 !important;
+    letter-spacing: -0.5px !important;
+  }
+
+  .swal2-html-container {
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    line-height: 1.6 !important;
+  }
+
+  .swal2-actions {
+    margin-top: 24px !important;
+    gap: 12px;
+  }
+
+  .swal2-confirm,
+  .swal2-cancel,
+  .swal2-deny {
+    box-shadow: none !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    padding: 14px 24px !important;
+    border-radius: 12px !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  button.swal2-confirm {
+    background: #000 !important;
+    color: #fff !important;
+
+    &:hover {
+      background: #222 !important;
+    }
+  }
+
+  button.swal2-cancel {
+    background: #f3f4f6 !important;
+    color: #4b5563 !important;
+
+    &:hover {
+      background: #e5e7eb !important;
+      color: #111 !important;
+    }
+  }
+}

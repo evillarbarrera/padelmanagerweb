@@ -1,0 +1,212 @@
+@use '../../theme/colors.scss' as *;
+
+// Usamos el layout global admin, así que solo estilizamos el contenido específico
+
+.page-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+
+    .section-title {
+        font-size: 28px;
+        font-weight: 900;
+        margin: 0;
+        color: #111;
+        text-transform: uppercase;
+        letter-spacing: -1px;
+    }
+
+    .section-subtitle {
+        margin: 8px 0 0;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+}
+
+// Grid de Tarjetas
+.strokes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+// Tarjeta Individual (Golpe)
+.stroke-card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    border: 1px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border-color: #000;
+    }
+
+    .card-header {
+        background: #fcfcfc;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .avg-badge {
+            background: #111;
+            color: #ccff00;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            min-width: 36px;
+            text-align: center;
+        }
+    }
+
+    .card-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+
+// Slider Custom (Nike Style)
+.metric-item {
+    .metric-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+
+        .val {
+            color: #111;
+            font-weight: 800;
+        }
+    }
+
+    .nike-range {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #111;
+            border: 2px solid #ccff00;
+            /* Neon border */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s;
+
+            &:hover {
+                transform: scale(1.2);
+            }
+        }
+
+        &:active::-webkit-slider-thumb {
+            background: #ccff00;
+        }
+    }
+}
+
+
+// Botones
+button {
+    border: none;
+    font-family: inherit;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+}
+
+.btn-cancel {
+    background: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+
+    &:hover {
+        background: #f3f4f6;
+        color: #111;
+    }
+}
+
+.btn-save {
+    background: #ccff00;
+    color: #000;
+    box-shadow: 0 4px 12px rgba(204, 255, 0, 0.3);
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(204, 255, 0, 0.4);
+        background: #bbff00;
+    }
+}
+
+
+// Comentarios
+.comments-section {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px;
+    margin-top: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+
+    h3 {
+        margin: 0 0 16px;
+        font-size: 16px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    textarea {
+        width: 100%;
+        height: 120px;
+        padding: 16px;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 14px;
+        resize: vertical;
+        outline: none;
+        transition: border-color 0.2s;
+
+        &:focus {
+            border-color: #111;
+        }
+
+        &::placeholder {
+            color: #aaa;
+        }
+    }
+}

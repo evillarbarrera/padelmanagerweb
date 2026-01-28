@@ -1,0 +1,74 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo-icon">🎾</div>
+        <h2>PADEL MANAGER</h2>
+    </div>
+
+    <nav class="sidebar-nav">
+        <!-- Photo Widget -->
+        <div class="sidebar-player-widget" *ngIf="userId">
+            <div class="avatar-large" *ngIf="!jugadorFoto">{{ jugadorNombre[0] }}</div>
+            <img *ngIf="jugadorFoto" [src]="jugadorFoto" class="avatar-img-large">
+        </div>
+
+        <!-- PLAYER MENU -->
+        <ng-container *ngIf="role === 'jugador'">
+            <a class="nav-item" [class.active]="activePage === 'inicio'" (click)="navigate('/jugador-home')">
+                <span class="icon">🏠</span>
+                <span>Inicio</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'calendario'" (click)="navigate('/jugador-calendario')">
+                <span class="icon">📅</span>
+                <span>Calendario</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'reservas'" (click)="navigate('/jugador-reservas')">
+                <span class="icon">📋</span>
+                <span>Agenda Nueva</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'packs'" (click)="navigate('/jugador-packs')">
+                <span class="icon">⚡</span>
+                <span>Packs</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
+                <span class="icon">👤</span>
+                <span>Perfil</span>
+            </a>
+        </ng-container>
+
+        <!-- TRAINER MENU -->
+        <ng-container *ngIf="role === 'entrenador'">
+            <a class="nav-item" [class.active]="activePage === 'inicio'" (click)="navigate('/entrenador-home')">
+                <span class="icon">🏠</span>
+                <span>Inicio</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'alumnos'" (click)="navigate('/alumnos')">
+                <span class="icon">👥</span>
+                <span>Mis Alumnos</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'agenda'" (click)="navigate('/entrenador-calendario')">
+                <span class="icon">📅</span>
+                <span>Mi Agenda</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'packs'" (click)="navigate('/entrenador-packs')">
+                <span class="icon">📦</span>
+                <span>Mis Packs</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'disponibilidad'"
+                (click)="navigate('/disponibilidad-entrenador')">
+                <span class="icon">⏰</span>
+                <span>Disponibilidad</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
+                <span class="icon">👤</span>
+                <span>Perfil</span>
+            </a>
+        </ng-container>
+    </nav>
+
+    <div class="sidebar-footer">
+        <button class="logout-btn" (click)="logout()">
+            <span class="icon">🚪</span>
+            <span>Cerrar Sesión</span>
+        </button>
+    </div>
+</aside>

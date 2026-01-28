@@ -1,0 +1,425 @@
+<!-- Dashboard Principal -->
+<div class="dashboard-container" [class.not-authenticated]="!isAuthenticated">
+  <!-- Si no está autenticado: Mostrar landing -->
+  <ng-container *ngIf="!isAuthenticated">
+    <!-- HERO SECTION -->
+    <header class="nike-hero">
+      <div class="hero-background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="overlay"></div>
+      </div>
+
+      <nav class="nike-navbar">
+        <div class="logo">
+          <span class="icon">🎾</span>
+          <span class="text">TRAINING ACADEMY</span>
+        </div>
+        <div class="menu">
+          <a href="#features">Características</a>
+          <a href="#stats">Comunidad</a>
+          <a href="#testimonials">Testimonios</a>
+        </div>
+        <div class="auth-buttons">
+          <button class="btn-login" (click)="irALogin()">Iniciar Sesión</button>
+          <button class="btn-register" (click)="irALogin()">Empezar Ahora</button>
+        </div>
+      </nav>
+
+      <div class="hero-content">
+        <!-- Visual (Phone) - Now on Left -->
+        <div class="hero-visual">
+          <div class="phone-mockup">
+            <div class="phone-bezel">
+              <div class="phone-notch"></div>
+              <div class="phone-screen">
+                <div class="screen-header">
+                  <span class="time">9:41</span>
+                  <div class="status-icons">
+                    <span>📶</span>
+                    <span>🔋</span>
+                  </div>
+                </div>
+                <!-- App Content (Image) -->
+                <img src="assets/images/app-screenshot.png" alt="App Screenshot" class="app-screen-img">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Content - Now on Right -->
+        <div class="hero-text-content">
+          <span class="badge-new">NUEVO SISTEMA 2.0</span>
+          <h1>LLEVA TU PADEL <br><span class="highlight">AL SIGUIENTE NIVEL</span></h1>
+          <p>La plataforma definitiva para gestionar tu evolución. Entrena como un profesional, analiza tus estadísticas
+            y supera tus límites.</p>
+
+          <div class="cta-group">
+            <button class="btn-primary-large" (click)="irALogin()">
+              <span class="btn-text">COMENZAR GRATIS</span>
+              <span class="btn-icon">→</span>
+            </button>
+            <button class="btn-secondary-large">
+              <span class="btn-icon">▶</span>
+              <span class="btn-text">VER DEMO</span>
+            </button>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="val">5k+</span>
+              <span class="lbl">Jugadores</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="val">250+</span>
+              <span class="lbl">Entrenadores</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="val">4.9</span>
+              <span class="lbl">Calificación</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- FEATURES SECTION -->
+    <section id="features" class="nike-features">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="overline">POR QUÉ ELEGIRNOS</span>
+          <h2>TODO LO QUE NECESITAS PARA <span class="text-gradient">DOMINAR LA PISTA</span></h2>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="icon-wrapper glass-gold">
+              <span>👨‍🏫</span>
+            </div>
+            <h3>Profesores Certificados</h3>
+            <p>Aprende de los mejores. Nuestro equipo de entrenadores está altamente calificado para llevar tu juego al
+              máximo.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon-wrapper glass-red">
+              <span>📊</span>
+            </div>
+            <h3>Visibilidad de Progreso</h3>
+            <p>Métricas detalladas de tu evolución. Visualiza tus mejoras entrenamiento a entrenamiento.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon-wrapper glass-green">
+              <span>⚡</span>
+            </div>
+            <h3>Reserva Rápida y Fácil</h3>
+            <p>Olvídate de las esperas. Reserva tu entrenamiento en segundos desde cualquier dispositivo.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="icon-wrapper glass-blue">
+              <span>📦</span>
+            </div>
+            <h3>Compra de Packs</h3>
+            <p>Adquiere tus paquetes de clases de la manera más sencilla y administra tus créditos fácilmente.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS SECTION -->
+    <section id="testimonials" class="nike-testimonials">
+      <div class="container">
+        <div class="section-header">
+          <h2>LO QUE DICEN NUESTROS <span class="text-gradient">PARTNERS</span></h2>
+        </div>
+
+        <div class="testimonials-scroller">
+          <div class="testimonial-card">
+            <div class="quote-icon">❝</div>
+            <p class="quote">"Esta plataforma cambió totalmente mi forma de entrenar. Ahora puedo ver exactamente dónde
+              necesito mejorar."</p>
+            <div class="author">
+              <div class="avatar">JC</div>
+              <div class="info">
+                <h5>Juan Carlos</h5>
+                <span>Jugador Amateur</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card highlight">
+            <div class="quote-icon">❝</div>
+            <p class="quote">"Imprescindible para cualquier entrenador. Gestiono a mis 50 alumnos sin perder tiempo
+              administrativo."</p>
+            <div class="author">
+              <div class="avatar">ML</div>
+              <div class="info">
+                <h5>Martina López</h5>
+                <span>Entrenadora Pro</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card">
+            <div class="quote-icon">❝</div>
+            <p class="quote">"La facilidad para encontrar clases y torneos es increíble. He subido mi nivel compitiendo
+              más seguido."</p>
+            <div class="author">
+              <div class="avatar">DG</div>
+              <div class="info">
+                <h5>Diego García</h5>
+                <span>Competidor</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALL TO ACTION -->
+    <section class="nike-cta">
+      <div class="cta-content">
+        <h2>¿LISTO PARA <span class="text-white">EMPEZAR?</span></h2>
+        <p>Únete hoy a la comunidad de pádel más grande y comienza tu transformación.</p>
+        <button class="btn-primary-large" (click)="irALogin()">
+          CREAR CUENTA GRATIS
+        </button>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="nike-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="brand-col">
+            <h3>TRAINING ACADEMY</h3>
+            <p>Innovando en el entrenamiento de pádel.</p>
+            <div class="socials">
+              <a href="#">IG</a>
+              <a href="#">TW</a>
+              <a href="#">FB</a>
+            </div>
+          </div>
+          <div class="links-col">
+            <h4>Plataforma</h4>
+            <a href="#">Para Jugadores</a>
+            <a href="#">Para Entrenadores</a>
+            <a href="#">Precios</a>
+          </div>
+          <div class="links-col">
+            <h4>Soporte</h4>
+            <a href="#">Centro de Ayuda</a>
+            <a href="#">Contacto</a>
+            <a href="#">Términos</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2026 Training Padel Academy. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
+  </ng-container>
+
+  <!-- Si está autenticado: Mostrar Dashboard -->
+  <ng-container *ngIf="isAuthenticated">
+    <!-- Header del Dashboard -->
+    <div class="dashboard-header">
+      <div class="header-top">
+        <div class="header-left">
+          <h1 class="dashboard-title">
+            <span class="logo-icon">🎾</span>
+            <span class="logo-text">TRAINING</span>
+          </h1>
+        </div>
+        <div class="header-right">
+          <div class="user-info">
+            <span class="user-name">{{ userName }}</span>
+            <span class="user-role" [class]="userRole">{{ userRole === 'jugador' ? 'Estudiante' : 'Entrenador'
+              }}</span>
+          </div>
+          <button class="btn-logout" (click)="logout()">Salir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando tu panel...</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content" *ngIf="!isLoading">
+      <!-- DASHBOARD PARA ALUMNO -->
+      <ng-container *ngIf="userRole === 'jugador'">
+        <!-- Stats Cards -->
+        <div class="stats-section">
+          <h2 class="section-title">Tu Progreso</h2>
+          <div class="stats-grid">
+            <div class="stat-card pagadas">
+              <div class="stat-icon">💳</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ alumnoStats.pagadas }}</div>
+                <div class="stat-label">Clases Pagadas</div>
+              </div>
+            </div>
+            <div class="stat-card reservadas">
+              <div class="stat-icon">📅</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ alumnoStats.reservadas }}</div>
+                <div class="stat-label">Reservadas</div>
+              </div>
+            </div>
+            <div class="stat-card disponibles">
+              <div class="stat-icon">⏳</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ alumnoStats.disponibles }}</div>
+                <div class="stat-label">Disponibles</div>
+              </div>
+            </div>
+            <div class="stat-card total">
+              <div class="stat-icon">✅</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ alumnoStats.pagadas + alumnoStats.reservadas + alumnoStats.disponibles }}
+                </div>
+                <div class="stat-label">Total</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="actions-section">
+          <h2 class="section-title">Acciones Rápidas</h2>
+          <div class="actions-grid">
+            <button class="action-card" (click)="irACalendario()">
+              <div class="action-icon">📅</div>
+              <div class="action-text">
+                <h3>Ver Disponibles</h3>
+                <p>Busca y reserva clases</p>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+            <button class="action-card" (click)="irAReservas()">
+              <div class="action-icon">📋</div>
+              <div class="action-text">
+                <h3>Mis Reservas</h3>
+                <p>Gestiona tus entrenamientos</p>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+            <button class="action-card" (click)="irAHome()">
+              <div class="action-icon">📊</div>
+              <div class="action-text">
+                <h3>Perfil</h3>
+                <p>Actualiza tu información</p>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- DASHBOARD PARA ENTRENADOR -->
+      <ng-container *ngIf="userRole === 'entrenador'">
+        <!-- Stats Cards -->
+        <div class="stats-section">
+          <h2 class="section-title">Tu Academia</h2>
+          <div class="stats-grid">
+            <div class="stat-card alumnos">
+              <div class="stat-icon">👥</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ entrenadorStats.alumnos_totales }}</div>
+                <div class="stat-label">Alumnos Totales</div>
+              </div>
+            </div>
+            <div class="stat-card clases">
+              <div class="stat-icon">🎾</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ entrenadorStats.clases_hoy }}</div>
+                <div class="stat-label">Clases Hoy</div>
+              </div>
+            </div>
+            <div class="stat-card packs">
+              <div class="stat-icon">📦</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ entrenadorStats.packs_activos }}</div>
+                <div class="stat-label">Packs Activos</div>
+              </div>
+            </div>
+            <div class="stat-card ganancia">
+              <div class="stat-icon">💰</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ entrenadorStats.proximos_entrenamientos.length }}</div>
+                <div class="stat-label">Próximos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="actions-section">
+          <h2 class="section-title">Panel de Control</h2>
+          <div class="actions-grid">
+            <button class="action-card" (click)="irAAlumnos()">
+              <div class="action-icon">👥</div>
+              <div class="action-text">
+                <h3>Mis Alumnos</h3>
+                <p>Gestiona tu base de datos</p>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+            <button class="action-card" (click)="irAAgenda()">
+              <div class="action-icon">📅</div>
+              <div class="action-text">
+                <h3>Mi Agenda</h3>
+                <p>Visualiza tus entrenamientos</p>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+            <button class="action-card" (click)="irAPacks()">
+              <div class="action-icon">📦</div>
+              <div class="action-text">
+                <h3>Gestionar Packs</h3>
+                <p>Crea y edita tus paquetes</p>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+            <button class="action-card" (click)="irAHome()">
+              <div class="action-icon">⚙️</div>
+              <div class="action-text">
+                <h3>Configuración</h3>
+                <p>Actualiza tu perfil</p>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Próximos Entrenamientos -->
+        <div class="upcoming-section" *ngIf="entrenadorStats.proximos_entrenamientos.length > 0">
+          <h2 class="section-title">Próximos Entrenamientos</h2>
+          <div class="upcoming-list">
+            <div class="upcoming-card" *ngFor="let entrenamiento of entrenadorStats.proximos_entrenamientos">
+              <div class="upcoming-date">
+                <span class="day">{{ entrenamiento.fecha | slice:8:10 }}</span>
+                <span class="month">{{ entrenamiento.fecha | slice:5:7 }}</span>
+              </div>
+              <div class="upcoming-info">
+                <h4>{{ entrenamiento.alumno_nombre || 'Clase Grupal' }}</h4>
+                <p>{{ entrenamiento.hora_inicio }} - {{ entrenamiento.hora_fin }}</p>
+              </div>
+              <div class="upcoming-type" [class]="entrenamiento.tipo">
+                {{ entrenamiento.tipo === 'grupal' ? 'Grupal' : 'Individual' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>

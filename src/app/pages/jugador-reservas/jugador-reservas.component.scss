@@ -1,0 +1,722 @@
+@use '../../theme/colors.scss' as *;
+
+@use '../../theme/colors.scss' as *;
+
+// Admin Layout styles are now global (see styles.scss)
+
+// ===== BOOKING FLOW STYLES (FULL SCREEN) =====
+.agendar-container {
+  width: 100%;
+}
+
+// 1. Initial State: Coach Selection
+.coach-selection-state {
+  text-align: center;
+  padding: 40px;
+
+  h3 {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 40px;
+    color: #111;
+    text-transform: uppercase;
+  }
+
+  .coach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 300px));
+    gap: 30px;
+    justify-content: center;
+  }
+
+  .coach-card {
+    background: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 40px 24px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .avatar-large {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #f8f8f8;
+      color: #111;
+      font-size: 32px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .avatar-img-large {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    h4 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #111;
+      text-transform: uppercase;
+    }
+
+    .select-label {
+      font-size: 11px;
+      color: #fff;
+      font-weight: 800;
+      padding: 8px 18px;
+      background: #111;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  }
+}
+
+// 2. Active Booking Layout (2 Columns)
+.booking-grid-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+// LEFT COLUMN
+.booking-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 90px;
+}
+
+.booking-section {
+  background: #fff;
+  border-radius: 20px;
+  padding: 30px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  h3 {
+    font-size: 14px;
+    font-weight: 900;
+    margin: 0 0 24px;
+    color: #111;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 12px;
+  }
+}
+
+// Selected Coach Display
+.selected-coach-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .coach-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #000;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .coach-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .coach-name {
+    flex: 1;
+    font-weight: 700;
+    font-size: 15px;
+    color: #111;
+  }
+
+  .btn-change {
+    font-size: 11px;
+    color: #888;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      color: #000;
+      border-color: #000;
+    }
+  }
+}
+
+
+// Modified Slot Grid for Large Display
+.slots-grid.large {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 20px;
+
+  .slot-card {
+    padding: 30px 16px;
+    border: 1px solid #f0f0f0;
+    border-radius: 16px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+
+    .slot-time {
+      font-size: 28px;
+      font-weight: 900;
+      color: #111;
+      letter-spacing: -2px;
+    }
+
+    .slot-status {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #999;
+      letter-spacing: 0.5px;
+    }
+
+    &:hover:not(.occupied) {
+      border-color: transparent;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      background: #000;
+
+      .slot-time,
+      .slot-status {
+        color: white;
+      }
+    }
+
+    &.occupied {
+      opacity: 0.4;
+      background: #f8f8f8;
+
+      .slot-time {
+        text-decoration: line-through;
+        color: #bbb;
+      }
+    }
+  }
+}
+
+// Responsive Days Scroller (Vertical on Desktop)
+.days-scroller.vertical-desktop {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); // 3 per row in column
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  .day-card {
+    width: 100%;
+    height: 70px;
+  }
+}
+
+.custom-select-wrapper {
+  position: relative;
+
+  select.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--bg-primary);
+    color: var(--text-main);
+    font-size: 16px;
+    appearance: none;
+    cursor: pointer;
+
+    &:focus {
+      border-color: var(--accent-blue);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  }
+
+  .select-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+}
+
+.days-scroller {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+
+  .day-card {
+    flex: 0 0 auto;
+    width: 64px;
+    height: 80px;
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+    .day-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .day-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: #111;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        border-color: #000;
+        transform: translateY(-2px);
+      }
+    }
+
+    &.active {
+      background: #111;
+      border-color: #111;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+
+      .day-name,
+      .day-num {
+        color: white !important;
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.period-tabs {
+  display: flex;
+  gap: 8px;
+
+  .period-tab {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    color: #888;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+
+    &.active {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+  }
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+
+  .slot-card {
+    padding: 16px 8px;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+    .slot-time {
+      font-size: 16px;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .slot-status {
+      font-size: 10px;
+      color: #999;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    &:hover:not(.occupied) {
+      border-color: #000;
+      background: #000;
+
+      .slot-time,
+      .slot-status {
+        color: white;
+      }
+    }
+
+    &.occupied {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #f8f8f8;
+
+      .slot-time {
+        color: #ccc;
+        text-decoration: line-through;
+      }
+    }
+  }
+}
+
+.no-slots-message {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 24px;
+
+  .icon {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Media Queries for Mobile
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--card-border);
+    height: auto;
+
+    .sidebar-nav,
+    .sidebar-footer {
+      display: none;
+    }
+  }
+
+  .main-content {
+    overflow: visible;
+  }
+
+  .top-header {
+    padding: 0 16px;
+  }
+
+  .dashboard-grid {
+    padding: 20px 16px;
+  }
+
+  // Table Responsive
+  .data-table {
+    display: none !important;
+  }
+
+  .mobile-cards {
+    display: flex !important;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  // Booking Mobile
+  .days-scroller .day-card {
+    width: 56px;
+    height: 72px;
+  }
+
+  .period-tabs {
+    gap: 4px;
+
+    .period-tab {
+      font-size: 12px;
+      padding: 8px;
+    }
+  }
+
+  .slots-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .reserva-card-mobile {
+    background: var(--bg-secondary);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .card-header-mobile {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .date {
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 13px;
+      }
+    }
+
+    .card-body-mobile {
+      h3 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+
+      .location {
+        margin-top: 4px;
+        font-size: 13px;
+        color: var(--accent-blue);
+      }
+    }
+
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+
+      &.reservado {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+      }
+    }
+
+    .btn-text {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--card-border);
+      background: transparent;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      cursor: pointer;
+
+      &.danger {
+        color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+    }
+  }
+}
+
+// Filters Row (Coach + Day side by side)
+.filters-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  align-items: stretch;
+
+  .booking-section {
+    margin-bottom: 0; // Reset
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Make both sections equal width
+  .coach-section,
+  .day-section {
+    flex: 1;
+    min-width: 0; // Crucial for flex child scroll to work
+    overflow: hidden;
+  }
+
+  // Ensure content inside takes available space
+  .custom-select-wrapper {
+    width: 100%;
+  }
+
+  .days-scroller {
+    // Ensure horizontal scroll works comfortably
+    padding-bottom: 4px;
+    width: 100%;
+    justify-content: flex-start; // Align items to start
+
+    // Ensure cards don't get squashed
+    .day-card {
+      flex: 0 0 64px; // Fixed width per card to ensure visibility
+    }
+  }
+}
+
+// Adjust mobile responsiveness
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+
+    .coach-section,
+    .day-section {
+      width: 100%;
+      flex: none;
+    }
+  }
+}
+
+// --- NEW STYLES FOR PHOTOS ---
+
+// Coach Selector Grid (Photo + Select)
+.coach-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.selected-coach-photo {
+  flex: 0 0 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-circle {
+    width: 100%;
+    height: 100%;
+    background: var(--accent-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+  }
+}
+
+// Sidebar Player Widget
+.sidebar-player-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0 16px;
+  text-align: center;
+
+  .avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    color: white;
+    font-size: 32px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .avatar-img-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--bg-secondary);
+  }
+}

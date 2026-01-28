@@ -1,0 +1,114 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <!-- Sidebar -->
+  <app-sidebar [userId]="userId" [jugadorNombre]="jugadorNombre" [jugadorFoto]="jugadorFoto" activePage="inicio">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Control</span>
+        <span class="separator">/</span>
+        <span class="current">Inicio</span>
+      </div>
+
+      <div class="user-profile frc">
+        <div class="user-info">
+          <span class="name">{{ jugadorNombre }}</span>
+          <span class="role">Jugador</span>
+        </div>
+        <div class="avatar-circle" *ngIf="!jugadorFoto">{{ jugadorNombre.charAt(0) }}</div>
+        <img class="avatar-circle" *ngIf="jugadorFoto" [src]="jugadorFoto" style="object-fit: cover;">
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-grid" *ngIf="!isLoading">
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card pagadas">
+          <div class="icon-box">💳</div>
+          <div class="stat-details">
+            <span class="value">{{ stats.pagadas }}</span>
+            <span class="label">Clases Pagadas</span>
+          </div>
+        </div>
+
+        <div class="stat-card reservadas">
+          <div class="icon-box">📅</div>
+          <div class="stat-details">
+            <span class="value">{{ stats.reservadas }}</span>
+            <span class="label">Reservadas</span>
+          </div>
+        </div>
+
+        <div class="stat-card disponibles">
+          <div class="icon-box">✅</div>
+          <div class="stat-details">
+            <span class="value">{{ stats.disponibles }}</span>
+            <span class="label">Disponibles</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <h3 class="section-title">Mi Rendimiento</h3>
+      <div class="charts-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 40px;">
+
+        <!-- Line Chart -->
+        <div class="chart-container"
+          style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); height: 350px;">
+          <h4 style="margin: 0 0 16px; font-size: 14px; color: #666; text-transform: uppercase;">Evolución General</h4>
+          <canvas id="progressChart"></canvas>
+        </div>
+
+        <!-- Radar Chart -->
+        <div class="chart-container"
+          style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); height: 350px;">
+          <h4 style="margin: 0 0 16px; font-size: 14px; color: #666; text-transform: uppercase;">Habilidades (Última
+            Evaluación)</h4>
+          <div style="height: 280px; display: flex; justify-content: center;">
+            <canvas id="radarChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <h3 class="section-title">Acciones Rápidas</h3>
+      <div class="actions-grid">
+        <div class="action-card primary" (click)="irAReservas()">
+          <div class="card-content">
+            <span class="card-icon">📅</span>
+            <h3>Agendar Clase</h3>
+            <p>Reserva tu próximo entrenamiento</p>
+          </div>
+          <span class="arrow-icon">→</span>
+        </div>
+
+        <div class="action-card secondary" (click)="irACalendario()">
+          <div class="card-content">
+            <span class="card-icon">📋</span>
+            <h3>Mis Reservas</h3>
+            <p>Gestiona tus sesiones confirmadas</p>
+          </div>
+          <span class="arrow-icon">→</span>
+        </div>
+
+        <div class="action-card tertiary" (click)="irAPacks()">
+          <div class="card-content">
+            <span class="card-icon">⚡</span>
+            <h3>Comprar Packs</h3>
+            <p>Adquiere más clases</p>
+          </div>
+          <span class="arrow-icon">→</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

@@ -1,0 +1,81 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [role]="'entrenador'" activePage="alumnos">
+    </app-sidebar>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="breadcrumbs">
+                <span>Panel de Entrenador</span>
+                <span class="separator">/</span>
+                <span class="clickable" (click)="volver()">Mis Alumnos</span>
+                <span class="separator">/</span>
+                <span class="current">Progreso de {{ alumnoNombre }}</span>
+            </div>
+
+            <div class="actions">
+                <button class="back-btn" (click)="volver()">
+                    ← Volver
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-grid fade-in">
+
+            <!-- Student Header -->
+            <div class="student-header-card">
+                <div class="student-info">
+                    <div class="avatar-large">
+                        <img *ngIf="alumnoFoto" [src]="alumnoFoto" />
+                        <span *ngIf="!alumnoFoto">{{ alumnoNombre?.charAt(0) || 'A' }}</span>
+                    </div>
+                    <div>
+                        <h1>{{ alumnoNombre }}</h1>
+                        <p>Análisis de Rendimiento y Evolución</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-container" *ngIf="!isLoading && hasData">
+
+                <!-- Radar Chart -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3>Mapa de Habilidades</h3>
+                        <p>Distribución técnica actual</p>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="webRadarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Line Chart -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3>Evolución General</h3>
+                        <p>Progreso sesión a sesión</p>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="webLineChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Loading State -->
+            <div *ngIf="isLoading" class="loading-state">
+                <div class="spinner"></div>
+                <p>Cargando datos del alumno...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!isLoading && !hasData" class="empty-state">
+                <div class="empty-icon">📊</div>
+                <h3>Sin datos de evaluación</h3>
+                <p>Este alumno aún no ha sido evaluado.</p>
+                <button class="create-eval-btn" (click)="volver()">Volver a Alumnos</button>
+            </div>
+
+        </div>
+    </main>
+</div>

@@ -1,0 +1,158 @@
+@use '../../theme/colors.scss' as *;
+
+.sidebar {
+    width: 280px;
+    background: var(--bg-secondary, #ffffff);
+    color: var(--text-main, #111827);
+    border-right: 1px solid var(--card-border, #e5e7eb);
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    height: 100vh; // Ensure full viewport height
+    position: sticky;
+    top: 0;
+    overflow: hidden; // Prevent generic scrollbar
+    box-shadow: none;
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--card-border, #e5e7eb);
+        flex-shrink: 0; // Prevent shrinking
+
+        .logo-icon {
+            font-size: 32px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin: 0;
+            color: var(--text-main, #111827);
+            background: none;
+            -webkit-text-fill-color: initial;
+        }
+    }
+
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        // flex: 1;  <-- REMOVED to allow footer to float up
+        min-height: 0; // Allow shrinking if needed
+        flex-shrink: 1; // Allow shrinking
+        overflow-y: auto; // Enable scrolling for nav items
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+
+        &::-webkit-scrollbar {
+            display: none;
+            /* Chrome, Safari and Opera */
+        }
+
+        .sidebar-player-widget {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-shrink: 0; // Prevent widget from squishing
+
+            .avatar-large,
+            .avatar-img-large {
+                width: 90px;
+                height: 90px;
+                border-radius: 50%;
+                background: var(--accent-blue, #2563eb);
+                color: white;
+                font-size: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                border: 3px solid white;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                object-fit: cover;
+            }
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            color: var(--text-secondary, #6b7280);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-weight: 500;
+            flex-shrink: 0; // Prevent items from squishing
+
+            .icon {
+                font-size: 20px;
+                width: 24px;
+                text-align: center;
+            }
+
+            &:hover {
+                background: var(--bg-primary, #f3f4f6);
+                color: var(--text-main, #111827);
+                transform: translateX(4px);
+            }
+
+            &.active {
+                background: rgba(37, 99, 235, 0.1);
+                color: var(--accent-blue, #2563eb);
+                font-weight: 700;
+                box-shadow: none;
+
+                .icon {
+                    transform: scale(1.1);
+                }
+            }
+        }
+    }
+
+    .sidebar-footer {
+        padding-top: 20px;
+        margin-top: 20px; // Changed from auto to fixed spacing to ensure visibility
+        border-top: 1px solid var(--card-border, #e5e7eb);
+        background: var(--bg-secondary, #ffffff);
+        flex-shrink: 0; // Always keep footer visible and not squished
+
+        .logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid var(--card-border, #e5e7eb);
+            color: var(--text-secondary, #6b7280);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+
+            &:hover {
+                background: rgba(239, 68, 68, 0.1);
+                color: #ef4444;
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+        }
+    }
+}
+
+// Mobile Responsive
+@media (max-width: 1024px) {
+    .sidebar {
+        display: none;
+    }
+}

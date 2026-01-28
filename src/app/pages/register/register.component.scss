@@ -1,0 +1,311 @@
+@use '../../theme/colors' as *;
+@use '../../theme/animations' as *;
+
+.login-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    background: url('https://www.superprof.es/blog/wp-content/uploads/2023/04/entrenamiento-de-padel-scaled.jpg') no-repeat center center/cover;
+    position: relative;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+
+    // Modern gradient overlay for premium feel
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 138, 0.75) 100%);
+        backdrop-filter: blur(4px);
+        z-index: 1;
+    }
+}
+
+// Glassmorphism Card
+// Glassmorphism Card
+.login-card {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 750px; // Increased for 2-column layout
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    padding: 3rem 3rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.6s ease-out;
+
+    @media (max-width: 768px) {
+        max-width: 90%;
+        padding: 2rem;
+    }
+
+    .header-box {
+        text-align: center;
+        margin-bottom: 2.5rem;
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+
+            .logo-icon {
+                font-size: 1.8rem;
+            }
+
+            .logo-text {
+                font-size: 1rem;
+                font-weight: 700;
+                letter-spacing: 1px;
+                color: #ffffff;
+                text-transform: uppercase;
+            }
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+    }
+
+    .form-box {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+
+        @media (max-width: 640px) {
+            grid-template-columns: 1fr; // Stack on mobile
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            // Make the 5th input (Role) full width and centered
+            &:nth-of-type(5) {
+                grid-column: 1 / -1;
+                width: 100%;
+                max-width: 50%; // Constrain width for better look
+                margin: 0 auto;
+
+                @media (max-width: 640px) {
+                    max-width: 100%;
+                }
+            }
+
+            label {
+                font-size: 0.9rem;
+                font-weight: 600;
+                margin-left: 4px;
+                color: rgba(255, 255, 255, 0.9);
+            }
+
+            // ...
+
+            .input-wrapper {
+                position: relative;
+
+                input,
+                select {
+                    width: 100%;
+                    box-sizing: border-box; // Fix for width + padding overflow
+                    padding: 1rem 1rem 1rem 2.8rem;
+                    border-radius: 8px; // Slightly less round based on feedback
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    background: rgba(0, 0, 0, 0.2);
+                    color: #ffffff;
+                    font-size: 1rem;
+                    transition: all 0.3s ease;
+                    appearance: none; // For select
+
+                    &::placeholder {
+                        color: rgba(255, 255, 255, 0.4);
+                    }
+
+                    &:focus {
+                        outline: none;
+                        background: rgba(0, 0, 0, 0.3);
+                        border-color: var(--accent-blue, #60a5fa); // Lighter blue for dark bg
+                        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
+                    }
+
+                    // Autocomplete styles fix
+                    &:-webkit-autofill,
+                    &:-webkit-autofill:hover,
+                    &:-webkit-autofill:focus {
+                        -webkit-text-fill-color: #ffffff;
+                        -webkit-box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.2) inset;
+                        transition: background-color 5000s ease-in-out 0s;
+                    }
+                }
+
+                // Custom style for select arrows if needed, though appearance:none removes it
+                select {
+                    padding-right: 2rem;
+                }
+
+                .icon {
+                    position: absolute;
+                    left: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 1.1rem;
+                    color: rgba(255, 255, 255, 0.6);
+                    pointer-events: none;
+                }
+
+                .toggle-password {
+                    position: absolute;
+                    right: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    cursor: pointer;
+                    font-size: 1.1rem;
+                    color: rgba(255, 255, 255, 0.6);
+                    transition: color 0.2s;
+
+                    &:hover {
+                        color: #ffffff;
+                    }
+                }
+            }
+        }
+
+        .btn-login {
+            grid-column: 1 / -1; // Span full width
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-blue, #2563eb) 0%, #1d4ed8 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+
+            &:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            .spinner {
+                width: 20px;
+                height: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-top-color: white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+        }
+
+        .error-message {
+            grid-column: 1 / -1; // Span full width
+            color: #fca5a5; // Red 300
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .register-prompt {
+            grid-column: 1 / -1; // Span full width
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+
+            a {
+                color: #ffffff;
+                text-decoration: none;
+                font-weight: 700;
+                cursor: pointer;
+                margin-left: 5px;
+                transition: color 0.2s;
+
+                &:hover {
+                    color: var(--accent-blue, #60a5fa);
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+
+    .footer-links {
+        margin-top: 2.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        font-size: 0.85rem;
+
+        a {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            transition: color 0.2s;
+
+            &:hover {
+                color: #ffffff;
+            }
+        }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

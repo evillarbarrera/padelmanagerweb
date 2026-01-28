@@ -1,0 +1,132 @@
+<div class="admin-layout">
+  <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+    activePage="agenda">
+  </app-sidebar>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Entrenador</span>
+        <span class="separator">/</span>
+        <span class="current">Mi Agenda</span>
+      </div>
+
+      <div class="user-profile frc">
+        <div class="user-info">
+          <span class="name">{{ coachNombre }}</span>
+          <span class="role">Entrenador</span>
+        </div>
+        <div class="avatar-circle">
+          <img *ngIf="coachFoto" [src]="coachFoto"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <div class="hero-section">
+        <h2
+          style="font-size: 2rem; font-weight: 900; color: var(--text-main); letter-spacing: -1px; margin-bottom: 0.5rem;">
+          Mi Agenda Semanal</h2>
+        <p style="color: var(--text-secondary);">Tus sesiones programadas para los próximos días</p>
+      </div>
+
+      <!-- Day Selector (Premium Tabs) -->
+      <div class="segment-wrapper animate-up" *ngIf="dias.length > 0">
+        <div class="nike-segment-days">
+          <div *ngFor="let dia of dias" class="segment-button" [class.checked]="diaSeleccionado === dia.fecha"
+            (click)="seleccionarDia(dia.fecha)">
+            <span class="day-name">{{ dia.nombre | slice:0:3 }}</span>
+            <span class="day-date">{{ dia.fecha | date:'dd' }}</span>
+            <div *ngIf="dia.data.length > 0" class="dot-indicator"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Cargando agenda...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && agendaActual.length === 0" class="empty-state animate-up">
+        <div class="empty-icon">📭</div>
+        <h3>Agenda Libre</h3>
+        <p>No tienes clases programadas para este día.</p>
+      </div>
+
+      <!-- Agenda List (Standardized Cards) -->
+      <div class="agenda-list" *ngIf="!isLoading && agendaActual.length > 0">
+
+        <div class="session-card animate-up" *ngFor="let item of agendaActual; let i = index"
+          [style.animation-delay]="(i * 0.05) + 's'"
+          [ngClass]="item.tipo === 'grupal' ? 'pack-grupal' : 'reserva-individual'">
+
+          <div class="card-header">
+            <div class="time-badge">
+              <span class="icon">🕒</span>
+              <ng-container *ngIf="item.tipo === 'grupal'">
+                <span>{{ item.hora_inicio | slice:0:5 }}</span>
+              </ng-container>
+              <ng-container *ngIf="item.tipo !== 'grupal'">
+                <span>{{ item.hora_inicio | slice:0:5 }} - {{ item.hora_fin | slice:0:5 }}</span>
+              </ng-container>
+            </div>
+            <div class="status-tag" [ngClass]="getEstadoText(item)?.toLowerCase()">
+              {{ getEstadoText(item) }}
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- INDIVIDUAL -->
+            <div *ngIf="item.tipo !== 'grupal'" class="player-profile">
+              <div class="avatar-circle-small">👤</div>
+              <div class="player-details">
+                <h3>{{ item.jugador_nombre }}</h3>
+                <p>{{ item.jugador_email }}</p>
+              </div>
+            </div>
+
+            <!-- GRUPAL Info -->
+            <div *ngIf="item.tipo === 'grupal'" class="grupal-info">
+              <div class="grupal-header">
+                <div class="tipo-badge">👥 GRUPAL</div>
+                <span class="categoria">{{ item.categoria }}</span>
+              </div>
+              <div class="cupos-info">
+                <span class="badge-cupos" [ngClass]="item.estado_grupo">
+                  {{ item.cupos_ocupados }}/{{ item.capacidad_maxima }} cupos
+                </span>
+                <span class="duracion">⏱️ {{ item.duracion_calculada || 0 }}min</span>
+              </div>
+
+              <!-- Lista de Inscritos -->
+              <div class="inscritos-list" *ngIf="item.inscritos && item.inscritos.length > 0">
+                <p class="inscritos-title">Inscritos:</p>
+                <div class="inscritos-avatars">
+                  <div *ngFor="let inscrito of item.inscritos" class="inscrito-avatar" [title]="inscrito.nombre">
+                    <span class="avatar-icon">👤</span>
+                    <span class="nombre-corto">{{ inscrito.nombre | slice:0:1 }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pack-row" *ngIf="item.pack_nombre">
+              <span class="pack-label">{{ item.pack_nombre }}</span>
+            </div>
+          </div>
+
+          <div class="card-footer" *ngIf="(item.estado !== 'cancelado' && item.estado_grupo !== 'cancelado')">
+            <button class="action-btn cancel" (click)="cancelarClase(item)">
+              ✕ Cancelar {{ item.tipo === 'grupal' ? 'Pack' : 'Clase' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>

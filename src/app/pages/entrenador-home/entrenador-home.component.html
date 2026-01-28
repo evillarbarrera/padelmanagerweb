@@ -1,0 +1,103 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+    activePage="inicio">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Entrenador</span>
+        <span class="separator">/</span>
+        <span class="current">Inicio</span>
+      </div>
+
+      <div class="user-profile frc">
+        <div class="user-info">
+          <span class="name">{{ coachNombre }}</span>
+          <span class="role">Entrenador</span>
+        </div>
+        <div class="avatar-circle">
+          <img *ngIf="coachFoto" [src]="coachFoto"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-grid" *ngIf="!isLoading">
+
+
+
+      <!-- Quick Actions Grid -->
+      <h3 class="section-title">Panel de Control</h3>
+      <div class="actions-grid">
+        <div class="action-card primary" (click)="irAAlumnos()">
+          <div class="card-content">
+            <span class="card-icon">👥</span>
+            <h3>Mis Alumnos</h3>
+            <p>Gestiona tu base de datos</p>
+          </div>
+          <span class="arrow-icon">→</span>
+        </div>
+
+        <div class="action-card secondary" (click)="irACalendario()">
+          <div class="card-content">
+            <span class="card-icon">📅</span>
+            <h3>Mi Agenda</h3>
+            <p>Visualiza tus entrenamientos</p>
+          </div>
+          <span class="arrow-icon">→</span>
+        </div>
+
+        <div class="action-card tertiary" (click)="irAPacks()">
+          <div class="card-content">
+            <span class="card-icon">📦</span>
+            <h3>Gestionar Packs</h3>
+            <p>Crea y edita paquetes</p>
+          </div>
+          <span class="arrow-icon">→</span>
+        </div>
+
+        <div class="action-card quaternary" (click)="irADisponibilidad()">
+          <div class="card-content">
+            <span class="card-icon">⏰</span>
+            <h3>Disponibilidad</h3>
+            <p>Configura tus horarios</p>
+          </div>
+          <span class="arrow-icon">→</span>
+        </div>
+      </div>
+
+      <!-- Clases de Hoy Section -->
+      <div class="today-classes-section">
+        <h3 class="section-title">Clases del Día</h3>
+
+        <div class="classes-list" *ngIf="clasesHoyList.length > 0">
+          <div class="class-card" *ngFor="let clase of clasesHoyList">
+            <div class="time-col">
+              <span class="time">{{ clase.hora }}</span>
+            </div>
+            <div class="info-col">
+              <span class="class-title">{{ clase.titulo }}</span>
+              <span class="class-subtitle">{{ clase.subtitulo }}</span>
+            </div>
+            <div class="type-col">
+              <span class="badge" [ngClass]="clase.tipo === 'Grupal' ? 'badge-grupal' : 'badge-indiv'">
+                {{ clase.tipo }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-classes" *ngIf="clasesHoyList.length === 0">
+          <p>No hay clases para hoy 🎉</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

@@ -1,0 +1,125 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <!-- Sidebar -->
+  <app-sidebar [userId]="userId" [jugadorNombre]="jugadorNombre" [jugadorFoto]="jugadorFoto" activePage="reservas">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Control</span>
+        <span class="separator">/</span>
+        <span class="current">Agendar Clase</span>
+      </div>
+
+      <div class="user-profile">
+        <div class="user-info">
+          <span class="name">{{ jugadorNombre }}</span>
+          <span class="role">Perfil</span>
+        </div>
+        <div class="avatar-circle" *ngIf="!jugadorFoto">{{ jugadorNombre.charAt(0) }}</div>
+        <img class="avatar-circle" *ngIf="jugadorFoto" [src]="jugadorFoto" style="object-fit: cover;">
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="dashboard-grid">
+
+      <!-- Page Title -->
+      <div class="page-header">
+        <h2 class="section-title">Nueva Reserva</h2>
+      </div>
+
+      <!-- AGENDAR NUEVA CLASE -->
+      <div class="agendar-container animate-fade-in">
+
+        <div class="filters-row">
+          <!-- 1. Coach Selection -->
+          <div class="booking-section coach-section">
+            <h3>1. Selecciona tu Coach</h3>
+            <div class="coach-selector-container">
+              <!-- Coach Photo Placeholder or Real Image -->
+              <div class="selected-coach-photo" *ngIf="selectedEntrenador">
+                <div class="avatar-circle" *ngIf="!currentCoachPhoto">{{ getCoachName(selectedEntrenador)[0] }}</div>
+                <img *ngIf="currentCoachPhoto" [src]="currentCoachPhoto" class="avatar-img" alt="Coach">
+              </div>
+
+              <div class="custom-select-wrapper">
+                <select [(ngModel)]="selectedEntrenador" (change)="onEntrenadorChange()" class="form-select">
+                  <option [ngValue]="null" disabled>Elige un entrenador</option>
+                  <option *ngFor="let entrenador of entrenadores" [value]="entrenador.id">
+                    {{ entrenador.nombre }}
+                  </option>
+                </select>
+                <div class="select-icon">▼</div>
+              </div>
+            </div>
+
+            <!-- Pack Selection (New) -->
+            <div class="pack-selector-container" *ngIf="selectedEntrenador && packsDelEntrenador.length > 1"
+              style="margin-top: 15px;">
+              <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;">Selecciona tu
+                Pack:</label>
+              <div class="custom-select-wrapper">
+                <select [(ngModel)]="selectedPack" class="form-select">
+                  <option *ngFor="let pack of packsDelEntrenador" [ngValue]="pack">
+                    {{ pack.pack_nombre }} ({{ pack.sesiones_restantes }} diponibles)
+                  </option>
+                </select>
+                <div class="select-icon">▼</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Day Selection -->
+          <div class="booking-section day-section" *ngIf="selectedEntrenador">
+            <h3>2. Selecciona el Día</h3>
+            <div class="days-scroller">
+              <button type="button" *ngFor="let d of dias" class="day-card" [class.active]="diaSeleccionado === d"
+                (click)="seleccionarDia(d)">
+                <span class="day-name">{{ d | date:'EEE' : '' : 'es-ES' | uppercase }}</span>
+                <span class="day-num">{{ d | date:'dd' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM ROW: Available Slots (All) -->
+        <div class="booking-results">
+          <div class="booking-section full-height">
+            <div class="section-header">
+              <h3>HORARIOS DISPONIBLES - {{ diaSeleccionado | date:'EEEE dd' : '' : 'es-ES' | uppercase }} DE {{
+                diaSeleccionado | date:'MMMM' : '' : 'es-ES' | uppercase }}</h3>
+            </div>
+
+            <div class="slots-grid large"
+              *ngIf="horariosPorDia[diaSeleccionado] && horariosPorDia[diaSeleccionado].length > 0; else noSlots">
+              <button *ngFor="let slot of horariosPorDia[diaSeleccionado]" class="slot-card"
+                [class.occupied]="slot.ocupado" [disabled]="slot.ocupado" (click)="reservarHorario(slot)">
+                <span class="slot-time">{{ slot.hora_inicio | date:'HH:mm' }}</span>
+                <span class="slot-status">{{ slot.ocupado ? 'Reservado' : 'Reservar' }}</span>
+              </button>
+            </div>
+
+            <ng-template #noSlots>
+              <div class="no-slots-message">
+                <span class="icon">⏳</span>
+                <p>No hay horarios disponibles en este tramo.</p>
+              </div>
+            </ng-template>
+          </div>
+
+        </div>
+
+        <div *ngIf="!selectedEntrenador && entrenadores.length === 0" class="empty-state">
+          <p>Cargando entrenadores disponibles...</p>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>

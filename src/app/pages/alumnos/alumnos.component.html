@@ -1,0 +1,90 @@
+<div class="admin-layout">
+  <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+    activePage="alumnos">
+  </app-sidebar>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <span>Panel de Entrenador</span>
+        <span class="separator">/</span>
+        <span class="current">Mis Alumnos</span>
+      </div>
+
+      <div class="user-profile frc">
+        <div class="user-info">
+          <span class="name">{{ coachNombre }}</span>
+          <span class="role">Entrenador</span>
+        </div>
+        <div class="avatar-circle">
+          <img *ngIf="coachFoto" [src]="coachFoto"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- Search Bar -->
+      <div class="search-section">
+        <span class="search-icon">🔍</span>
+        <input type="text" [(ngModel)]="searchTerm" (input)="filtrarAlumnos()" placeholder="Buscar alumno por nombre..."
+          class="search-input" />
+      </div>
+
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando alumnos...</p>
+      </div>
+
+      <div *ngIf="!isLoading && alumnosFiltrados.length === 0" class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No tienes alumnos</h3>
+        <p>Tus alumnos aparecerán aquí cuando se inscriban</p>
+      </div>
+
+      <div *ngIf="!isLoading && alumnosFiltrados.length > 0" class="alumnos-grid">
+        <div *ngFor="let alumno of alumnosFiltrados" class="alumno-card">
+          <div class="card-header">
+            <div class="avatar">
+              {{ alumno.jugador_nombre?.charAt(0) || '👤' }}
+            </div>
+            <div class="header-info">
+              <h3>{{ alumno.jugador_nombre }}</h3>
+              <p class="pack">{{ alumno.pack_nombre }}</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="session-info">
+              <div class="session-stat">
+                <span class="label">Pagadas</span>
+                <span class="value">{{ alumno.sesiones_pagadas || 0 }}</span>
+              </div>
+              <div class="session-stat">
+                <span class="label">Reservadas</span>
+                <span class="value">{{ alumno.sesiones_reservadas }}</span>
+              </div>
+              <div class="session-stat">
+                <span class="label">Restantes</span>
+                <span class="value highlight">{{ alumno.sesiones_restantes }}</span>
+              </div>
+            </div>
+
+            <!-- Removed redundant stats blocks -->
+          </div>
+
+          <div class="card-footer">
+            <button class="action-btn eval-btn" (click)="irAEvaluar(alumno)"
+              style="background-color: #ccff00; color: black; font-weight: bold;">
+              ⚡ Evaluar
+            </button>
+            <button class="action-btn" (click)="verProgreso(alumno)">
+              📈 Progreso
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,260 @@
+@use '../../theme/colors.scss' as *;
+
+// Dashboard Grid (Standard Layout)
+.dashboard-grid {
+  padding: 32px 40px;
+  max-width: 1300px;
+  margin: 0 auto;
+  width: 100%;
+
+  .section-title {
+    font-size: 24px;
+    font-weight: 900;
+    margin: 40px 0 24px;
+    color: #111;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+  }
+
+  // Stats Row
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .stat-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: none;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .icon-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: #f8f8f8;
+      color: #999;
+    }
+
+    .stat-details {
+      display: flex;
+      flex-direction: column;
+
+      .value {
+        font-size: 28px;
+        font-weight: 900;
+        line-height: 1;
+        color: #111;
+        margin-bottom: 4px;
+        letter-spacing: -1px;
+      }
+
+      .label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #888;
+      }
+    }
+
+    // Semantic colors for icons
+    &.total .icon-box {
+      background: rgba(37, 99, 235, 0.1);
+      color: #2563eb;
+    }
+
+    &.pagadas .icon-box {
+      background: rgba(255, 215, 0, 0.1);
+      color: #bfa100;
+    }
+
+    &.disponibles .icon-box {
+      background: rgba(0, 200, 83, 0.08);
+      color: #00c853;
+    }
+  }
+
+  // Actions Grid
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .action-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 3px solid transparent;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+      border-color: #000;
+
+      .arrow-icon {
+        transform: translateX(5px);
+        color: #000;
+      }
+    }
+
+    .card-content {
+      display: flex;
+      flex-direction: column;
+
+      .card-icon {
+        font-size: 28px;
+        margin-bottom: 16px;
+        display: block;
+      }
+
+      h3 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #111;
+        letter-spacing: -0.5px;
+      }
+
+      p {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 500;
+        color: #888;
+      }
+    }
+
+    .arrow-icon {
+      font-size: 22px;
+      color: #ddd;
+      transition: all 0.3s;
+    }
+  }
+
+  /* TODAY CLASSES SECTION */
+  .today-classes-section {
+    margin-top: 40px;
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: #111;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+
+    .classes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .class-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+      border: 1px solid #f0f0f0;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateX(4px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+        border-color: #eee;
+      }
+
+      .time-col {
+        width: 70px;
+        font-weight: 900;
+        font-size: 18px;
+        color: #111;
+        border-right: 2px solid #f5f5f5;
+        margin-right: 20px;
+        text-align: center;
+      }
+
+      .info-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .class-title {
+          font-weight: 800;
+          font-size: 16px;
+          color: #111;
+          margin-bottom: 4px;
+        }
+
+        .class-subtitle {
+          font-size: 13px;
+          font-weight: 500;
+          color: #777;
+        }
+      }
+
+      .type-col {
+        .badge {
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+
+          &.badge-indiv {
+            background: #e3f2fd;
+            color: #1976d2;
+          }
+
+          &.badge-grupal {
+            background: #e8f5e9;
+            color: #2e7d32;
+          }
+        }
+      }
+    }
+
+    .empty-classes {
+      text-align: center;
+      padding: 40px;
+      background: #f9f9f9;
+      border-radius: 20px;
+      color: #888;
+      font-weight: 600;
+      border: 2px dashed #eee;
+    }
+  }
+}
+
+// Media Queries
+@media (max-width: 768px) {
+  .dashboard-grid {
+    padding: 20px 16px;
+  }
+}

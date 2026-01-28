@@ -1,0 +1,808 @@
+// ===== VARIABLES =====
+@use '../../theme/colors' as *;
+@use '../../theme/animations' as *;
+@use 'sass:color';
+
+// Color Mapping to Professional Theme
+$verde-padel: $prof-blue; // Primary Action -> Electric Blue
+$verde-padel-alt: $prof-blue; // Hover/Gradient -> Electric Blue
+$negro: #121212;
+$gris-oscuro: #1E1E1E;
+$blanco: #FFFFFF;
+$gris-claro: $prof-gray;
+
+// Theme Overrides
+$gold: $prof-orange; // Accents -> Orange
+$dark-navy: $prof-navy; // Background -> Navy Blue
+$navy: $prof-navy; // Secondary BG -> Navy Blue
+$red: $prof-blue; // Highlights -> Blue
+$blue-dark: $prof-navy;
+$mobile: 480px;
+$tablet: 768px;
+$desktop: 1024px;
+
+:host {
+  --font-family: 'Inter', sans-serif; // Changed to Inter
+  display: block;
+  background-color: $dark-navy;
+  color: $white;
+  font-family: var(--font-family); // Ensure font is applied
+}
+
+// ... (omitted shared styles)
+
+// ===== NIKE HERO SECTION =====
+.nike-hero {
+  position: relative;
+  min-height: 100vh;
+  padding: 8rem 2rem 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  // Updated background: Lighter overlay (0.3/0.2) for more "light"
+  background: linear-gradient(rgba($dark-navy, 0.3), rgba($dark-navy, 0.2)), url('/assets/images/hero-bg-2.png') no-repeat center center/cover;
+
+  .hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 1;
+    }
+
+    .shape-1 {
+      top: -10%;
+      right: -5%;
+      width: 500px;
+      height: 500px;
+      background: rgba($prof-blue, 0.2); // Reduced opacity
+    }
+
+    .shape-2 {
+      bottom: -10%;
+      left: -10%;
+      width: 600px;
+      height: 600px;
+      background: rgba($prof-orange, 0.15); // Reduced opacity
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, transparent 0%, $dark-navy 120%); // Adjusted gradient
+      z-index: 2;
+    }
+  }
+
+  .nike-navbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem 4rem;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    overflow-x: hidden;
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-weight: 900;
+      font-size: 1.4rem;
+      letter-spacing: -0.5px;
+      color: $white;
+
+      .icon {
+        font-size: 1.6rem;
+        filter: drop-shadow(0 0 5px rgba($white, 0.5));
+      }
+
+      .text {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .menu {
+      display: flex;
+      gap: 3rem;
+      background: rgba($white, 0.1); // Slightly clearer
+      padding: 0.8rem 2rem;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba($white, 0.2);
+
+      a {
+        color: white; // Brighter
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+        &:hover {
+          color: $gold;
+          text-shadow: 0 0 10px rgba($gold, 0.5);
+        }
+      }
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-right: 1rem;
+
+      button {
+        cursor: pointer;
+        font-weight: 700;
+        padding: 0.8rem 1.8rem;
+        border-radius: 50px;
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        font-size: 0.9rem;
+      }
+
+      .btn-login {
+        background: rgba($white, 0.1);
+        color: $white;
+        border: 1px solid rgba($white, 0.3);
+        backdrop-filter: blur(5px);
+
+        &:hover {
+          border-color: $white;
+          background: rgba($white, 0.2);
+          box-shadow: 0 0 15px rgba($white, 0.2);
+        }
+      }
+
+      .btn-register {
+        background: $white;
+        color: $dark-navy;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 20px rgba($white, 0.4);
+        }
+      }
+    }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1280px;
+    display: grid;
+    // Swap columns: Phone (0.8) Left, Content (1.2) Right
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 8rem;
+    align-items: center;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 100%;
+
+    .hero-text-content {
+      padding-left: 4rem;
+      padding-right: 0;
+
+      .badge-new {
+        display: inline-block;
+        padding: 0.6rem 1.2rem;
+        background: rgba($prof-orange, 0.2);
+        color: lighten($prof-orange, 10%);
+        border: 1px solid rgba($prof-orange, 0.5);
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        margin-bottom: 2rem;
+        letter-spacing: 1px;
+        box-shadow: 0 0 20px rgba($prof-orange, 0.4);
+        backdrop-filter: blur(5px);
+      }
+
+      h1 {
+        font-size: 4.5rem;
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        letter-spacing: -1.5px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+        .highlight {
+          color: transparent;
+          background: linear-gradient(90deg, #00f2fe, #4facfe, #ffffff);
+          -webkit-background-clip: text;
+          background-clip: text;
+          display: block;
+          margin-top: 0.2rem;
+          filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.5));
+        }
+      }
+
+      p {
+        font-size: 1.25rem;
+        color: white;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        max-width: 520px;
+        margin-bottom: 3.5rem;
+        line-height: 1.7;
+        font-weight: 500;
+      }
+
+      .cta-group {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 5rem;
+        align-items: center;
+
+        .btn-primary-large {
+          padding: 1.2rem 2.8rem;
+          background: $prof-blue;
+          color: white;
+          border: none;
+          border-radius: 16px;
+          font-weight: 800;
+          font-size: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+          box-shadow: 0 10px 25px rgba($prof-blue, 0.4);
+
+          &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba($prof-blue, 0.6);
+            background: color.adjust($prof-blue, $lightness: 5%);
+          }
+
+          .btn-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+          }
+
+          &:hover .btn-icon {
+            transform: translateX(4px);
+          }
+        }
+
+        .btn-secondary-large {
+          padding: 1.2rem 2.5rem;
+          background: rgba($white, 0.1);
+          color: white;
+          border: 1px solid rgba($white, 0.2);
+          border-radius: 16px;
+          font-weight: 700;
+          font-size: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          cursor: pointer;
+          transition: all 0.3s;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+
+          &:hover {
+            background: rgba($white, 0.2);
+            border-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+          }
+        }
+      }
+
+      .hero-stats {
+        display: flex;
+        align-items: center;
+        gap: 3rem;
+        background: rgba($white, 0.1);
+        padding: 1.5rem 2.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba($white, 0.25); // Brighter border
+        backdrop-filter: blur(15px);
+        width: fit-content;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+
+          .val {
+            font-size: 2rem;
+            font-weight: 900;
+            color: $white;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+          }
+
+          .lbl {
+            font-size: 0.85rem;
+            color: rgba($white, 0.95);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          }
+        }
+
+        .stat-divider {
+          width: 1px;
+          height: 40px;
+          background: rgba($white, 0.3);
+        }
+      }
+    }
+
+    .hero-visual {
+      position: relative;
+      display: flex;
+      justify-content: flex-start;
+      padding-top: 4rem;
+
+      .phone-mockup {
+        width: 330px;
+        height: 680px;
+        background: #000;
+        border-radius: 56px;
+        padding: 5px;
+        box-shadow:
+          0 0 0 1px #444,
+          0 30px 60px -15px rgba(0, 0, 0, 0.8),
+          0 0 60px rgba($prof-blue, 0.15);
+        border: none;
+        position: relative;
+        transform: rotate(-12deg);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+        &:hover {
+          transform: rotate(0deg) scale(1.02) translateY(-10px);
+          box-shadow:
+            0 0 0 1px $white,
+            0 40px 80px -20px rgba(0, 0, 0, 0.9),
+            0 0 60px rgba($prof-blue, 0.3);
+        }
+
+        .phone-bezel {
+          width: 100%;
+          height: 100%;
+          background: #000;
+          border-radius: 50px;
+          position: relative;
+          overflow: hidden;
+          border: 3px solid #000;
+
+          .phone-notch {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 32px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 20;
+          }
+
+          .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            padding: 0;
+            position: relative;
+
+            .screen-header {
+              position: absolute;
+              top: 15px;
+              left: 20px;
+              right: 20px;
+              display: flex;
+              justify-content: space-between;
+              color: white;
+              font-size: 0.9rem;
+              z-index: 15;
+              font-weight: 600;
+
+              .status-icons {
+                display: flex;
+                gap: 6px;
+              }
+            }
+
+            .app-screen-img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border-radius: 44px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .floating-badge {
+    display: none; // Ensure this is hidden as removed in previous steps
+  }
+}
+
+// ===== NIKE FEATURES =====
+.nike-features {
+  padding: 8rem 2rem;
+  // Previously: color.adjust($prof-navy, $lightness: -3%) -> Too dark
+  // New: Lighter navy with a central "light" spot (radial gradient)
+  background: radial-gradient(circle at center, lighten($prof-navy, 15%) 0%, $prof-navy 100%);
+  position: relative;
+
+  .section-header {
+    margin-bottom: 5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .overline {
+      color: $gold;
+      letter-spacing: 4px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      display: block;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 10px rgba($gold, 0.5); // Add glow
+    }
+
+    h2 {
+      font-size: 3rem;
+      font-weight: 900;
+      text-align: center;
+      color: white; // Explicit white
+      text-shadow: 0 0 20px rgba($prof-blue, 0.6); // Blue glow behind text
+
+      .text-gradient {
+        // Brighter gradient
+        background: linear-gradient(to right, #fff, #a5b4fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+      }
+    }
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+
+    .feature-card {
+      background: rgba($white, 0.08); // Brighter card bg (was 0.03)
+      border: 1px solid rgba($white, 0.15); // Brighter border
+      padding: 3rem 2rem;
+      border-radius: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        background: rgba($white, 0.12);
+        transform: translateY(-10px);
+        border-color: rgba($white, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      // ... icon styles remain ...
+      .icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+
+        &.glass-gold {
+          background: rgba($prof-orange, 0.2);
+          color: $prof-orange;
+        }
+
+        &.glass-red {
+          background: rgba($prof-blue, 0.2);
+          color: $prof-blue;
+        }
+
+        &.glass-green {
+          background: rgba($green, 0.2);
+          color: $green;
+        }
+
+        &.glass-blue {
+          background: rgba($blue, 0.2);
+          color: $blue;
+        }
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: white; // Ensure bright title
+      }
+
+      p {
+        color: rgba($white, 0.8); // Brighter body text
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+// ===== NIKE TESTIMONIALS =====
+.nike-testimonials {
+  padding: 8rem 2rem;
+  // Previously: color.adjust($dark-navy, $lightness: 5%)
+  // New: Significantly lighter "Platform" color or gradient
+  background: linear-gradient(to bottom, lighten($prof-navy, 10%), lighten($prof-navy, 5%));
+  overflow: hidden;
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 5rem;
+
+    h2 {
+      font-size: 3rem;
+      font-weight: 900;
+      color: white;
+      text-shadow: 0 0 20px rgba($white, 0.2); // Soft glow
+    }
+  }
+
+  .testimonials-scroller {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .testimonial-card {
+      flex: 1;
+      min-width: 300px;
+      max-width: 400px;
+      background: rgba($white, 0.05);
+      padding: 3rem;
+      border-radius: 24px;
+      position: relative;
+
+      &.highlight {
+        background: $navy;
+        border: 1px solid $gold;
+        transform: scale(1.05);
+        z-index: 10;
+      }
+
+      .quote-icon {
+        font-size: 4rem;
+        color: rgba($white, 0.1);
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+      }
+
+      .quote {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 2;
+      }
+
+      .author {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .avatar {
+          width: 50px;
+          height: 50px;
+          background: rgba($white, 0.1);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+        }
+
+        .info {
+          h5 {
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+          }
+
+          span {
+            font-size: 0.85rem;
+            color: $gold;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ===== NIKE CTA =====
+.nike-cta {
+  padding: 6rem 2rem;
+  background: linear-gradient(135deg, $red 0%, $dark-navy 100%);
+  text-align: center;
+
+  .cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+
+    h2 {
+      font-size: 3.5rem;
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+      color: rgba($white, 0.5);
+    }
+
+    .text-white {
+      color: white;
+    }
+
+    p {
+      font-size: 1.3rem;
+      margin-bottom: 3rem;
+      opacity: 0.9;
+    }
+
+    button {
+      padding: 1.5rem 3rem;
+      background: white;
+      color: $dark-navy;
+      border: none;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+// ===== NIKE FOOTER =====
+.nike-footer {
+  background: black;
+  padding: 5rem 2rem 2rem;
+  border-top: 1px solid rgba($white, 0.1);
+
+  .footer-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 4rem;
+    margin-bottom: 4rem;
+    max-width: 1400px;
+    margin: 0 auto 4rem;
+
+    .brand-col {
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        color: rgba($white, 0.5);
+        margin-bottom: 2rem;
+      }
+
+      .socials {
+        display: flex;
+        gap: 1rem;
+
+        a {
+          color: white;
+          text-decoration: none;
+          opacity: 0.7;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
+      }
+    }
+
+    .links-col {
+      h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1.5rem;
+      }
+
+      a {
+        display: block;
+        color: rgba($white, 0.6);
+        text-decoration: none;
+        margin-bottom: 0.8rem;
+
+        &:hover {
+          color: $gold;
+        }
+      }
+    }
+  }
+
+  .footer-bottom {
+    text-align: center;
+    border-top: 1px solid rgba($white, 0.1);
+    padding-top: 2rem;
+
+    p {
+      color: rgba($white, 0.4);
+      font-size: 0.9rem;
+    }
+  }
+}
+
+@media (max-width: $tablet) {
+  .nike-hero {
+    padding-top: 6rem;
+
+    .hero-content {
+      grid-template-columns: 1fr;
+      text-align: center;
+
+      .hero-text-content {
+        h1 {
+          font-size: 3rem;
+        }
+
+        .cta-group {
+          justify-content: center;
+        }
+
+        .hero-stats {
+          justify-content: center;
+        }
+      }
+
+      .hero-visual {
+        display: none;
+      }
+    }
+
+    .nike-navbar {
+      .menu {
+        display: none;
+      }
+    }
+  }
+
+  .nike-footer .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
