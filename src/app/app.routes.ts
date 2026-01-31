@@ -14,8 +14,7 @@ import { LandingComponent } from './pages/landing/landing.component';
 import { JugadorPacksComponent } from './pages/jugador-packs/jugador-packs.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'home', component: LandingComponent },
+  { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
 
@@ -43,5 +42,5 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/alumno-progreso/alumno-progreso.component').then(m => m.AlumnoProgresoComponent)
   },
 
-  { path: '**', redirectTo: 'home' }
+  { path: '**', redirectTo: '' }
 ];

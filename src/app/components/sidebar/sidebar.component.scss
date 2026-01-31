@@ -150,9 +150,84 @@
     }
 }
 
+/* Mobile Toggle Button (Visible only on mobile) */
+.mobile-toggle-btn {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 8px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    font-size: 24px;
+    color: #111;
+
+    @media (max-width: 1024px) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(2px);
+
+    &.active {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+/* Close Button (inside sidebar) */
+.close-btn {
+    display: none; // Hidden on desktop
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto; // Push to right
+
+    @media (max-width: 1024px) {
+        display: block;
+    }
+}
+
 // Mobile Responsive
 @media (max-width: 1024px) {
     .sidebar {
-        display: none;
+        display: flex; // We need flex because of the column layout
+        position: fixed;
+        top: 0;
+        left: -320px; // Hide off-screen
+        width: 300px;
+        height: 100vh;
+        z-index: 999;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+
+        &.open {
+            transform: translateX(320px); // Slide in
+        }
+
+        .sidebar-header {
+            justify-content: space-between; // Space between logo and close button
+        }
     }
 }

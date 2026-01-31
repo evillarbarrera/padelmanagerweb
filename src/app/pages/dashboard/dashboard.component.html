@@ -1,7 +1,7 @@
 <div class="dashboard-container">
   <nav class="navbar">
     <div class="navbar-content">
-      <h2 class="navbar-title">Training Academy</h2>
+      <h2 class="navbar-title">Padel Manager</h2>
       <div class="navbar-user">
         <span *ngIf="currentUser" class="user-name">{{ currentUser.nombre }}</span>
         <button class="btn btn-danger btn-small" (click)="logout()">Cerrar Sesión</button>
@@ -13,58 +13,65 @@
   <section class="hero-padel">
     <div class="hero-content">
       <h1>El Mejor Entrenamiento de Pádel</h1>
-      <p>Descubre tu potencial y vive la experiencia de entrenar en una cancha profesional, con los mejores entrenadores y el ambiente ideal para mejorar tu juego.</p>
+      <p>Descubre tu potencial y vive la experiencia de entrenar en una cancha profesional, con los mejores entrenadores
+        y el ambiente ideal para mejorar tu juego.</p>
     </div>
   </section>
 
   <main class="main-content">
     <div class="container">
       <!-- Stats Section -->
-        <section *ngIf="stats" class="stats-section">
-          <h3>Mis Estadísticas</h3>
-          <p style="color: #fff; font-size: 18px; margin-bottom: 24px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); max-width: 600px;">El pádel es pasión, estrategia y trabajo en equipo. Aquí puedes ver tus avances y el impacto de tu entrenamiento en cada clase.</p>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-number">{{ stats.pagadas }}</div>
-              <div class="stat-label">Clases Pagadas</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number">{{ stats.reservadas }}</div>
-              <div class="stat-label">Clases Reservadas</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number">{{ stats.disponibles }}</div>
-              <div class="stat-label">Clases Disponibles</div>
-            </div>
+      <section *ngIf="stats" class="stats-section">
+        <h3>Mis Estadísticas</h3>
+        <p
+          style="color: #fff; font-size: 18px; margin-bottom: 24px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); max-width: 600px;">
+          El pádel es pasión, estrategia y trabajo en equipo. Aquí puedes ver tus avances y el impacto de tu
+          entrenamiento en cada clase.</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">{{ stats.pagadas }}</div>
+            <div class="stat-label">Clases Pagadas</div>
           </div>
-        </section>
+          <div class="stat-card">
+            <div class="stat-number">{{ stats.reservadas }}</div>
+            <div class="stat-label">Clases Reservadas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ stats.disponibles }}</div>
+            <div class="stat-label">Clases Disponibles</div>
+          </div>
+        </div>
+      </section>
 
       <!-- Reservations Section -->
-        <section class="reservations-section">
-          <h3>Mis Reservas</h3>
-          <p style="color: #fff; font-size: 18px; margin-bottom: 24px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); max-width: 600px;">Reserva tus entrenamientos y vive la experiencia del pádel en cada partido. Organiza tu agenda y prepárate para mejorar tu juego.</p>
-          <div *ngIf="isLoading" class="loading">
-            Cargando reservas...
-          </div>
+      <section class="reservations-section">
+        <h3>Mis Reservas</h3>
+        <p
+          style="color: #fff; font-size: 18px; margin-bottom: 24px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); max-width: 600px;">
+          Reserva tus entrenamientos y vive la experiencia del pádel en cada partido. Organiza tu agenda y prepárate
+          para mejorar tu juego.</p>
+        <div *ngIf="isLoading" class="loading">
+          Cargando reservas...
+        </div>
 
-          <div *ngIf="!isLoading && reservas.length === 0" class="empty-state">
-            <p>No tienes reservas programadas</p>
-          </div>
+        <div *ngIf="!isLoading && reservas.length === 0" class="empty-state">
+          <p>No tienes reservas programadas</p>
+        </div>
 
-          <div *ngIf="!isLoading && reservas.length > 0" class="reservations-list">
-            <div *ngFor="let reserva of reservas" class="reservation-card">
-              <div class="reservation-header">
-                <h4>{{ reserva.nombre_entrenador }}</h4>
-                <span class="badge badge-success">{{ reserva.estado }}</span>
-              </div>
-              <div class="reservation-details">
-                <p><strong>Fecha:</strong> {{ reserva.fecha | date: 'short' }}</p>
-                <p><strong>Hora:</strong> {{ reserva.hora_inicio }} - {{ reserva.hora_fin }}</p>
-                <p><strong>Tipo:</strong> {{ reserva.tipo }}</p>
-              </div>
+        <div *ngIf="!isLoading && reservas.length > 0" class="reservations-list">
+          <div *ngFor="let reserva of reservas" class="reservation-card">
+            <div class="reservation-header">
+              <h4>{{ reserva.nombre_entrenador }}</h4>
+              <span class="badge badge-success">{{ reserva.estado }}</span>
+            </div>
+            <div class="reservation-details">
+              <p><strong>Fecha:</strong> {{ reserva.fecha | date: 'short' }}</p>
+              <p><strong>Hora:</strong> {{ reserva.hora_inicio }} - {{ reserva.hora_fin }}</p>
+              <p><strong>Tipo:</strong> {{ reserva.tipo }}</p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
     </div>
   </main>
 </div>

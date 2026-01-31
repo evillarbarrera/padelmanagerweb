@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://api.lamatek.cl';
+  private apiUrl = environment.apiUrl;
   private authToken = 'Bearer ' + btoa('1|padel_academy');
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -23,23 +24,23 @@ export class ApiService {
   }
 
   login(usuario: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login.php`, { usuario, password });
+    return this.http.post(`${this.apiUrl}/auth/login.php`, { usuario, password });
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register.php`, userData, {
+    return this.http.post(`${this.apiUrl}/auth/register.php`, userData, {
       headers: this.getHeaders()
     });
   }
 
   getPerfil(userId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/get_perfil.php?user_id=${userId}`, {
+    return this.http.get(`${this.apiUrl}/user/get_perfil.php?user_id=${userId}`, {
       headers: this.getHeaders()
     });
   }
 
   updatePerfil(userId: number, data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/update_perfil.php`, { user_id: userId, ...data }, {
+    return this.http.post(`${this.apiUrl}/user/update_perfil.php`, { user_id: userId, ...data }, {
       headers: this.getHeaders()
     });
   }

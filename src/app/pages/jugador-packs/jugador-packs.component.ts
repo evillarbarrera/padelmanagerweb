@@ -204,7 +204,7 @@ export class JugadorPacksComponent implements OnInit {
             jugador_id: this.userId,
             pack_id: pack.id,
             amount: pack.precio,
-            origin: 'http://localhost:4200/jugador-packs'
+            origin: 'https://padelmanager.cl/jugador-packs'
         };
 
         Swal.fire({

@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class EvaluacionService {
-    private apiUrl = 'http://api.lamatek.cl/evaluaciones'; // Adjust if using localhost via proxy, but direct is standard here
+    private apiUrl = `${environment.apiUrl}/evaluaciones`;
 
     // Headers typically handled by interceptors, but adding basic auth header logic if needed or relying on explicit token passing
     private token = localStorage.getItem('token') || '';

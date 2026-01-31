@@ -2,5 +2,5 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'https://api.lamatek.cl/api_training'
+  apiUrl: 'https://api.padelmanager.cl'
 };

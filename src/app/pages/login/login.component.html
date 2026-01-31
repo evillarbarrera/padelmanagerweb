@@ -5,11 +5,13 @@
         <span class="logo-icon">🎾</span>
         <span class="logo-text">PADEL MANAGER</span>
       </div>
-      <h2>Bienvenido de nuevo</h2>
-      <p class="subtitle">Ingresa tus credenciales para acceder</p>
+      <h2>{{ showRecoverForm ? 'Recuperar Contraseña' : 'Bienvenido de nuevo' }}</h2>
+      <p class="subtitle">{{ showRecoverForm ? 'Ingresa tu correo para recibir instrucciones' : 'Ingresa tus
+        credenciales para acceder' }}</p>
     </div>
 
-    <div class="form-box">
+    <!-- Login Form -->
+    <div class="form-box" *ngIf="!showRecoverForm">
       <div class="input-group">
         <label>Correo Electrónico</label>
         <div class="input-wrapper">
@@ -34,7 +36,7 @@
           <input type="checkbox">
           Recordarme
         </label>
-        <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+        <a (click)="toggleRecoverMode()" class="forgot-link">¿Olvidaste tu contraseña?</a>
       </div>
 
       <button class="btn-login" (click)="login()" [disabled]="isLoading">
@@ -48,6 +50,34 @@
 
       <div class="register-prompt">
         ¿No tienes cuenta? <a (click)="goToRegister()">Regístrate aquí</a>
+      </div>
+    </div>
+
+    <!-- Recovery Form -->
+    <div class="form-box" *ngIf="showRecoverForm">
+      <div class="input-group">
+        <label>Correo Electrónico</label>
+        <div class="input-wrapper">
+          <input type="email" placeholder="nombre@ejemplo.com" [(ngModel)]="recoverEmail">
+          <span class="icon">✉️</span>
+        </div>
+      </div>
+
+      <button class="btn-login" (click)="sendRecovery()" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Enviar Instrucciones</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
+
+      <div *ngIf="recoverMessage" class="success-message">
+        {{ recoverMessage }}
+      </div>
+
+      <div *ngIf="recoverError" class="error-message">
+        {{ recoverError }}
+      </div>
+
+      <div class="register-prompt">
+        <a (click)="toggleRecoverMode()">Volver a Iniciar Sesión</a>
       </div>
     </div>
 

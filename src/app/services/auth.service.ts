@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://api.lamatek.cl';
+  private apiUrl = environment.apiUrl;
   private authToken = 'Bearer ' + btoa('1|padel_academy');
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -23,11 +24,15 @@ export class AuthService {
   }
 
   login(usuario: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login.php`, { usuario, password });
+    return this.http.post(`${this.apiUrl}/auth/login.php`, { usuario, password });
+  }
+
+  recoverPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/recover-password.php`, { email });
   }
 
   register(nombre: string, email: string, password: string, rol: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register.php`, {
+    return this.http.post(`${this.apiUrl}/auth/register.php`, {
       nombre,
       email,
       password,

@@ -57,21 +57,21 @@
       <!-- Charts Section -->
       <h3 class="section-title">Mi Rendimiento</h3>
       <div class="charts-grid"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 40px;">
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px;">
 
         <!-- Line Chart -->
         <div class="chart-container"
-          style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); height: 350px;">
+          style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); height: 350px; overflow: hidden;">
           <h4 style="margin: 0 0 16px; font-size: 14px; color: #666; text-transform: uppercase;">Evolución General</h4>
           <canvas id="progressChart"></canvas>
         </div>
 
         <!-- Radar Chart -->
         <div class="chart-container"
-          style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); height: 350px;">
+          style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); height: 350px; overflow: hidden;">
           <h4 style="margin: 0 0 16px; font-size: 14px; color: #666; text-transform: uppercase;">Habilidades (Última
             Evaluación)</h4>
-          <div style="height: 280px; display: flex; justify-content: center;">
+          <div style="height: 280px; display: flex; justify-content: center; position: relative;">
             <canvas id="radarChart"></canvas>
           </div>
         </div>

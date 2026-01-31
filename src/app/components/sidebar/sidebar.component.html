@@ -1,7 +1,17 @@
-<aside class="sidebar">
+<!-- Mobile Hamburger Button -->
+<button class="mobile-toggle-btn" (click)="toggleSidebar()">
+    <span class="icon">☰</span>
+</button>
+
+<!-- Overlay for mobile -->
+<div class="sidebar-overlay" [class.active]="isOpen" (click)="closeSidebar()"></div>
+
+<aside class="sidebar" [class.open]="isOpen">
     <div class="sidebar-header">
         <div class="logo-icon">🎾</div>
         <h2>PADEL MANAGER</h2>
+        <!-- Close button for mobile -->
+        <button class="close-btn" (click)="closeSidebar()">✕</button>
     </div>
 
     <nav class="sidebar-nav">

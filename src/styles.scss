@@ -2,6 +2,10 @@
    SHARED ADMIN LAYOUT STYLES
    ========================================== */
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -107,38 +111,35 @@ body {
 }
 
 /* Media Queries */
+/* Media Queries */
 @media (max-width: 768px) {
   .admin-layout {
     flex-direction: column;
-    height: auto;
-    overflow-y: auto;
-  }
-
-  .sidebar {
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 16px;
-    border-right: none;
-    border-bottom: 1px solid var(--card-border);
-    height: auto;
-
-    .sidebar-nav,
-    .sidebar-footer {
-      display: none;
-    }
+    height: 100vh;
+    /* Keep it 100vh but allow overflow validation */
+    overflow: hidden;
   }
 
   .main-content {
-    overflow: visible;
+    width: 100%;
+    overflow-x: hidden;
+    /* Prevent horizontal scroll */
+    padding-bottom: 80px;
+    padding-top: 80px;
+    /* Space for hamburger button */
+    /* Space for bottom nav if needed */
   }
 
   .top-header {
-    padding: 0 16px;
+    display: none;
   }
 
   .dashboard-grid {
-    padding: 20px 16px;
+    padding: 16px;
+    width: 100%;
+    margin: 0;
+    max-width: 100%;
+    /* Ensure it doesn't exceed screen */
   }
 }
 

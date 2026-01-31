@@ -18,6 +18,10 @@ export class LoginComponent {
   isLoading = false;
   error = '';
   showPassword = false;
+  showRecoverForm = false;
+  recoverEmail = '';
+  recoverMessage = '';
+  recoverError = '';
 
   constructor(
     private apiService: ApiService,
@@ -60,6 +64,39 @@ export class LoginComponent {
         console.error('Login error:', err);
         this.error = 'Error al iniciar sesión. Verifica tus credenciales.';
         this.isLoading = false;
+      }
+    });
+  }
+
+  toggleRecoverMode(): void {
+    this.showRecoverForm = !this.showRecoverForm;
+    this.error = '';
+    this.recoverError = '';
+    this.recoverMessage = '';
+  }
+
+  sendRecovery(): void {
+    if (!this.recoverEmail) {
+      this.recoverError = 'Ingresa tu correo electrónico';
+      return;
+    }
+
+    this.isLoading = true;
+    this.recoverError = '';
+    this.recoverMessage = '';
+
+    this.authService.recoverPassword(this.recoverEmail).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        if (res.success) {
+          this.recoverMessage = 'Instrucciones enviadas a tu correo.';
+        } else {
+          this.recoverError = res.message || 'No se pudo enviar el correo.';
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        this.recoverError = 'Error de conexión. Intenta más tarde.';
       }
     });
   }

@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AlumnoService {
-  private apiUrl = 'http://api.lamatek.cl';
+  private apiUrl = environment.apiUrl;
   private token = btoa('1|padel_academy');
 
   private headers = new HttpHeaders({

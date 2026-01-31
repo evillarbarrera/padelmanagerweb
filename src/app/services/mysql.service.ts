@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MysqlService {
-  private apiUrl = 'http://api.lamatek.cl';
+  private apiUrl = environment.apiUrl;
   private token = btoa('1|padel_academy');
 
   private headers = new HttpHeaders({
@@ -17,13 +19,13 @@ export class MysqlService {
   constructor(private http: HttpClient) { }
 
   getPerfil(usuarioId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/get_perfil.php?user_id=${usuarioId}`, {
+    return this.http.get(`${this.apiUrl}/user/get_perfil.php?user_id=${usuarioId}`, {
       headers: this.headers
     });
   }
 
   updatePerfil(usuarioId: number, data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/update_perfil.php`, {
+    return this.http.post(`${this.apiUrl}/user/update_perfil.php`, {
       user_id: usuarioId,
       ...data
     }, { headers: this.headers });
@@ -76,7 +78,7 @@ export class MysqlService {
       'Authorization': `Bearer ${this.token}`
     });
 
-    return this.http.post(`${this.apiUrl}/subir_foto.php`, formData, {
+    return this.http.post(`${this.apiUrl}/user/subir_foto.php`, formData, {
       headers: uploadHeaders
     });
   }

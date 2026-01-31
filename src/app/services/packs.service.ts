@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PacksService {
-  private apiUrl = 'http://api.lamatek.cl/packs';
+  private apiUrl = `${environment.apiUrl}/packs`;
   private token = btoa('1|padel_academy');
 
   private headers = new HttpHeaders({
@@ -52,7 +54,7 @@ export class PacksService {
 
   getInscripcionesGrupales(packId: number): Observable<any[]> {
     return this.http.get<any[]>(
-      `http://api.lamatek.cl/packs/get_inscripciones_grupales.php?pack_id=${packId}`,
+      `${environment.apiUrl}/packs/get_inscripciones_grupales.php?pack_id=${packId}`,
       { headers: this.headers }
     );
   }

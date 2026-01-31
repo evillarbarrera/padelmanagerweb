@@ -63,7 +63,7 @@ src/
 
 ## 🔐 Autenticación
 
-El sistema usa autenticación con usuario/contraseña contra la API en `http://api.lamatek.cl`
+El sistema usa autenticación con usuario/contraseña contra la API en `https://api.padelmanager.cl/api_training`
 
 **Token de acceso**: `Bearer 1|padel_academy`
 
@@ -125,7 +125,7 @@ El proyecto utiliza un diseño moderno inspirado en Nike Fitness con:
 
 ## 🔗 API Base URL
 
-`http://api.lamatek.cl`
+`https://api.padelmanager.cl/api_training`
 
 Todos los endpoints incluyen el header:
 ```

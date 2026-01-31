@@ -14,20 +14,27 @@ export class SidebarComponent implements OnInit {
     @Input() jugadorNombre: string = 'Usuario';
     @Input() jugadorFoto: string | null = null;
     @Input() activePage: string = '';
-    @Input() role: 'jugador' | 'entrenador' = 'jugador'; // Added role input
+    @Input() role: 'jugador' | 'entrenador' = 'jugador';
+
+    isOpen = false; // Mobile menu state
 
     constructor(private router: Router) { }
 
     ngOnInit() { }
 
-    // Navigation Helper
-    navigate(path: string) {
-        this.router.navigate([path]);
+    toggleSidebar() {
+        this.isOpen = !this.isOpen;
     }
 
-    // Role-specific navigations are handled in template via navigate()
-    // but keeping specific methods for backward compatibility if needed, 
-    // though generic navigate is cleaner for the template.
+    closeSidebar() {
+        this.isOpen = false;
+    }
+
+    // Navigation Helper
+    navigate(path: string) {
+        this.closeSidebar(); // Close on navigation
+        this.router.navigate([path]);
+    }
 
     logout() {
         localStorage.clear();
