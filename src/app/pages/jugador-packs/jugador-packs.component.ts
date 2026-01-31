@@ -178,20 +178,17 @@ export class JugadorPacksComponent implements OnInit {
     }
 
     comprarPack(pack: any): void {
-
-
         Swal.fire({
             title: '¿Confirmar compra?',
             text: `Vas a adquirir el pack "${pack.nombre}" por $${pack.precio}.`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Sí, comprar',
-            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Si',
+            cancelButtonText: 'No',
             confirmButtonColor: '#10b981',
-            cancelButtonColor: '#ef4444'
+            allowOutsideClick: false
         }).then((result) => {
             if (result.isConfirmed) {
-
                 this.procesarCompra(pack);
             }
         });
@@ -200,46 +197,41 @@ export class JugadorPacksComponent implements OnInit {
     procesarCompra(pack: any): void {
         if (!this.userId) return;
 
-        const data = {
-            jugador_id: this.userId,
-            pack_id: pack.id,
-            amount: pack.precio,
-            origin: 'https://padelmanager.cl/jugador-packs'
-        };
-
         Swal.fire({
             title: 'Procesando...',
-            text: 'Redirigiendo a Webpay (Simulado)',
+            text: 'Registrando compra...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
         });
 
-        this.alumnoService.initTransaction(data).subscribe({
-            next: (res: any) => {
-                if (res.token && res.url) {
-                    // Create Form and Submit
-                    const form = document.createElement('form');
-                    form.method = 'POST'; // Webpay calls are usually POST
-                    form.action = res.url;
+        // CLIENT-SIDE TOKEN GENERATION (Bypass Remote Mock Bank)
+        try {
+            const payload = JSON.stringify({
+                pack_id: pack.id,
+                jugador_id: this.userId,
+                origin: window.location.href.split('?')[0]
+            });
+            const token = btoa(payload);
+            const confirmUrl = 'https://api.padelmanager.cl/pagos/confirm_transaction.php';
 
-                    const inputToken = document.createElement('input');
-                    inputToken.type = 'hidden';
-                    inputToken.name = 'token_ws';
-                    inputToken.value = res.token;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = confirmUrl;
 
-                    form.appendChild(inputToken);
-                    document.body.appendChild(form);
-                    form.submit();
-                } else {
-                    Swal.fire('Error', 'No se pudo iniciar la transacción.', 'error');
-                }
-            },
-            error: (err) => {
-                console.error('Error init transaction:', err);
-                Swal.fire('Error', 'Error de comunicación con el servidor de pagos.', 'error');
-            }
-        });
+            const inputToken = document.createElement('input');
+            inputToken.type = 'hidden';
+            inputToken.name = 'token_ws';
+            inputToken.value = token;
+
+            form.appendChild(inputToken);
+            document.body.appendChild(form);
+            form.submit();
+        } catch (e) {
+            console.error('Error constructing purchase token', e);
+            Swal.fire('Error', 'No se pudo iniciar la compra.', 'error');
+        }
     }
+
 
     irAInicio(): void {
         this.router.navigate(['/jugador-home']);

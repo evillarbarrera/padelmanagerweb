@@ -62,6 +62,13 @@ export class MysqlService {
     }, { headers: this.headers });
   }
 
+  cancelarInscripcionGrupal(inscripcionId: number, jugadorId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/alumno/cancelar_inscripcion_grupal.php`, {
+      inscripcion_id: inscripcionId,
+      jugador_id: jugadorId
+    }, { headers: this.headers });
+  }
+
   cancelarReservaEntrenador(reservaId: number, entrenadorId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/entrenador/cancelar_reserva.php`, {
       reserva_id: reservaId,

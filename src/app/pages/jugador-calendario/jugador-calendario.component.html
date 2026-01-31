@@ -63,6 +63,7 @@
                 <th>Entrenador</th>
                 <th>Fecha</th>
                 <th>Horario</th>
+                <th>Modalidad</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -77,7 +78,14 @@
                   </div>
                 </td>
                 <td>{{ reserva.fecha | date: 'dd MMM yyyy' }}</td>
-                <td>{{ (reserva.hora_inicio | slice:0:5) }} - {{ (reserva.hora_fin | slice:0:5) }}</td>
+                <td>{{ (reserva.hora_inicio || reserva.hora || '') | slice:0:5 }} - {{ (reserva.hora_fin || '') |
+                  slice:0:5 }}</td>
+                <td>
+                  <span class="badge-modalidad" [class.grupal]="reserva.tipo === 'grupal'"
+                    [class.individual]="reserva.tipo !== 'grupal'">
+                    {{ (reserva.tipo === 'grupal') ? 'Grupal' : 'Individual' }}
+                  </span>
+                </td>
                 <td>
                   <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
                     {{ reserva.estado }}
@@ -85,7 +93,7 @@
                 </td>
                 <td>
                   <button class="btn-icon danger" title="Cancelar" (click)="cancelarReserva(reserva)"
-                    [disabled]="reserva.estado !== 'reservado'">
+                    [disabled]="reserva.estado !== 'reservado' && reserva.estado !== 'activo'">
                     ✕
                   </button>
                 </td>
@@ -97,7 +105,9 @@
             <div *ngFor="let reserva of paginatedReservas" class="reserva-card-mobile">
               <div class="card-header-mobile">
                 <span class="date">{{ reserva.fecha | date: 'dd MMM' }}</span>
-                <span class="status-badge" [class]="reserva.estado?.toLowerCase()">{{ reserva.estado }}</span>
+                <span class="badge-modalidad-mobile" [class.grupal]="reserva.tipo === 'grupal'">
+                  {{ (reserva.tipo === 'grupal') ? '👥 Grupal' : '👤 Indiv.' }}
+                </span>
               </div>
               <div class="card-body-mobile">
                 <h3>{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</h3>

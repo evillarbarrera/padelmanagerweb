@@ -152,8 +152,8 @@ export class EntrenadorPacksComponent implements OnInit {
       showCancelButton: true,
       confirmButtonColor: '#000',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: 'Si',
+      cancelButtonText: 'No'
     }).then((result) => {
       if (result.isConfirmed) {
         this.packsService.eliminarPack(packId).subscribe({

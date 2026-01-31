@@ -200,8 +200,8 @@ export class JugadorReservasComponent implements OnInit {
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, reservar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: 'Si',
+      cancelButtonText: 'No'
     }).then((result) => {
       if (result.isConfirmed) {
         // Validar que exista un pack seleccionado con cupo

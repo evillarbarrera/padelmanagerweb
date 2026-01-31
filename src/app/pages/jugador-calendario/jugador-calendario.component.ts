@@ -138,31 +138,39 @@ export class JugadorCalendarioComponent implements OnInit {
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, cancelar',
-      cancelButtonText: 'No, mantener'
+      confirmButtonText: 'Si',
+      cancelButtonText: 'No'
     }).then((result) => {
       if (result.isConfirmed) {
-        if (!this.userId) return; // Paranoia check
-        this.mysqlService.cancelarReserva(id, this.userId).subscribe({
-          next: () => {
-            Swal.fire(
-              '¡Cancelada!',
-              'Tu reserva ha sido cancelada.',
-              'success'
-            );
-            this.loadReservas();
-          },
-          error: (err: any) => {
-            console.error('Error canceling reservation:', err);
-            // Verify if it is a 400 to give a better message
-            const msg = err.status === 400 ? 'Datos incorrectos (400). ID inválido.' : 'No se pudo cancelar la reserva.';
-            Swal.fire(
-              'Error',
-              msg,
-              'error'
-            );
-          }
-        });
+        if (!this.userId) return;
+
+        // Check if it is a group reservation
+        if (reserva.tipo === 'grupal' || reserva.inscripcion_id) {
+          const inscId = reserva.inscripcion_id || id;
+          this.mysqlService.cancelarInscripcionGrupal(inscId, this.userId).subscribe({
+            next: (res) => {
+              Swal.fire('¡Cancelada!', res.message || 'Tu cupo ha sido liberado.', 'success');
+              this.loadReservas();
+            },
+            error: (err) => {
+              console.error('Error canceling group:', err);
+              Swal.fire('Error', err.error?.error || 'No se pudo cancelar.', 'error');
+            }
+          });
+        } else {
+          // Individual Reservation
+          this.mysqlService.cancelarReserva(id, this.userId).subscribe({
+            next: () => {
+              Swal.fire('¡Cancelada!', 'Tu reserva ha sido cancelada.', 'success');
+              this.loadReservas();
+            },
+            error: (err: any) => {
+              console.error('Error canceling reservation:', err);
+              const msg = err.error?.error || 'No se pudo cancelar la reserva.';
+              Swal.fire('Error', msg, 'error');
+            }
+          });
+        }
       }
     });
   }

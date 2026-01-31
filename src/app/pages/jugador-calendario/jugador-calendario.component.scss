@@ -208,24 +208,48 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border: 1px solid transparent; // Clean edges
+      border: 1px solid transparent;
 
       &.reservado {
-        background: rgba(34, 197, 94, 0.1); // Green tint
-        color: #16a34a; // Green 600
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
         border-color: rgba(34, 197, 94, 0.2);
       }
 
       &.cancelado {
-        background: rgba(239, 68, 68, 0.1); // Red tint
-        color: #ef4444; // Red 500
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
         border-color: rgba(239, 68, 68, 0.2);
       }
 
       &.completado {
-        background: #f1f5f9; // Slate 100
-        color: #64748b; // Slate 500
+        background: #f1f5f9;
+        color: #64748b;
         border-color: #e2e8f0;
+      }
+    }
+
+    .badge-modalidad {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &.grupal {
+        background: rgba(139, 92, 246, 0.1);
+        color: #7c3aed;
+        /* Violet */
+        border: 1px solid rgba(139, 92, 246, 0.2);
+      }
+
+      &.individual {
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+        /* Blue */
+        border: 1px solid rgba(59, 130, 246, 0.2);
       }
     }
 
@@ -383,6 +407,19 @@
         font-weight: 600;
         color: var(--text-secondary);
         font-size: 13px;
+      }
+
+      .badge-modalidad-mobile {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 4px;
+
+        &.grupal {
+          color: #7c3aed;
+          background: rgba(139, 92, 246, 0.1);
+        }
       }
     }
 

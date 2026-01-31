@@ -145,8 +145,8 @@ export class EntrenadorAgendaComponent implements OnInit {
       showCancelButton: true,
       confirmButtonColor: '#000',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'SÍ, CANCELAR',
-      cancelButtonText: 'VOLVER'
+      confirmButtonText: 'Si',
+      cancelButtonText: 'No'
     }).then((result) => {
       if (result.isConfirmed) {
         this.ejecutarCancelacion(item);
