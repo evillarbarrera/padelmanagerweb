@@ -72,9 +72,9 @@
               <tr *ngFor="let reserva of paginatedReservas">
                 <td>
                   <div class="user-cell">
-                    <div class="avatar-small">{{ reserva.nombre_entrenador?.charAt(0) ||
-                      reserva.entrenador_nombre?.charAt(0) || 'E' }}</div>
-                    <span class="font-medium">{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</span>
+                    <img class="avatar-small" [src]="reserva.entrenador_foto || 'assets/images/placeholder_avatar.png'"
+                      style="object-fit: cover;">
+                    <span class="font-medium">{{ reserva.entrenador_nombre }}</span>
                   </div>
                 </td>
                 <td>{{ reserva.fecha | date: 'dd MMM yyyy' }}</td>
@@ -83,17 +83,29 @@
                 <td>
                   <span class="badge-modalidad" [class.grupal]="reserva.tipo === 'grupal'"
                     [class.individual]="reserva.tipo !== 'grupal'">
-                    {{ (reserva.tipo === 'grupal') ? 'Grupal' : 'Individual' }}
+                    <ng-container *ngIf="reserva.tipo === 'grupal'">
+                      👥 Grupal ({{ reserva.cupos_ocupados }}/{{ reserva.capacidad_maxima }})
+                    </ng-container>
+                    <ng-container *ngIf="reserva.tipo !== 'grupal'">
+                      👤 Individual
+                    </ng-container>
                   </span>
                 </td>
                 <td>
-                  <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
-                    {{ reserva.estado }}
-                  </span>
+                  <ng-container *ngIf="reserva.tipo === 'grupal'">
+                    <span class="status-badge" [class]="reserva.estado_grupo?.toLowerCase()">
+                      {{ reserva.estado_grupo === 'activo' ? '🔥 Activada' : '⏳ Pendiente' }}
+                    </span>
+                  </ng-container>
+                  <ng-container *ngIf="reserva.tipo !== 'grupal'">
+                    <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
+                      {{ reserva.estado }}
+                    </span>
+                  </ng-container>
                 </td>
                 <td>
                   <button class="btn-icon danger" title="Cancelar" (click)="cancelarReserva(reserva)"
-                    [disabled]="reserva.estado !== 'reservado' && reserva.estado !== 'activo'">
+                    [disabled]="reserva.estado !== 'reservado' && reserva.estado !== 'activo' && reserva.estado !== 'pendiente'">
                     ✕
                   </button>
                 </td>
@@ -106,12 +118,25 @@
               <div class="card-header-mobile">
                 <span class="date">{{ reserva.fecha | date: 'dd MMM' }}</span>
                 <span class="badge-modalidad-mobile" [class.grupal]="reserva.tipo === 'grupal'">
-                  {{ (reserva.tipo === 'grupal') ? '👥 Grupal' : '👤 Indiv.' }}
+                  {{ (reserva.tipo === 'grupal') ? '👥 Grupal (' + reserva.cupos_ocupados + '/' +
+                  reserva.capacidad_maxima + ')' : '👤 Individual' }}
                 </span>
               </div>
               <div class="card-body-mobile">
                 <h3>{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</h3>
                 <p>{{ reserva.hora_inicio | slice:0:5 }} - {{ reserva.hora_fin | slice:0:5 }}</p>
+                <div class="status-mobile" style="margin-top: 8px;">
+                  <ng-container *ngIf="reserva.tipo === 'grupal'">
+                    <span class="status-badge" [class]="reserva.estado_grupo?.toLowerCase()">
+                      {{ reserva.estado_grupo === 'activo' ? '🔥 Activada' : '⏳ Pendiente' }}
+                    </span>
+                  </ng-container>
+                  <ng-container *ngIf="reserva.tipo !== 'grupal'">
+                    <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
+                      {{ reserva.estado }}
+                    </span>
+                  </ng-container>
+                </div>
               </div>
               <div class="card-actions-mobile">
                 <button class="btn-text danger" (click)="cancelarReserva(reserva)">Cancelar</button>

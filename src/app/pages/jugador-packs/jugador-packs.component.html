@@ -64,7 +64,10 @@
             <div class="packs-grid" *ngIf="packsFiltrados.length > 0; else noPacks">
                 <div class="pack-card" *ngFor="let pack of packsFiltrados">
                     <div class="pack-type" [ngClass]="pack.tipo">
-                        {{ pack.tipo === 'individual' ? 'Individual' : 'Grupal' }}
+                        <span *ngIf="pack.cantidad_personas > 1">PACK {{ pack.cantidad_personas }} JUGADORES</span>
+                        <span *ngIf="!pack.cantidad_personas || pack.cantidad_personas <= 1">
+                            {{ pack.tipo === 'individual' ? 'Individual' : 'Grupal' }}
+                        </span>
                     </div>
 
                     <div class="pack-icon">
@@ -83,12 +86,18 @@
                     </div>
 
                     <div class="pack-price">
-                        ${{ pack.precio }}<span>/pack</span>
+                        ${{ pack.precio | number:'1.0-0':'es' }}<span>/pack</span>
                     </div>
 
                     <ul class="pack-details">
                         <li><strong>{{ pack.sesiones_totales }}</strong> Clases incluídas</li>
-
+                        <li *ngIf="pack.cantidad_personas > 1"><strong>Válido para {{ pack.cantidad_personas }}
+                                jugadores</strong></li>
+                        <li *ngIf="!pack.cantidad_personas || pack.cantidad_personas <= 1">Uso personal (1 jugador)</li>
+                        <li>
+                            Horario: <strong>{{ pack.rango_horario_inicio ? (pack.rango_horario_inicio | slice:0:5) + '
+                                a ' + (pack.rango_horario_fin | slice:0:5) : 'Sin restricción' }}</strong>
+                        </li>
                         <li>Acceso a reservas online</li>
                     </ul>
 

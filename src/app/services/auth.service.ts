@@ -31,6 +31,18 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/recover-password.php`, { email });
   }
 
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/reset-password.php`, { token, password });
+  }
+
+  getInvitationInfo(token: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/alumno/get_invitacion_info.php?token=${token}`);
+  }
+
+  aceptarInvitacion(token: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/alumno/aceptar_invitacion.php`, { token });
+  }
+
   register(nombre: string, email: string, password: string, rol: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/auth/register.php`, {
       nombre,

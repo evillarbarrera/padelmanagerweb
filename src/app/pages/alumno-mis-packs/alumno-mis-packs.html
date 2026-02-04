@@ -1,0 +1,145 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="jugadorNombre" [jugadorFoto]="jugadorFoto" [role]="'jugador'"
+        activePage="mis-packs-activos">
+    </app-sidebar>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="breadcrumbs">
+                <span>Panel de Jugador</span>
+                <span class="separator">/</span>
+                <span class="current">Mis Packs & Créditos</span>
+            </div>
+
+            <div class="user-profile frc">
+                <div class="user-info">
+                    <span class="name">{{ jugadorNombre }}</span>
+                    <span class="role">Jugador</span>
+                </div>
+                <div class="avatar-circle">
+                    <img *ngIf="jugadorFoto" [src]="jugadorFoto"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    <span *ngIf="!jugadorFoto">{{ jugadorNombre.charAt(0) }}</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+
+            <!-- Standard Page Header -->
+            <div class="page-header">
+                <h2 class="section-title">Mis Packs Activos</h2>
+                <button class="add-btn" (click)="irAComprar()">
+                    + Comprar Nuevos Packs
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-state" *ngIf="isLoading">
+                <div class="spinner"></div>
+                <p>Cargando tus packs...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!isLoading && packs.length === 0" class="empty-state">
+                <div class="empty-icon">🎫</div>
+                <p>No tienes packs activos actualmente.</p>
+                <button class="btn-primary" (click)="irAComprar()">Explorar Packs</button>
+            </div>
+
+            <!-- Packs List -->
+            <div class="packs-grid" *ngIf="!isLoading && packs.length > 0">
+                <div class="pack-card animate-up" *ngFor="let pack of packs; let i = index"
+                    [style.animation-delay]="(i * 0.05) + 's'" [class.grupal]="pack.cantidad_personas > 1">
+
+                    <div class="pack-header">
+                        <h3>{{ pack.pack_nombre }}</h3>
+                        <span class="pack-badge" [class.grupal-badge]="pack.cantidad_personas > 1">
+                            {{ pack.cantidad_personas > 1 ? 'PACK ' + pack.cantidad_personas + ' JUGADORES' :
+                            'INDIVIDUAL' }}
+                        </span>
+                    </div>
+
+                    <div class="pack-body">
+                        <div class="info-row">
+                            <span class="label">Clases Usadas:</span>
+                            <span class="val">{{ pack.sesiones_usadas }} / {{ pack.sesiones_totales }}</span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill"
+                                [style.width.%]="(pack.sesiones_usadas / pack.sesiones_totales) * 100">
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="label">Horario:</span>
+                            <span class="val">{{ pack.rango_horario_inicio ? (pack.rango_horario_inicio | slice:0:5) + '
+                                - ' + (pack.rango_horario_fin | slice:0:5) : 'Sin restricción' }}</span>
+                        </div>
+
+                        <!-- Team Management for Multi-player Packs -->
+                        <div class="team-section" *ngIf="pack.cantidad_personas > 1">
+                            <div class="team-header">
+                                <h4>Mi Equipo ({{ (pack.invitados?.length || 0) + 1 }}/{{ pack.cantidad_personas }})
+                                </h4>
+                            </div>
+
+                            <div class="team-members">
+                                <!-- Me -->
+                                <div class="member-chip me">
+                                    <span class="avatar">{{ jugadorNombre.charAt(0) }}</span>
+                                    <span class="name">Yo (Titular)</span>
+                                </div>
+
+                                <!-- Guests -->
+                                <div class="member-chip guest" *ngFor="let invitado of pack.invitados"
+                                    [class.pending]="invitado.estado === 'pendiente'">
+                                    <span class="avatar">{{ invitado.nombre.charAt(0) }}</span>
+                                    <span class="name">
+                                        {{ invitado.nombre }}
+                                        <small *ngIf="invitado.estado === 'pendiente'"
+                                            style="color: #ff9800; display: block; font-size: 0.7rem;">(Pendiente)</small>
+                                    </span>
+                                </div>
+
+                                <!-- Add Button -->
+                                <button class="add-member-btn"
+                                    *ngIf="(pack.invitados?.length || 0) + 1 < pack.cantidad_personas"
+                                    (click)="abrirModalInvitacion(pack)">
+                                    + Agregar
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal Invitación -->
+<div class="modal-overlay" *ngIf="showModalInvitacion">
+    <div class="modal-content animate-pop">
+        <div class="modal-header">
+            <h3>Agregar Compañero</h3>
+            <button class="close-btn" (click)="cerrarModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <p>Invita a un amigo para compartir este pack. Debe estar registrado en la App.</p>
+
+            <div class="form-group">
+                <label>Email del Jugador</label>
+                <input [(ngModel)]="emailInvitado" type="email" placeholder="ejemplo@correo.com" class="form-input" />
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+                <button class="btn-confirm" (click)="enviarInvitacion()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>

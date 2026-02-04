@@ -12,17 +12,27 @@ import { EntrenadorPacksComponent } from './pages/entrenador-packs/entrenador-pa
 import { DisponibilidadEntrenadorComponent } from './pages/disponibilidad-entrenador/disponibilidad-entrenador.component';
 import { LandingComponent } from './pages/landing/landing.component';
 import { JugadorPacksComponent } from './pages/jugador-packs/jugador-packs.component';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
+import { AceptarInvitacionComponent } from './pages/aceptar-invitacion/aceptar-invitacion.component';
+import { EntrenadorAgendarComponent } from './pages/entrenador-agendar/entrenador-agendar.component';
 
 export const routes: Routes = [
-  { path: '', component: LandingComponent },
+  { path: 'unete', component: AceptarInvitacionComponent },
+  { path: 'entrenador-agendar', component: EntrenadorAgendarComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: '', component: LandingComponent, pathMatch: 'full' },
 
   // Student Routes
   { path: 'jugador-home', component: JugadorHomeComponent },
   { path: 'jugador-reservas', component: JugadorReservasComponent },
   { path: 'jugador-calendario', component: JugadorCalendarioComponent },
   { path: 'jugador-packs', component: JugadorPacksComponent },
+  {
+    path: 'mis-habilidades',
+    loadComponent: () => import('./pages/mis-habilidades/mis-habilidades.component').then(m => m.MisHabilidadesComponent)
+  },
 
   // Trainer Routes
   { path: 'entrenador-home', component: EntrenadorHomeComponent },
@@ -40,6 +50,15 @@ export const routes: Routes = [
   {
     path: 'progreso/:id',
     loadComponent: () => import('./pages/alumno-progreso/alumno-progreso.component').then(m => m.AlumnoProgresoComponent)
+  },
+  {
+    path: 'mis-packs-activos',
+    loadComponent: () => import('./pages/alumno-mis-packs/alumno-mis-packs').then(m => m.AlumnoMisPacks)
+  },
+
+  {
+    path: 'mantenimiento',
+    loadComponent: () => import('./pages/mantenimiento/mantenimiento.component').then(m => m.MantenimientoComponent)
   },
 
   { path: '**', redirectTo: '' }

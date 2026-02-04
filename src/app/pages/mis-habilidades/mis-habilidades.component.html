@@ -1,0 +1,80 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="jugadorNombre" [jugadorFoto]="jugadorFoto" activePage="habilidades">
+    </app-sidebar>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="breadcrumbs">
+                <span>Mi Panel</span>
+                <span class="separator">/</span>
+                <span class="current">Mis Habilidades</span>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Header section -->
+            <div class="page-intro">
+                <h1>Tu Rendimiento 🎾</h1>
+                <p>Analiza tu evolución técnica y repasa tus mejores jugadas.</p>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-row" *ngIf="!isLoading && hasData">
+                <div class="card chart-card">
+                    <div class="card-title">Distribución Técnica</div>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-title">Evolución de Promedio</div>
+                    <div class="chart-container">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty Stats -->
+            <div class="card empty-card" *ngIf="!isLoading && !hasData">
+                <div class="icon">📈</div>
+                <h3>Aún no tienes evaluaciones</h3>
+                <p>Tus gráficos aparecerán cuando tu entrenador realice tu primera evaluación técnica.</p>
+            </div>
+
+            <!-- Videos Section -->
+            <div class="videos-section" *ngIf="!isLoading">
+                <div class="section-title">
+                    <h2>🎬 Videos de Entrenamiento</h2>
+                    <p>Revisiones enviadas por tu coach</p>
+                </div>
+
+                <div class="videos-grid" *ngIf="videos.length > 0; else noVideos">
+                    <div class="video-card card" *ngFor="let vid of videos">
+                        <div class="video-container">
+                            <video [src]="vid.video_url" controls preload="metadata" playsinline></video>
+                        </div>
+                        <div class="video-info">
+                            <h4>{{ vid.titulo || 'Entrenamiento' }}</h4>
+                            <span class="date">{{ vid.fecha | date:'dd/MM/yyyy' }}</span>
+                            <p class="comment" *ngIf="vid.comentario">{{ vid.comentario }}</p>
+                            <span class="coach-tag">Enviado por {{ vid.entrenador_nombre }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <ng-template #noVideos>
+                    <div class="card empty-card mini">
+                        <p>No tienes videos guardados todavía.</p>
+                    </div>
+                </ng-template>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-overlay" *ngIf="isLoading">
+                <div class="spinner"></div>
+                <p>Analizando rendimiento...</p>
+            </div>
+        </div>
+    </main>
+</div>

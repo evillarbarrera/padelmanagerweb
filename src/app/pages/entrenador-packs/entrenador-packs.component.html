@@ -125,6 +125,31 @@
             </div>
 
             <!-- Description -->
+            <!-- Time range (Valid Hours) -->
+            <div class="form-group span-2" *ngIf="nuevoPack.tipo === 'individual'">
+              <div class="flex-row gap-2" style="margin-bottom: 20px;">
+                <div class="half-width">
+                  <label>Cantidad Personas</label>
+                  <p class="helper-text">Ej: 2 para Pack Dupla.</p>
+                  <input [(ngModel)]="nuevoPack.cantidad_personas" name="cant_personas" type="number" min="1"
+                    class="form-input" />
+                </div>
+              </div>
+
+              <label>Rango Horario Permitido (Opcional)</label>
+              <p class="helper-text">Si llenas esto, el alumno solo podrá reservar clases dentro de este horario.</p>
+              <div class="flex-row gap-2">
+                <div class="half-width">
+                  <label class="sub-label">Desde</label>
+                  <input [(ngModel)]="nuevoPack.rango_horario_inicio" name="r_inicio" type="time" class="form-input" />
+                </div>
+                <div class="half-width">
+                  <label class="sub-label">Hasta</label>
+                  <input [(ngModel)]="nuevoPack.rango_horario_fin" name="r_fin" type="time" class="form-input" />
+                </div>
+              </div>
+            </div>
+
             <div class="form-group span-full">
               <label>Descripción</label>
               <textarea [(ngModel)]="nuevoPack.descripcion" name="descripcion" placeholder="Detalles del pack..."
@@ -153,43 +178,43 @@
       <!-- Packs List -->
       <div class="packs-grid" *ngIf="!isLoading && packsFiltrados.length > 0">
         <div class="pack-card animate-up" *ngFor="let pack of packsFiltrados; let i = index"
-          [style.animation-delay]="(i * 0.05) + 's'" [class.grupal]="pack.tipo === 'grupal'">
+          [style.animation-delay]="(i * 0.05) + 's'">
 
-          <div class="pack-header">
-            <h3>{{ pack.nombre }}</h3>
-            <span class="pack-badge" [class.grupal-badge]="pack.tipo === 'grupal'">
-              {{ pack.tipo | uppercase }}
+          <div class="pack-type" [ngClass]="pack.tipo">
+            <span *ngIf="pack.cantidad_personas > 1">PACK {{ pack.cantidad_personas }} JUGADORES</span>
+            <span *ngIf="!pack.cantidad_personas || pack.cantidad_personas <= 1">
+              {{ pack.tipo === 'individual' ? 'Individual' : 'Grupal' }}
             </span>
           </div>
 
-          <div class="pack-body">
-            <div class="info-row">
-              <span class="label">Sesiones:</span>
-              <span class="val">{{ pack.sesiones_totales }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Duración:</span>
-              <span class="val">{{ pack.duracion_sesion_min }} min</span>
-            </div>
-
-            <!-- Group Info -->
-            <div class="group-info" *ngIf="pack.tipo === 'grupal'">
-              <div class="info-row">
-                <span class="label">Cupos:</span>
-                <span class="val status-indicator"
-                  [ngClass]="{'full': pack.cupos_ocupados >= pack.capacidad_maxima, 'open': pack.cupos_ocupados < pack.capacidad_maxima}">
-                  {{ pack.cupos_ocupados || 0 }} / {{ pack.capacidad_maxima }}
-                </span>
-              </div>
-              <div class="info-row">
-                <span class="label">Horario:</span>
-                <span class="val">{{ pack.hora_inicio | slice:0:5 }}</span>
-              </div>
-            </div>
-
-            <div class="price-tag">${{ pack.precio | number }}</div>
-            <p class="desc" *ngIf="pack.descripcion">{{ pack.descripcion }}</p>
+          <div class="pack-icon">
+            <span *ngIf="pack.sesiones_totales > 10">🏆</span>
+            <span *ngIf="pack.sesiones_totales <= 10 && pack.sesiones_totales > 5">⚡</span>
+            <span *ngIf="pack.sesiones_totales <= 5">🎾</span>
           </div>
+
+          <h2 class="pack-title">{{ pack.nombre }}</h2>
+
+          <div class="pack-price">
+            ${{ pack.precio | number:'1.0-0':'es' }}<span>/pack</span>
+          </div>
+
+          <ul class="pack-details">
+            <li><strong>{{ pack.sesiones_totales }}</strong> Clases incluídas</li>
+            <li *ngIf="pack.cantidad_personas > 1"><strong>Válido para {{ pack.cantidad_personas }} jugadores</strong>
+            </li>
+            <li *ngIf="!pack.cantidad_personas || pack.cantidad_personas <= 1">Uso personal (1 jugador)</li>
+            <li>
+              Horario: <strong>{{ pack.rango_horario_inicio ? (pack.rango_horario_inicio | slice:0:5) + ' a ' +
+                (pack.rango_horario_fin | slice:0:5) : 'Sin restricción' }}</strong>
+            </li>
+            <li *ngIf="pack.tipo === 'grupal'">
+              Cupos: <strong
+                [ngClass]="{'full': pack.cupos_ocupados >= pack.capacidad_maxima, 'open': pack.cupos_ocupados < pack.capacidad_maxima}">
+                {{ pack.cupos_ocupados || 0 }} / {{ pack.capacidad_maxima }}
+              </strong>
+            </li>
+          </ul>
 
           <div class="pack-footer">
             <button class="action-btn edit" (click)="editarPack(pack)">Editar</button>

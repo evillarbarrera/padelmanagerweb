@@ -52,9 +52,16 @@ export class LandingComponent implements OnInit {
       return;
     }
 
-    this.isAuthenticated = true;
-    this.userRole = userRole as 'jugador' | 'entrenador';
-    this.cargarDatos();
+    // Redirect to the actual home page based on role
+    if (userRole === 'jugador') {
+      this.router.navigate(['/jugador-home']);
+    } else if (userRole === 'entrenador') {
+      this.router.navigate(['/entrenador-home']);
+    } else {
+      this.isAuthenticated = true;
+      this.userRole = userRole as 'jugador' | 'entrenador';
+      this.cargarDatos();
+    }
   }
 
   cargarDatos(): void {

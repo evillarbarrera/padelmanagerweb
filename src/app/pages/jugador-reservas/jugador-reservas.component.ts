@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { EntrenamientoService } from '../../services/entrenamientos.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PopupService } from '../../services/popup.service';
 
 @Component({
   selector: 'app-jugador-reservas',
@@ -31,11 +31,14 @@ export class JugadorReservasComponent implements OnInit {
   horariosPorDia: { [key: string]: any[] } = {};
   dias: string[] = [];
   diaSeleccionado: string = '';
+  recurrencia: number = 1;
+  showCoachPicker: boolean = false; // New: for custom picker
 
   constructor(
     private mysqlService: MysqlService,
     private entrenamientoService: EntrenamientoService,
-    private router: Router
+    private router: Router,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -57,7 +60,7 @@ export class JugadorReservasComponent implements OnInit {
           this.jugadorFoto = res.user.foto_perfil || res.user.foto || null;
         }
       },
-      error: (err) => console.error('Error loading profile:', err)
+      error: (err: any) => console.error('Error loading profile:', err)
     });
   }
 
@@ -104,31 +107,50 @@ export class JugadorReservasComponent implements OnInit {
     this.packsDelEntrenador = this.packs.filter(p => {
       const isTrainer = Number(p.entrenador_id) === Number(this.selectedEntrenador);
       const hasSessions = Number(p.sesiones_restantes) > 0;
+      // Filter out group packs (keep only individual or those with capacity <= 1)
+      const isIndividual = p.tipo === 'individual' || Number(p.cantidad_personas || 1) <= 1;
 
-      return isTrainer && hasSessions;
+      return isTrainer && hasSessions && isIndividual;
     });
 
 
 
-    // Sort by fecha_compra_pack ASC (oldest first)
+    // Sort by fecha_compra_pack DESC (newest first)
     this.packsDelEntrenador.sort((a, b) => {
       const dateA = new Date(a.fecha_compra_pack).getTime();
       const dateB = new Date(b.fecha_compra_pack).getTime();
-      return dateA - dateB;
+      return dateB - dateA;
     });
 
     // Auto-select the first pack if available
     if (this.packsDelEntrenador.length > 0) {
       this.selectedPack = this.packsDelEntrenador[0];
+      console.log("Pack Seleccionado ID:", this.selectedPack.pack_id);
     } else {
       this.selectedPack = null;
     }
 
-    this.entrenamientoService.getDisponibilidadEntrenador(this.selectedEntrenador).subscribe({
+    const packId = this.selectedPack ? this.selectedPack.pack_id : undefined;
+
+    this.entrenamientoService.getDisponibilidadEntrenador(this.selectedEntrenador!, packId).subscribe({
       next: (res: any) => {
         this.generarBloquesHorarios(res);
       },
       error: (err: any) => console.error('Error loading availability:', err)
+    });
+  }
+
+  onPackChange(): void {
+    if (!this.selectedPack || !this.selectedEntrenador) return;
+
+    const packId = this.selectedPack.pack_id;
+    console.log("Cambio de Pack - Nuevo ID:", packId);
+
+    this.entrenamientoService.getDisponibilidadEntrenador(this.selectedEntrenador!, packId).subscribe({
+      next: (res: any) => {
+        this.generarBloquesHorarios(res);
+      },
+      error: (err: any) => console.error('Error loading availability after pack change:', err)
     });
   }
 
@@ -193,74 +215,39 @@ export class JugadorReservasComponent implements OnInit {
   reservarHorario(horario: any): void {
     if (horario.ocupado) return;
 
-    Swal.fire({
-      title: '¿Confirmar Reserva?',
-      text: `Clase para el ${horario.fecha} a las ${horario.hora_inicio.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Si',
-      cancelButtonText: 'No'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Validar que exista un pack seleccionado con cupo
-        // Validar que exista un pack seleccionado con cupo
+    const msgRecurrencia = this.recurrencia > 1 ? ` por ${this.recurrencia} semanas` : '';
+    this.popupService.confirm(
+      '¿Confirmar Reserva?',
+      `Clase para el ${horario.fecha} a las ${horario.hora_inicio.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${msgRecurrencia}`
+    ).then((confirmed) => {
+      if (confirmed) {
         if (!this.selectedPack) {
-          // Debug info for user
-          const trainerId = Number(this.selectedEntrenador);
-          const totalPacks = this.packs.length;
-          const trainerPacks = this.packs.filter(p => p.entrenador_id == trainerId).length;
-          const validPacks = this.packs.filter(p => p.entrenador_id == trainerId && p.sesiones_restantes > 0).length;
-
-          const firstPack = this.packs.find(p => p.entrenador_id == trainerId);
-          Swal.fire({
-            title: 'Sin cupos disponibles',
-            text: 'No tienes un pack activo con sesiones disponibles para este entrenador.',
-            icon: 'error'
-          });
+          this.popupService.error('Sin cupos disponibles', 'No tienes un pack activo con sesiones disponibles.');
           return;
         }
 
-        // Proceed with booking
-        const bookingPackId = this.selectedPack.pack_id;
-
         const payload = {
           entrenador_id: this.selectedEntrenador,
-          pack_id: bookingPackId,
-          // Sending pack_jugador_id might be necessary if the API supports it to debit the exact pack.
-          // If not, the backend likely decrements any valid pack or the oldest one automatically?
-          // The USER REQUEST says "tomar el pack mas antiguo para asociarlo a la reserva".
-          // If I select it here, I should probably send its specific ID if the API allows.
-          // Since I can't check `reservas.php`, I will inject `pack_jugador_id` into the payload
-          // IF the service/backend accepts extra fields. It's safer to add it.
-          pack_jugador_id: this.selectedPack ? this.selectedPack.pack_jugador_id : null,
+          pack_id: this.selectedPack.pack_id,
+          pack_jugador_id: this.selectedPack.pack_jugador_id,
           fecha: horario.fecha,
           hora_inicio: horario.hora_inicio.toTimeString().slice(0, 5),
           hora_fin: horario.hora_fin.toTimeString().slice(0, 5),
           jugador_id: this.userId,
-          estado: 'reservado'
+          estado: 'reservado',
+          recurrencia: this.recurrencia
         };
 
         this.entrenamientoService.crearReserva(payload).subscribe({
           next: () => {
-            Swal.fire({
-              title: '¡Reservado!',
-              text: 'Tu clase ha sido agendada con éxito.',
-              icon: 'success',
-              timer: 2000,
-              showConfirmButton: false
+            this.popupService.success('¡Reservado!', 'Tu clase ha sido agendada con éxito.').then(() => {
+              this.router.navigate(['/jugador-calendario']);
             });
-            this.onEntrenadorChange(); // Refresh availability
-            this.router.navigate(['/jugador-calendario']); // Redirect to Calendar/My Bookings
+            this.onEntrenadorChange();
           },
           error: (err: any) => {
             console.error('Error creating reservation:', err);
-            Swal.fire({
-              title: 'Error',
-              text: 'Hubo un problema al crear la reserva. Inténtalo de nuevo.',
-              icon: 'error'
-            });
+            this.popupService.error('Error', 'Hubo un problema al crear la reserva.');
           }
         });
       }

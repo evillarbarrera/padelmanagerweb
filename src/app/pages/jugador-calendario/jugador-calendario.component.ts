@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PopupService } from '../../services/popup.service';
 
 @Component({
   selector: 'app-jugador-calendario',
@@ -32,7 +32,8 @@ export class JugadorCalendarioComponent implements OnInit {
 
   constructor(
     private mysqlService: MysqlService,
-    private router: Router
+    private router: Router,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -127,21 +128,15 @@ export class JugadorCalendarioComponent implements OnInit {
 
     if (!id) {
       console.error('No se encontró ID válido para cancelar:', reserva);
-      Swal.fire('Error', 'No se pudo identificar la reserva. Contacta a soporte.', 'error');
+      this.popupService.error('Error', 'No se pudo identificar la reserva. Contacta a soporte.');
       return;
     }
 
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: "Cancelarás tu reserva y dejarás el horario libre.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Si',
-      cancelButtonText: 'No'
-    }).then((result) => {
-      if (result.isConfirmed) {
+    this.popupService.confirm(
+      '¿Estás seguro?',
+      "Cancelarás tu reserva y dejarás el horario libre."
+    ).then((result) => {
+      if (result) {
         if (!this.userId) return;
 
         // Check if it is a group reservation
@@ -149,25 +144,25 @@ export class JugadorCalendarioComponent implements OnInit {
           const inscId = reserva.inscripcion_id || id;
           this.mysqlService.cancelarInscripcionGrupal(inscId, this.userId).subscribe({
             next: (res) => {
-              Swal.fire('¡Cancelada!', res.message || 'Tu cupo ha sido liberado.', 'success');
+              this.popupService.success('¡Cancelada!', res.message || 'Tu cupo ha sido liberado.');
               this.loadReservas();
             },
             error: (err) => {
               console.error('Error canceling group:', err);
-              Swal.fire('Error', err.error?.error || 'No se pudo cancelar.', 'error');
+              this.popupService.error('Error', err.error?.error || 'No se pudo cancelar.');
             }
           });
         } else {
           // Individual Reservation
           this.mysqlService.cancelarReserva(id, this.userId).subscribe({
             next: () => {
-              Swal.fire('¡Cancelada!', 'Tu reserva ha sido cancelada.', 'success');
+              this.popupService.success('¡Cancelada!', 'Tu reserva ha sido cancelada.');
               this.loadReservas();
             },
             error: (err: any) => {
               console.error('Error canceling reservation:', err);
               const msg = err.error?.error || 'No se pudo cancelar la reserva.';
-              Swal.fire('Error', msg, 'error');
+              this.popupService.error('Error', msg);
             }
           });
         }

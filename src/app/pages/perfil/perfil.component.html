@@ -20,8 +20,8 @@
           <span class="name">{{ profile.nombre }}</span>
           <span class="role">Perfil</span>
         </div>
-        <div class="avatar-circle" *ngIf="!profile.foto_perfil">{{ profile.nombre?.charAt(0) || 'U' }}</div>
-        <img class="avatar-circle" *ngIf="profile.foto_perfil" [src]="profile.foto_perfil" style="object-fit: cover;">
+        <img class="avatar-circle" [src]="profile.foto_perfil || 'assets/images/placeholder_avatar.png'"
+          style="object-fit: cover;">
       </div>
     </header>
 
@@ -74,6 +74,30 @@
             <div class="nike-item">
               <label>Teléfono</label>
               <input type="tel" [(ngModel)]="profile.telefono" placeholder="+56 9 ...">
+            </div>
+
+            <div class="nike-item">
+              <label>Categoría</label>
+              <select [(ngModel)]="profile.categoria">
+                <option value="" disabled selected>Selecciona tu nivel</option>
+                <optgroup label="Varones">
+                  <option value="Primera">Primera</option>
+                  <option value="Segunda">Segunda</option>
+                  <option value="Tercera">Tercera</option>
+                  <option value="Cuarta">Cuarta</option>
+                  <option value="Quinta">Quinta</option>
+                  <option value="Sexta">Sexta</option>
+                </optgroup>
+                <optgroup label="Damas">
+                  <option value="A">Damas A</option>
+                  <option value="B">Damas B</option>
+                  <option value="C">Damas C</option>
+                  <option value="D">Damas D</option>
+                </optgroup>
+                <optgroup label="Otros">
+                  <option value="Principiante">Principiante</option>
+                </optgroup>
+              </select>
             </div>
 
           </div>

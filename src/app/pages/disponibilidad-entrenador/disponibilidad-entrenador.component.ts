@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EntrenamientoService } from '../../services/entrenamientos.service';
 import { MysqlService } from '../../services/mysql.service';
-import Swal from 'sweetalert2';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PopupService } from '../../services/popup.service';
 
 interface BloqueHorario {
   fecha: string;
@@ -48,7 +48,8 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   constructor(
     private entrenamientoService: EntrenamientoService,
     private mysqlService: MysqlService,
-    private router: Router
+    private router: Router,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -74,7 +75,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
           this.coachFoto = res.user.foto_perfil || res.user.link_foto || null;
         }
       },
-      error: (err) => console.error(err)
+      error: (err: any) => console.error(err)
     });
   }
 
@@ -164,7 +165,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
         // Load reservations to mark occupied blocks
         this.cargarReservasExistentes();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading disponibilidad:', err);
         this.isLoading = false;
       }
@@ -205,7 +206,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
 
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading reservations:', err);
         this.isLoading = false;
       }
@@ -282,14 +283,14 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
     });
 
     if (crear.length === 0 && eliminar.length === 0) {
-      Swal.fire('Sin cambios', 'No hay cambios para guardar.', 'info');
+      this.popupService.info('Sin cambios', 'No hay cambios para guardar.');
       return;
     }
 
     this.isLoading = true;
     this.entrenamientoService.syncDisponibilidad({ crear, eliminar }).subscribe({
       next: () => {
-        Swal.fire('Guardado', 'Horario actualizado correctamente', 'success');
+        this.popupService.success('Guardado', 'Horario actualizado correctamente');
 
         // Refresh local state
         this.disponibilidadExistente.clear();
@@ -297,9 +298,9 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
         this.crearSemanaDesdeHoy();
         this.cargarDisponibilidadExistente(); // Reload fresh from DB
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error syncing disponibilidad:', err);
-        Swal.fire('Error', 'No se pudieron guardar los cambios', 'error');
+        this.popupService.error('Error', 'No se pudieron guardar los cambios');
         this.isLoading = false;
       }
     });

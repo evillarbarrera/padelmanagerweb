@@ -1,0 +1,62 @@
+<div class="login-container">
+    <div class="login-card">
+        <div class="logo-section">
+            <span class="tennis-icon">🎾</span>
+            <h2>Padel Manager</h2>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-state">
+            <div class="spinner-modern"></div>
+            <p>Verificando tu invitación...</p>
+        </div>
+
+        <!-- Details State -->
+        <div *ngIf="!loading && invitationData" class="invitation-content animate-in">
+            <h3 class="invitation-title">¡Te han invitado a un Pack!</h3>
+
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="label">Invitado por</span>
+                    <span class="value">{{ invitationData.owner_nombre }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Pack de entrenamiento</span>
+                    <span class="value">{{ invitationData.pack_nombre }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Sesiones totales</span>
+                    <span class="value">{{ invitationData.sesiones_totales }} sesiones</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Tipo de pack</span>
+                    <span class="value">{{ (invitationData.tipo === 'grupal' ? 'Grupal / Equipo' : 'Individual /
+                        Compartido') }}</span>
+                </div>
+            </div>
+
+            <p class="description">
+                Al aceptar esta invitación, te unirás al equipo de este pack y podrás compartir sus beneficios y
+                sesiones disponibles.
+            </p>
+
+            <div class="actions">
+                <button (click)="confirmar()" [disabled]="processing" class="btn-accept">
+                    {{ processing ? 'PROCESANDO...' : 'ACEPTAR E UNIRME' }}
+                </button>
+                <button (click)="cancelar()" [disabled]="processing" class="btn-decline">
+                    Ahora no, gracias
+                </button>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="!loading && !invitationData" class="error-state">
+            <div class="error-icon">⚠️</div>
+            <p>La invitación no es válida o ha expirado.</p>
+            <button (click)="cancelar()" class="btn-decline" style="margin-top: 20px; width: 100%;">
+                Volver al sitio
+            </button>
+        </div>
+    </div>
+</div>

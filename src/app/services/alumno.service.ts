@@ -15,6 +15,10 @@ export class AlumnoService {
     'Content-Type': 'application/json'
   });
 
+  private multipartHeaders = new HttpHeaders({
+    'Authorization': `Bearer ${this.token}`
+  });
+
   constructor(private http: HttpClient) { }
 
   getAlumnos(entrenadorId: number): Observable<any[]> {
@@ -46,6 +50,42 @@ export class AlumnoService {
 
   initTransaction(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/pagos/init_transaction.php`, data, {
+      headers: this.headers
+    });
+  }
+
+  getMisPacks(jugadorId: number): Observable<any> {
+    return this.http.get(
+      `${this.apiUrl}/alumno/get_mis_packs_alumno.php?jugador_id=${jugadorId}`,
+      { headers: this.headers }
+    );
+  }
+
+  invitarJugador(packJugadoresId: number, emailInvitado: string): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/alumno/invitar_jugador_pack.php`,
+      { pack_jugadores_id: packJugadoresId, email_invitado: emailInvitado },
+      { headers: this.headers }
+    );
+  }
+
+  uploadVideo(formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/entrenador/add_video.php`, formData, {
+      headers: this.multipartHeaders,
+      reportProgress: true,
+      observe: 'events'
+    });
+  }
+
+  getVideos(jugadorId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/entrenador/get_videos.php?jugador_id=${jugadorId}`,
+      { headers: this.headers }
+    );
+  }
+
+  deleteVideo(videoId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/entrenador/delete_video.php`, { video_id: videoId }, {
       headers: this.headers
     });
   }

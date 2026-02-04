@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PacksService } from '../../services/packs.service';
 import { MysqlService } from '../../services/mysql.service';
-import Swal from 'sweetalert2';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PopupService } from '../../services/popup.service';
 
 @Component({
   selector: 'app-entrenador-packs',
@@ -35,13 +35,17 @@ export class EntrenadorPacksComponent implements OnInit {
     capacidad_maxima: 6,
     dia_semana: null,
     hora_inicio: null,
-    categoria: ''
+    categoria: '',
+    rango_horario_inicio: null,
+    rango_horario_fin: null,
+    cantidad_personas: 1
   };
 
   constructor(
     private packsService: PacksService,
     private mysqlService: MysqlService,
-    private router: Router
+    private router: Router,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -104,35 +108,36 @@ export class EntrenadorPacksComponent implements OnInit {
 
   crearPack(): void {
     if (!this.nuevoPack.nombre || !this.nuevoPack.sesiones_totales) {
-      Swal.fire('Campos incompletos', 'Por favor completa nombre y sesiones totales.', 'warning');
+      this.popupService.warning('Campos incompletos', 'Por favor completa nombre y sesiones totales.');
       return;
     }
 
     if (this.nuevoPack.id) {
       // EDITAR
+      this.nuevoPack.entrenador_id = this.userId;
       this.packsService.editarPack(this.nuevoPack).subscribe({
         next: (res) => {
-          Swal.fire('¡Actualizado!', 'Pack actualizado correctamente', 'success');
+          this.popupService.success('¡Actualizado!', 'Pack actualizado correctamente');
           this.loadPacks();
           this.toggleFormulario();
         },
         error: (err) => {
           console.error('Error updating pack:', err);
-          Swal.fire('Error', 'No se pudo actualizar el pack', 'error');
+          this.popupService.error('Error', 'No se pudo actualizar el pack');
         }
       });
     } else {
       // CREAR
-      this.nuevoPack.entrenador_id = this.userId; // Ensure trainer ID is attached
+      this.nuevoPack.entrenador_id = this.userId;
       this.packsService.crearPack(this.nuevoPack).subscribe({
         next: (res) => {
-          Swal.fire('¡Creado!', 'Pack creado exitosamente', 'success');
+          this.popupService.success('¡Creado!', 'Pack creado exitosamente');
           this.loadPacks();
           this.toggleFormulario();
         },
         error: (err) => {
           console.error('Error creating pack:', err);
-          Swal.fire('Error', 'Error al crear el pack', 'error');
+          this.popupService.error('Error', 'Error al crear el pack');
         }
       });
     }
@@ -145,25 +150,19 @@ export class EntrenadorPacksComponent implements OnInit {
   }
 
   eliminarPack(packId: number): void {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: "No podrás revertir esto",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#000',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Si',
-      cancelButtonText: 'No'
-    }).then((result) => {
-      if (result.isConfirmed) {
+    this.popupService.confirm(
+      '¿Estás seguro?',
+      "No podrás revertir esto"
+    ).then((confirmed) => {
+      if (confirmed) {
         this.packsService.eliminarPack(packId).subscribe({
           next: (res) => {
-            Swal.fire('¡Eliminado!', 'El pack ha sido eliminado.', 'success');
+            this.popupService.success('¡Eliminado!', 'El pack ha sido eliminado.');
             this.loadPacks();
           },
           error: (err) => {
             console.error('Error deleting pack:', err);
-            Swal.fire('Error', 'Error al eliminar el pack', 'error');
+            this.popupService.error('Error', 'Error al eliminar el pack');
           }
         });
       }
@@ -183,7 +182,10 @@ export class EntrenadorPacksComponent implements OnInit {
       capacidad_maxima: 6,
       dia_semana: null,
       hora_inicio: null,
-      categoria: ''
+      categoria: '',
+      rango_horario_inicio: null,
+      rango_horario_fin: null,
+      cantidad_personas: 1
     };
   }
 

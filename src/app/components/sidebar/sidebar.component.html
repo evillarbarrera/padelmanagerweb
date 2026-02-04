@@ -17,8 +17,8 @@
     <nav class="sidebar-nav">
         <!-- Photo Widget -->
         <div class="sidebar-player-widget" *ngIf="userId">
-            <div class="avatar-large" *ngIf="!jugadorFoto">{{ jugadorNombre[0] }}</div>
-            <img *ngIf="jugadorFoto" [src]="jugadorFoto" class="avatar-img-large">
+            <img [src]="jugadorFoto || 'assets/images/placeholder_avatar.png'" class="avatar-img-large"
+                style="object-fit: cover;">
         </div>
 
         <!-- PLAYER MENU -->
@@ -37,7 +37,16 @@
             </a>
             <a class="nav-item" [class.active]="activePage === 'packs'" (click)="navigate('/jugador-packs')">
                 <span class="icon">⚡</span>
-                <span>Packs</span>
+                <span>Comprar Packs</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'mis-packs-activos'"
+                (click)="navigate('/mis-packs-activos')">
+                <span class="icon">🎟️</span>
+                <span>Mis Packs Activos</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'habilidades'" (click)="navigate('/mis-habilidades')">
+                <span class="icon">📈</span>
+                <span>Mis Habilidades</span>
             </a>
             <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
                 <span class="icon">👤</span>
@@ -54,6 +63,11 @@
             <a class="nav-item" [class.active]="activePage === 'alumnos'" (click)="navigate('/alumnos')">
                 <span class="icon">👥</span>
                 <span>Mis Alumnos</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'agendar-alumno'"
+                (click)="navigate('/entrenador-agendar')">
+                <span class="icon">🎾</span>
+                <span>Agendar Alumno</span>
             </a>
             <a class="nav-item" [class.active]="activePage === 'agenda'" (click)="navigate('/entrenador-calendario')">
                 <span class="icon">📅</span>

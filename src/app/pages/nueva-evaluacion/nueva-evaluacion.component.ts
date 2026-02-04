@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvaluacionService } from '../../services/evaluacion.service';
-import Swal from 'sweetalert2';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PopupService } from '../../services/popup.service';
 
 @Component({
     selector: 'app-nueva-evaluacion',
@@ -35,7 +35,8 @@ export class NuevaEvaluacionComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
-        private evaluacionService: EvaluacionService
+        private evaluacionService: EvaluacionService,
+        private popupService: PopupService
     ) {
         console.log('NuevaEvaluacionComponent inicializado');
     }
@@ -59,20 +60,40 @@ export class NuevaEvaluacionComponent implements OnInit {
         if (this.golpes.length > 0) this.accordionsState[this.golpes[0]] = true;
     }
 
+    setAllScores(value: number) {
+        this.golpes.forEach(golpe => {
+            this.setStrokeScores(golpe, value);
+        });
+    }
+
+    setStrokeScores(golpe: string, value: number) {
+        this.evaluationData[golpe].tecnica = value;
+        this.evaluationData[golpe].control = value;
+        this.evaluationData[golpe].direccion = value;
+        this.evaluationData[golpe].decision = value;
+    }
+
+    updateScore(golpe: string, metric: string, delta: number) {
+        let val = this.evaluationData[golpe][metric] + delta;
+        if (val < 1) val = 1;
+        if (val > 10) val = 10;
+        this.evaluationData[golpe][metric] = val;
+    }
+
+    setScore(golpe: string, metric: string, value: number) {
+        this.evaluationData[golpe][metric] = value;
+    }
+
     toggleAccordion(golpe: string) {
         this.accordionsState[golpe] = !this.accordionsState[golpe];
     }
 
     guardarEvaluacion() {
-        Swal.fire({
-            title: '¿Guardar Evaluación?',
-            text: 'Se registrarán los puntajes asignados.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Guardar',
-            confirmButtonColor: '#10b981'
-        }).then((result) => {
-            if (result.isConfirmed) {
+        this.popupService.confirm(
+            '¿Guardar Evaluación?',
+            'Se registrarán los puntajes asignados.'
+        ).then((confirmed) => {
+            if (confirmed) {
                 const payload = {
                     jugador_id: this.jugadorId,
                     entrenador_id: this.entrenadorId,
@@ -82,12 +103,13 @@ export class NuevaEvaluacionComponent implements OnInit {
 
                 this.evaluacionService.crearEvaluacion(payload).subscribe({
                     next: () => {
-                        Swal.fire('Guardado', 'La evaluación ha sido registrada.', 'success');
-                        this.router.navigate(['/alumnos']);
+                        this.popupService.success('Guardado', 'La evaluación ha sido registrada.').then(() => {
+                            this.router.navigate(['/alumnos']);
+                        });
                     },
                     error: (err) => {
                         console.error(err);
-                        Swal.fire('Error', 'No se pudo guardar la evaluación.', 'error');
+                        this.popupService.error('Error', 'No se pudo guardar la evaluación.');
                     }
                 });
             }

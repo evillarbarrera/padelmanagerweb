@@ -81,20 +81,23 @@ export class LoginComponent {
       return;
     }
 
+    console.log('Iniciando recuperación para:', this.recoverEmail);
     this.isLoading = true;
     this.recoverError = '';
     this.recoverMessage = '';
 
     this.authService.recoverPassword(this.recoverEmail).subscribe({
       next: (res: any) => {
+        console.log('Respuesta del servidor (Recovery):', res);
         this.isLoading = false;
         if (res.success) {
-          this.recoverMessage = 'Instrucciones enviadas a tu correo.';
+          this.recoverMessage = res.message || 'Instrucciones enviadas a tu correo.';
         } else {
           this.recoverError = res.message || 'No se pudo enviar el correo.';
         }
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error en la petición de recuperación:', err);
         this.isLoading = false;
         this.recoverError = 'Error de conexión. Intenta más tarde.';
       }

@@ -18,7 +18,7 @@
                     <span class="name">Entrenador</span>
                     <span class="role">Staff</span>
                 </div>
-                <div class="avatar-circle">E</div>
+                <img class="avatar-circle" src="assets/images/placeholder_avatar.png" style="object-fit: cover;">
             </div>
         </header>
 
@@ -36,58 +36,90 @@
                 </div>
             </div>
 
+            <!-- Global Actions -->
+            <div class="global-quick-set card">
+                <span>⚡ Calificación Rápida (Toda la evaluación):</span>
+                <div class="quick-buttons">
+                    <button (click)="setAllScores(1)">Todos en 1</button>
+                    <button (click)="setAllScores(5)">Todos en 5</button>
+                    <button (click)="setAllScores(7)">Todos en 7</button>
+                    <button (click)="setAllScores(10)">Todos en 10</button>
+                </div>
+            </div>
+
             <!-- Strokes Grid -->
             <div class="strokes-grid">
                 <div class="stroke-card" *ngFor="let golpe of golpes">
 
                     <div class="card-header">
-                        <h3>{{ golpe }}</h3>
-                        <div class="avg-badge">
-                            {{ ((evaluationData[golpe].tecnica + evaluationData[golpe].control +
-                            evaluationData[golpe].direccion + evaluationData[golpe].decision) / 4) | number:'1.1-1' }}
+                        <div class="header-main">
+                            <h3>{{ golpe }}</h3>
+                            <div class="avg-badge">
+                                {{ ((evaluationData[golpe].tecnica + evaluationData[golpe].control +
+                                evaluationData[golpe].direccion + evaluationData[golpe].decision) / 4) | number:'1.1-1'
+                                }}
+                            </div>
+                        </div>
+                        <div class="stroke-quick-set">
+                            <button (click)="setStrokeScores(golpe, 1)">1</button>
+                            <button (click)="setStrokeScores(golpe, 5)">5</button>
+                            <button (click)="setStrokeScores(golpe, 8)">8</button>
+                            <button (click)="setStrokeScores(golpe, 10)">10</button>
                         </div>
                     </div>
 
                     <div class="card-body">
 
-                        <!-- Metric Item -->
+                        <!-- Metric Item: Técnica -->
                         <div class="metric-item">
                             <div class="metric-label">
                                 <span>Técnica</span>
-                                <span class="val">{{ evaluationData[golpe].tecnica }}</span>
                             </div>
-                            <input type="range" min="1" max="10" [(ngModel)]="evaluationData[golpe].tecnica"
-                                class="nike-range">
+                            <div class="score-controls">
+                                <button class="step-btn" (click)="updateScore(golpe, 'tecnica', -1)">-</button>
+                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].tecnica"
+                                    class="score-input">
+                                <button class="step-btn" (click)="updateScore(golpe, 'tecnica', 1)">+</button>
+                            </div>
                         </div>
 
-                        <!-- Metric Item -->
+                        <!-- Metric Item: Control -->
                         <div class="metric-item">
                             <div class="metric-label">
                                 <span>Control</span>
-                                <span class="val">{{ evaluationData[golpe].control }}</span>
                             </div>
-                            <input type="range" min="1" max="10" [(ngModel)]="evaluationData[golpe].control"
-                                class="nike-range">
+                            <div class="score-controls">
+                                <button class="step-btn" (click)="updateScore(golpe, 'control', -1)">-</button>
+                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].control"
+                                    class="score-input">
+                                <button class="step-btn" (click)="updateScore(golpe, 'control', 1)">+</button>
+                            </div>
                         </div>
 
-                        <!-- Metric Item -->
+                        <!-- Metric Item: Dirección -->
                         <div class="metric-item">
                             <div class="metric-label">
                                 <span>Dirección</span>
-                                <span class="val">{{ evaluationData[golpe].direccion }}</span>
                             </div>
-                            <input type="range" min="1" max="10" [(ngModel)]="evaluationData[golpe].direccion"
-                                class="nike-range">
+                            <div class="score-controls">
+                                <button class="step-btn" (click)="updateScore(golpe, 'direccion', -1)">-</button>
+                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].direccion"
+                                    class="score-input">
+                                <button class="step-btn" (click)="updateScore(golpe, 'direccion', 1)">+</button>
+                            </div>
                         </div>
 
-                        <!-- Metric Item -->
+                        <!-- Metric Item: Decisión -->
                         <div class="metric-item">
                             <div class="metric-label">
                                 <span>Decisión</span>
-                                <span class="val">{{ evaluationData[golpe].decision }}</span>
                             </div>
-                            <input type="range" min="1" max="10" [(ngModel)]="evaluationData[golpe].decision"
-                                class="nike-range">
+                            <div class="score-controls">
+                                <button class="step-btn" (click)="updateScore(golpe, 'decision', -1)">-</button>
+                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].decision"
+                                    class="score-input">
+                                <button class="step-btn" (click)="updateScore(golpe, 'decision', 1)">+</button>
+                            </div>
                         </div>
 
                     </div>

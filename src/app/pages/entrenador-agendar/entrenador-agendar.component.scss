@@ -1,0 +1,218 @@
+@use '../../theme/colors.scss' as *;
+
+.booking-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1000px;
+}
+
+.section-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+    .section-title {
+        font-size: 0.95rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #111;
+
+        span {
+            background: #000;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 0.75rem;
+        }
+    }
+}
+
+.student-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+
+    .student-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #eee;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+            border-color: #000;
+            background: #fafafa;
+        }
+
+        &.selected {
+            background: #000;
+            border-color: #000;
+            color: #fff;
+
+            .info .pack-info {
+                color: #aaa;
+            }
+        }
+
+        .avatar-sm {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+
+            .name {
+                font-weight: 700;
+                font-size: 0.9rem;
+            }
+
+            .pack-info {
+                font-size: 0.75rem;
+                color: #666;
+            }
+        }
+    }
+}
+
+.recurrence-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    label {
+        font-weight: 700;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .nike-select {
+        padding: 10px 15px;
+        border-radius: 10px;
+        border: 1px solid #eee;
+        font-weight: 700;
+        outline: none;
+        cursor: pointer;
+
+        &:focus {
+            border-color: #000;
+        }
+    }
+}
+
+.booking-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+
+    .day-btn {
+        border: 1px solid #eee;
+        background: #fff;
+        padding: 12px 5px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.3s;
+
+        .day-name {
+            font-size: 0.65rem;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .day-num {
+            font-size: 1.1rem;
+            font-weight: 900;
+            margin-top: 2px;
+        }
+
+        &:hover {
+            border-color: #000;
+        }
+
+        &.active {
+            background: #000;
+            color: #fff;
+            border-color: #000;
+
+            .day-name {
+                color: #888;
+            }
+        }
+    }
+}
+
+.times-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+
+    .time-btn {
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #eee;
+        background: #fff;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover:not(:disabled) {
+            border-color: #000;
+            background: #000;
+            color: #fff;
+        }
+
+        &:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+
+            &.occupied {
+                background: #fdfdfd;
+                color: #ddd;
+            }
+        }
+    }
+}
+
+.no-selection {
+    color: #999;
+    text-align: center;
+    padding: 40px;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .booking-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .days-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+}

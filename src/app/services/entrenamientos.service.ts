@@ -42,11 +42,12 @@ export class EntrenamientoService {
     });
   }
 
-  getDisponibilidadEntrenador(entrenadorId: number): Observable<any[]> {
-    return this.http.get<any[]>(
-      `${this.apiUrl}/entrenador/get_disponibilidad.php?entrenador_id=${entrenadorId}`,
-      { headers: this.headers }
-    );
+  getDisponibilidadEntrenador(entrenadorId: number, packId?: number): Observable<any[]> {
+    let url = `${this.apiUrl}/entrenador/get_disponibilidad.php?entrenador_id=${entrenadorId}`;
+    if (packId) {
+      url += `&pack_id=${packId}`;
+    }
+    return this.http.get<any[]>(url, { headers: this.headers });
   }
 
   getEntrenadorPorJugador(jugadorId: number): Observable<any> {
@@ -64,8 +65,12 @@ export class EntrenamientoService {
   }
 
   getReservasEntrenador(entrenadorId: number): Observable<any> {
-    return this.http.get<any>(
-      `${this.apiUrl}/entrenador/get_agenda.php?entrenador_id=${entrenadorId}`,
+    return this.getAgenda(entrenadorId);
+  }
+
+  getMisAlumnos(entrenadorId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/entrenador/get_mis_alumnos.php?entrenador_id=${entrenadorId}`,
       { headers: this.headers }
     );
   }

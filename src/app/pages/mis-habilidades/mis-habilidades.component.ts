@@ -1,29 +1,25 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { EvaluacionService } from '../../services/evaluacion.service';
 import { MysqlService } from '../../services/mysql.service';
 import { AlumnoService } from '../../services/alumno.service';
-import { PopupService } from '../../services/popup.service';
 import { Chart, registerables } from 'chart.js';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
 Chart.register(...registerables);
 
 @Component({
-    selector: 'app-alumno-progreso',
+    selector: 'app-mis-habilidades',
     standalone: true,
     imports: [CommonModule, SidebarComponent],
-    templateUrl: './alumno-progreso.component.html',
-    styleUrls: ['./alumno-progreso.component.scss']
+    templateUrl: './mis-habilidades.component.html',
+    styleUrls: ['./mis-habilidades.component.scss']
 })
-export class AlumnoProgresoComponent implements OnInit {
+export class MisHabilidadesComponent implements OnInit {
     userId: number | null = null;
-    alumnoId: number | null = null;
-    coachNombre = 'Entrenador';
-
-    alumnoNombre: string = '';
-    alumnoFoto: string | null = null;
+    jugadorNombre: string = 'Jugador';
+    jugadorFoto: string | null = null;
 
     isLoading = true;
     hasData = false;
@@ -40,63 +36,52 @@ export class AlumnoProgresoComponent implements OnInit {
     videos: any[] = [];
 
     constructor(
-        private route: ActivatedRoute,
         private router: Router,
         private evaluacionService: EvaluacionService,
         private mysqlService: MysqlService,
         private alumnoService: AlumnoService,
-        private popupService: PopupService,
         private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit() {
         this.userId = Number(localStorage.getItem('userId'));
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        if (user) {
-            this.coachNombre = user.nombre || 'Entrenador';
+        if (!this.userId) {
+            this.router.navigate(['/login']);
+            return;
         }
 
-        this.route.paramMap.subscribe(params => {
-            const id = params.get('id');
-            if (id) {
-                this.alumnoId = Number(id);
-                this.loadAlumnoPerfil();
-                this.loadEvaluaciones();
-                this.loadVideos();
-            }
-        });
+        this.loadProfile();
+        this.loadEvaluaciones();
+        this.loadVideos();
     }
 
-    loadAlumnoPerfil() {
-        if (!this.alumnoId) return;
-        this.mysqlService.getPerfil(this.alumnoId).subscribe({
+    loadProfile() {
+        if (!this.userId) return;
+        this.mysqlService.getPerfil(this.userId).subscribe({
             next: (res) => {
-                if (res) {
-                    this.alumnoNombre = res.nombre;
-                    this.alumnoFoto = res.foto_perfil || res.link_foto || null;
+                if (res.success) {
+                    this.jugadorNombre = res.user.nombre;
+                    this.jugadorFoto = res.user.foto_perfil || res.user.foto || null;
                 }
             },
-            error: (err) => console.error('Error al cargar perfil del alumno:', err)
+            error: (err) => console.error('Error al cargar perfil:', err)
         });
     }
 
     loadEvaluaciones() {
-        if (!this.alumnoId) return;
+        if (!this.userId) return;
 
-        this.evaluacionService.getEvaluaciones(this.alumnoId).subscribe({
+        this.evaluacionService.getEvaluaciones(this.userId).subscribe({
             next: (data) => {
                 if (data && data.length > 0) {
-                    // Sort by date ascending
                     const sorted = data.sort((a: any, b: any) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
-                    // Store Line Data
                     this.storedLineLabels = sorted.map((e: any) => {
                         const d = new Date(e.fecha);
                         return `${d.getDate()}/${d.getMonth() + 1}`;
                     });
                     this.storedLineData = sorted.map((e: any) => Number(e.promedio_general));
 
-                    // Store Radar Data
                     const latest = sorted[sorted.length - 1];
                     if (latest && latest.scores) {
                         this.storedRadarLabels = Object.keys(latest.scores);
@@ -112,9 +97,8 @@ export class AlumnoProgresoComponent implements OnInit {
                         this.cdr.detectChanges();
 
                         setTimeout(() => {
-                            this.renderRadarChart();
-                            this.renderLineChart();
-                        }, 200);
+                            this.renderCharts();
+                        }, 300);
                     }
                 } else {
                     this.hasData = false;
@@ -128,8 +112,13 @@ export class AlumnoProgresoComponent implements OnInit {
         });
     }
 
+    renderCharts() {
+        this.renderRadarChart();
+        this.renderLineChart();
+    }
+
     renderRadarChart() {
-        const ctx = document.getElementById('webRadarChart') as HTMLCanvasElement;
+        const ctx = document.getElementById('radarChart') as HTMLCanvasElement;
         if (!ctx) return;
         if (this.radarChart) this.radarChart.destroy();
 
@@ -138,7 +127,7 @@ export class AlumnoProgresoComponent implements OnInit {
             data: {
                 labels: this.storedRadarLabels,
                 datasets: [{
-                    label: 'Habilidades',
+                    label: 'Mi Técnica',
                     data: this.storedRadarData,
                     fill: true,
                     backgroundColor: 'rgba(204, 255, 0, 0.2)',
@@ -152,7 +141,6 @@ export class AlumnoProgresoComponent implements OnInit {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                elements: { line: { borderWidth: 3 } },
                 scales: {
                     r: {
                         angleLines: { color: '#eee' },
@@ -160,11 +148,10 @@ export class AlumnoProgresoComponent implements OnInit {
                         suggestedMin: 0,
                         suggestedMax: 10,
                         pointLabels: {
-                            font: { size: 14, weight: 'bold', family: "'Inter', sans-serif" },
-                            color: '#444',
-                            padding: 20
+                            font: { size: 12, weight: 'bold' },
+                            color: '#444'
                         },
-                        ticks: { backdropColor: 'transparent', display: false }
+                        ticks: { display: false }
                     }
                 },
                 plugins: { legend: { display: false } }
@@ -173,7 +160,7 @@ export class AlumnoProgresoComponent implements OnInit {
     }
 
     renderLineChart() {
-        const ctx = document.getElementById('webLineChart') as HTMLCanvasElement;
+        const ctx = document.getElementById('lineChart') as HTMLCanvasElement;
         if (!ctx) return;
         if (this.lineChart) this.lineChart.destroy();
 
@@ -182,7 +169,7 @@ export class AlumnoProgresoComponent implements OnInit {
             data: {
                 labels: this.storedLineLabels,
                 datasets: [{
-                    label: 'Promedio General',
+                    label: 'Mi Evolución',
                     data: this.storedLineData,
                     borderColor: '#ccff00',
                     backgroundColor: 'rgba(204, 255, 0, 0.1)',
@@ -202,52 +189,21 @@ export class AlumnoProgresoComponent implements OnInit {
                     y: {
                         beginAtZero: true,
                         max: 10,
-                        grid: { color: '#f0f0f0' },
-                        ticks: { color: '#666', font: { weight: 'bold' } }
+                        grid: { color: '#f0f0f0' }
                     },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#666', font: { weight: 'bold' } }
-                    }
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
 
     loadVideos() {
-        if (!this.alumnoId) return;
-        this.alumnoService.getVideos(this.alumnoId).subscribe({
+        if (!this.userId) return;
+        this.alumnoService.getVideos(this.userId).subscribe({
             next: (vids) => {
                 this.videos = vids || [];
             },
             error: (err) => console.error('Error al cargar videos:', err)
         });
-    }
-
-    confirmDeleteVideo(video: any) {
-        this.popupService.confirm(
-            '¿Eliminar video?',
-            'Esta acción no se puede deshacer.'
-        ).then((result) => {
-            if (result === true) {
-                this.isLoading = true;
-                this.alumnoService.deleteVideo(video.id).subscribe({
-                    next: (res) => {
-                        this.isLoading = false;
-                        this.popupService.success('Eliminado', 'El video ha sido eliminado.');
-                        this.loadVideos();
-                    },
-                    error: (err) => {
-                        this.isLoading = false;
-                        console.error('Error deleting video:', err);
-                        this.popupService.error('Error', 'No se pudo eliminar el video.');
-                    }
-                });
-            }
-        });
-    }
-
-    volver() {
-        this.router.navigate(['/alumnos']);
     }
 }

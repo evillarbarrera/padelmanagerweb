@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service'; // Changed from EntrenamientoService to match source pattern if available, or keep using existing service but properly
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
-import Swal from 'sweetalert2';
+import { PopupService } from '../../services/popup.service';
 
 interface DiaAgenda {
   nombre: string;
@@ -32,7 +32,8 @@ export class EntrenadorAgendaComponent implements OnInit {
 
   constructor(
     private mysqlService: MysqlService, // Using mysqlService as in source
-    private router: Router
+    private router: Router,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -138,17 +139,19 @@ export class EntrenadorAgendaComponent implements OnInit {
   }
 
   cancelarClase(item: any): void {
-    Swal.fire({
+    this.popupService.open({
       title: 'Cancelar Entrenamiento',
-      text: `¿Estás seguro de que deseas cancelar este ${item.tipo === 'grupal' ? 'pack' : 'entrenamiento'}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#000',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Si',
-      cancelButtonText: 'No'
-    }).then((result) => {
-      if (result.isConfirmed) {
+      message: `¿Cómo deseas proceder con este ${item.tipo === 'grupal' ? 'pack' : 'entrenamiento'}?`,
+      icon: 'question',
+      buttons: [
+        { text: 'Cancelar y Notificar', value: 'notify', type: 'primary' },
+        { text: 'Solo Cancelar', value: 'silent', type: 'secondary' },
+        { text: 'Cerrar', value: null, type: 'danger' }
+      ]
+    }).then((action) => {
+      if (action) {
+        // En ambos casos de cancelación (notify o silent) ejecutamos la lógica.
+        // En una fase futura se podría pasar el parámetro action al backend.
         this.ejecutarCancelacion(item);
       }
     });
@@ -157,16 +160,15 @@ export class EntrenadorAgendaComponent implements OnInit {
   ejecutarCancelacion(item: any) {
     this.mysqlService.cancelarReservaEntrenador(item.reserva_id, this.userId!).subscribe({
       next: () => {
-        Swal.fire(
+        this.popupService.success(
           'Cancelado',
-          'El entrenamiento ha sido cancelado y el horario liberado.',
-          'success'
+          'El entrenamiento ha sido cancelado y el horario liberado.'
         );
         this.loadAgenda();
       },
       error: (err) => {
         console.error('Error al cancelar:', err);
-        Swal.fire('Error', 'No se pudo cancelar la reserva.', 'error');
+        this.popupService.error('Error', 'No se pudo cancelar la reserva.');
       }
     });
   }

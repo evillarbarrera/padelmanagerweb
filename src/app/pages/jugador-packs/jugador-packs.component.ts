@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import Swal from 'sweetalert2';
+import { PopupService } from '../../services/popup.service';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
@@ -38,7 +38,8 @@ export class JugadorPacksComponent implements OnInit {
         private packsService: PacksService,
         private alumnoService: AlumnoService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private popupService: PopupService
     ) { }
 
     ngOnInit(): void {
@@ -56,21 +57,16 @@ export class JugadorPacksComponent implements OnInit {
         this.route.queryParams.subscribe(params => {
             const status = params['status'];
             if (status === 'success') {
-                Swal.fire({
-                    title: '¡Pago Exitoso!',
-                    text: 'El pack ha sido activado en tu cuenta.',
-                    icon: 'success',
-                    confirmButtonColor: '#10b981'
-                });
+                this.popupService.success('¡Pago Exitoso!', 'El pack ha sido activado en tu cuenta.');
                 // Clean URL
                 this.router.navigate([], {
                     queryParams: { 'status': null },
                     queryParamsHandling: 'merge'
                 });
             } else if (status === 'error_db' || status === 'error_token') {
-                Swal.fire('Error', 'Hubo un problema confirmando tu pago.', 'error');
+                this.popupService.error('Error', 'Hubo un problema confirmando tu pago.');
             } else if (status === 'cancelled') {
-                Swal.fire('Cancelado', 'La compra fue anulada.', 'info');
+                this.popupService.info('Cancelado', 'La compra fue anulada.');
             }
         });
     }
@@ -101,7 +97,7 @@ export class JugadorPacksComponent implements OnInit {
 
     getCurrentLocation(): void {
         if (!navigator.geolocation) {
-            Swal.fire('Error', 'Geolocalización no soportada en este navegador', 'error');
+            this.popupService.error('Error', 'Geolocalización no soportada en este navegador');
             this.useLocation = false;
             return;
         }
@@ -116,7 +112,7 @@ export class JugadorPacksComponent implements OnInit {
             },
             (error) => {
                 console.error('Error getting location', error);
-                Swal.fire('Error', 'No se pudo obtener tu ubicación. Verifica los permisos.', 'error');
+                this.popupService.error('Error', 'No se pudo obtener tu ubicación. Verifica los permisos.');
                 this.isLoadingLocation = false;
                 this.useLocation = false;
             }
@@ -178,17 +174,11 @@ export class JugadorPacksComponent implements OnInit {
     }
 
     comprarPack(pack: any): void {
-        Swal.fire({
-            title: '¿Confirmar compra?',
-            text: `Vas a adquirir el pack "${pack.nombre}" por $${pack.precio}.`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Si',
-            cancelButtonText: 'No',
-            confirmButtonColor: '#10b981',
-            allowOutsideClick: false
-        }).then((result) => {
-            if (result.isConfirmed) {
+        this.popupService.confirm(
+            '¿Confirmar compra?',
+            `Vas a adquirir el pack "${pack.nombre}" por $${pack.precio}.`
+        ).then((confirmed) => {
+            if (confirmed) {
                 this.procesarCompra(pack);
             }
         });
@@ -196,13 +186,6 @@ export class JugadorPacksComponent implements OnInit {
 
     procesarCompra(pack: any): void {
         if (!this.userId) return;
-
-        Swal.fire({
-            title: 'Procesando...',
-            text: 'Registrando compra...',
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
-        });
 
         // CLIENT-SIDE TOKEN GENERATION (Bypass Remote Mock Bank)
         try {
@@ -228,7 +211,7 @@ export class JugadorPacksComponent implements OnInit {
             form.submit();
         } catch (e) {
             console.error('Error constructing purchase token', e);
-            Swal.fire('Error', 'No se pudo iniciar la compra.', 'error');
+            this.popupService.error('Error', 'No se pudo iniciar la compra.');
         }
     }
 

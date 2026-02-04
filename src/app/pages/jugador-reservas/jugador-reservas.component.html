@@ -47,14 +47,31 @@
                 <img *ngIf="currentCoachPhoto" [src]="currentCoachPhoto" class="avatar-img" alt="Coach">
               </div>
 
-              <div class="custom-select-wrapper">
-                <select [(ngModel)]="selectedEntrenador" (change)="onEntrenadorChange()" class="form-select">
-                  <option [ngValue]="null" disabled>Elige un entrenador</option>
-                  <option *ngFor="let entrenador of entrenadores" [value]="entrenador.id">
-                    {{ entrenador.nombre }}
-                  </option>
-                </select>
+              <div class="custom-select-wrapper" (click)="showCoachPicker = true">
+                <div class="form-select-custom">
+                  {{ selectedEntrenador ? getCoachName(selectedEntrenador) : 'Elige un entrenador' }}
+                </div>
                 <div class="select-icon">▼</div>
+              </div>
+            </div>
+
+            <!-- Custom Picker Overlay -->
+            <div class="picker-overlay" *ngIf="showCoachPicker" (click)="showCoachPicker = false">
+              <div class="picker-content animate-slide-up" (click)="$event.stopPropagation()">
+                <div class="picker-header">
+                  <h4>Elige un Entrenador</h4>
+                  <button class="close-btn" (click)="showCoachPicker = false">✕</button>
+                </div>
+                <div class="picker-list">
+                  <div *ngFor="let e of entrenadores" class="picker-item"
+                    (click)="selectedEntrenador = e.id; onEntrenadorChange(); showCoachPicker = false">
+                    <div class="picker-avatar">
+                      <div class="avatar-circle" *ngIf="!e.foto">{{ e.nombre[0] }}</div>
+                      <img *ngIf="e.foto" [src]="e.foto" class="avatar-img">
+                    </div>
+                    <span class="picker-name">{{ e.nombre }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -64,10 +81,26 @@
               <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;">Selecciona tu
                 Pack:</label>
               <div class="custom-select-wrapper">
-                <select [(ngModel)]="selectedPack" class="form-select">
+                <select [(ngModel)]="selectedPack" (change)="onPackChange()" class="form-select">
                   <option *ngFor="let pack of packsDelEntrenador" [ngValue]="pack">
                     {{ pack.pack_nombre }} ({{ pack.sesiones_restantes }} diponibles)
+                    {{ pack.rango_horario_inicio ? ' [' + (pack.rango_horario_inicio | slice:0:5) + '-' +
+                    (pack.rango_horario_fin | slice:0:5) + ']' : '' }}
                   </option>
+                </select>
+                <div class="select-icon">▼</div>
+              </div>
+            </div>
+            <!-- Recurrence Selection (New) -->
+            <div class="pack-selector-container" *ngIf="selectedEntrenador" style="margin-top: 15px;">
+              <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;">Repetir
+                por:</label>
+              <div class="custom-select-wrapper">
+                <select [(ngModel)]="recurrencia" class="form-select">
+                  <option [value]="1">Solo hoy</option>
+                  <option [value]="2">2 Semanas</option>
+                  <option [value]="4">4 Semanas (1 mes)</option>
+                  <option [value]="8">8 Semanas (2 meses)</option>
                 </select>
                 <div class="select-icon">▼</div>
               </div>

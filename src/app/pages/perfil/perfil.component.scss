@@ -276,19 +276,20 @@
   }
 
   .avatar-section {
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 20px;
+    flex-direction: column;
+    padding: 24px;
     min-height: auto;
 
     .avatar-wrapper {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 0;
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
     }
 
     .save-btn-container {
-      display: none; // Hide generic sidebar btn on mobile
+      display: block; // Show it on mobile
+      width: 100%;
+      margin-top: 10px;
     }
   }
 

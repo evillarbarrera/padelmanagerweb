@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PopupService } from '../../services/popup.service';
 
 @Component({
   selector: 'app-perfil',
@@ -22,7 +22,8 @@ export class PerfilComponent implements OnInit {
     telefono: '',
     instagram: '',
     facebook: '',
-    foto_perfil: ''
+    foto_perfil: '',
+    categoria: ''
   };
 
   userRole: 'jugador' | 'entrenador' = 'jugador';
@@ -82,7 +83,8 @@ export class PerfilComponent implements OnInit {
 
   constructor(
     private mysqlService: MysqlService,
-    private router: Router
+    private router: Router,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -114,7 +116,7 @@ export class PerfilComponent implements OnInit {
         }
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading profile:', err);
         this.isLoading = false;
       }
@@ -148,26 +150,21 @@ export class PerfilComponent implements OnInit {
       next: (res) => {
         this.isLoading = false;
         if (res.success) {
-          this.profile.foto_perfil = res.foto_url || res.user.foto_perfil || res.user.foto;
+          // Robust update of the local photo URL
+          this.profile.foto_perfil = res.foto_url;
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.isLoading = false;
         console.error('Error uploading photo:', err);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Hubo un problema al subir la foto.',
-          timer: 2000,
-          showConfirmButton: false
-        });
+        this.popupService.error('Error', 'Hubo un problema al subir la foto.');
       }
     });
   }
 
   getCurrentLocation(): void {
     if (!navigator.geolocation) {
-      Swal.fire('Error', 'Geolocalización no soportada', 'error');
+      this.popupService.error('Error', 'Geolocalización no soportada');
       return;
     }
 
@@ -177,12 +174,12 @@ export class PerfilComponent implements OnInit {
         this.direccion.latitud = pos.coords.latitude;
         this.direccion.longitud = pos.coords.longitude;
         this.isLoading = false;
-        Swal.fire('Éxito', 'Ubicación detectada correctamente. No olvides guardar los cambios.', 'success');
+        this.popupService.success('Éxito', 'Ubicación detectada correctamente. No olvides guardar los cambios.');
       },
-      (err) => {
+      (err: any) => {
         console.error(err);
         this.isLoading = false;
-        Swal.fire('Error', 'No se pudo obtener la ubicación. Verifica permisos.', 'error');
+        this.popupService.error('Error', 'No se pudo obtener la ubicación. Verifica permisos.');
       }
     );
   }
@@ -197,6 +194,8 @@ export class PerfilComponent implements OnInit {
       telefono: this.profile.telefono,
       instagram: this.profile.instagram,
       facebook: this.profile.facebook,
+      foto_perfil: this.profile.foto_perfil, // Include the photo URL
+      categoria: this.profile.categoria,
       ...this.direccion
     };
 
@@ -204,29 +203,15 @@ export class PerfilComponent implements OnInit {
       next: (res) => {
         this.isLoading = false;
         if (res.success) {
-          Swal.fire({
-            icon: 'success',
-            title: '¡Guardado!',
-            text: 'Perfil actualizado correctamente',
-            timer: 1500,
-            showConfirmButton: false
-          });
+          this.popupService.success('¡Guardado!', 'Perfil actualizado correctamente');
         } else {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Atención',
-            text: 'No se pudieron guardar los cambios',
-          });
+          this.popupService.warning('Atención', 'No se pudieron guardar los cambios');
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.isLoading = false;
         console.error('Error updating profile:', err);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Error al actualizar el perfil'
-        });
+        this.popupService.error('Error', 'Error al actualizar el perfil');
       }
     });
   }
@@ -248,8 +233,12 @@ export class PerfilComponent implements OnInit {
   }
 
   logout(): void {
-    localStorage.clear();
-    this.router.navigate(['/login']);
+    this.popupService.confirm('Cerrar Sesión', '¿Estás seguro de que deseas salir?').then(confirm => {
+      if (confirm) {
+        localStorage.clear();
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
 }

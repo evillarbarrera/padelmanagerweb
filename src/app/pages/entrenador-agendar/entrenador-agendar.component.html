@@ -1,0 +1,80 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="entrenadorId" role="entrenador" activePage="agendar-alumno"></app-sidebar>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="breadcrumbs">
+                <span>Entrenador</span>
+                <span class="separator">/</span>
+                <span class="current">Agendar Alumno</span>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="booking-container animate-up">
+
+                <!-- Step 1: Select Student -->
+                <section class="section-card">
+                    <h2 class="section-title"><span>1</span> Selecciona al Alumno</h2>
+                    <div class="student-list">
+                        <div *ngFor="let a of alumnos" class="student-item"
+                            [class.selected]="alumnoSeleccionado?.pack_jugador_id === a.pack_jugador_id"
+                            (click)="seleccionarAlumno(a)">
+                            <img [src]="a.jugador_foto || 'assets/images/placeholder_avatar.png'" class="avatar-sm">
+                            <div class="info">
+                                <span class="name">{{ a.jugador_nombre }}</span>
+                                <span class="pack-info">{{ a.pack_nombre }} ({{ a.sesiones_restantes }} cred.)</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 2: Recurrence -->
+                <section class="section-card">
+                    <h2 class="section-title"><span>2</span> Opciones de Recurrencia</h2>
+                    <div class="recurrence-box">
+                        <label>Repetir reserva por:</label>
+                        <select [(ngModel)]="recurrencia" class="nike-select">
+                            <option [value]="1">Solo esta vez</option>
+                            <option [value]="2">2 Semanas</option>
+                            <option [value]="4">4 Semanas (1 mes)</option>
+                            <option [value]="8">8 Semanas (2 meses)</option>
+                            <option [value]="12">12 Semanas (3 meses)</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- Step 3: Select Day & Time -->
+                <div class="booking-layout">
+                    <!-- Calendario lateral -->
+                    <section class="section-card calendar-column">
+                        <h2 class="section-title"><span>3</span> Selecciona el Día</h2>
+                        <div class="days-grid">
+                            <button *ngFor="let d of dias" class="day-btn" [class.active]="diaSeleccionado === d"
+                                (click)="seleccionarDia(d)">
+                                <span class="day-name">{{ d | date:'EEE':'':'es' }}</span>
+                                <span class="day-num">{{ d | date:'dd' }}</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Horarios -->
+                    <section class="section-card times-column">
+                        <h2 class="section-title">Selecciona la Hora</h2>
+                        <div class="times-grid" *ngIf="diaSeleccionado">
+                            <button *ngFor="let h of horariosPorDia[diaSeleccionado]" class="time-btn"
+                                [disabled]="h.ocupado || isLoading" [class.occupied]="h.ocupado"
+                                (click)="reservarHorario(h)">
+                                {{ h.hora_inicio | date:'HH:mm' }}
+                            </button>
+                        </div>
+                        <div *ngIf="!diaSeleccionado" class="no-selection">
+                            Selecciona un día para ver horarios disponibles
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
