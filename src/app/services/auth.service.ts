@@ -55,7 +55,7 @@ export class AuthService {
   setCurrentUser(user: any): void {
     localStorage.setItem('currentUser', JSON.stringify(user));
     localStorage.setItem('userId', user.id);
-    localStorage.setItem('userRole', user.rol || 'alumno');
+    localStorage.setItem('userRole', user.rol || 'jugador');
     this.currentUserSubject.next(user);
   }
 
@@ -64,7 +64,7 @@ export class AuthService {
   }
 
   getUserRole(): string {
-    return localStorage.getItem('userRole') || 'alumno';
+    return localStorage.getItem('userRole') || 'jugador';
   }
 
   loadUser(): void {

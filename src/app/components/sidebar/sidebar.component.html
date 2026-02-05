@@ -22,7 +22,7 @@
         </div>
 
         <!-- PLAYER MENU -->
-        <ng-container *ngIf="role === 'jugador'">
+        <ng-container *ngIf="computedRole === 'jugador'">
             <a class="nav-item" [class.active]="activePage === 'inicio'" (click)="navigate('/jugador-home')">
                 <span class="icon">🏠</span>
                 <span>Inicio</span>
@@ -31,9 +31,13 @@
                 <span class="icon">📅</span>
                 <span>Calendario</span>
             </a>
+            <a class="nav-item" [class.active]="activePage === 'clubes'" (click)="navigate('/clubes-reservar')">
+                <span class="icon">🏢</span>
+                <span>Reservar Cancha</span>
+            </a>
             <a class="nav-item" [class.active]="activePage === 'reservas'" (click)="navigate('/jugador-reservas')">
                 <span class="icon">📋</span>
-                <span>Agenda Nueva</span>
+                <span>Entrenadores</span>
             </a>
             <a class="nav-item" [class.active]="activePage === 'packs'" (click)="navigate('/jugador-packs')">
                 <span class="icon">⚡</span>
@@ -55,7 +59,7 @@
         </ng-container>
 
         <!-- TRAINER MENU -->
-        <ng-container *ngIf="role === 'entrenador'">
+        <ng-container *ngIf="computedRole === 'entrenador'">
             <a class="nav-item" [class.active]="activePage === 'inicio'" (click)="navigate('/entrenador-home')">
                 <span class="icon">🏠</span>
                 <span>Inicio</span>
@@ -81,6 +85,26 @@
                 (click)="navigate('/disponibilidad-entrenador')">
                 <span class="icon">⏰</span>
                 <span>Disponibilidad</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
+                <span class="icon">👤</span>
+                <span>Perfil</span>
+            </a>
+        </ng-container>
+
+        <!-- CLUB ADMIN MENU -->
+        <ng-container *ngIf="computedRole === 'administrador_club'">
+            <a class="nav-item" [class.active]="activePage === 'club-admin'" (click)="navigate('/admin-club')">
+                <span class="icon">🏢</span>
+                <span>Mi Club</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'club-reservas'" (click)="navigate('/club-reservas')">
+                <span class="icon">📅</span>
+                <span>Agenda de Reservas</span>
+            </a>
+            <a class="nav-item" [class.active]="activePage === 'torneos'" (click)="navigate('/crear-americano')">
+                <span class="icon">🏆</span>
+                <span>Torneos Americanos</span>
             </a>
             <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
                 <span class="icon">👤</span>

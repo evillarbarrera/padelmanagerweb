@@ -65,6 +65,8 @@ export class ApiService {
 
   setCurrentUser(user: any): void {
     localStorage.setItem('currentUser', JSON.stringify(user));
+    localStorage.setItem('userId', user.id);
+    localStorage.setItem('userRole', user.rol || 'jugador');
     this.currentUserSubject.next(user);
   }
 
@@ -82,6 +84,7 @@ export class ApiService {
   logout(): void {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
     this.currentUserSubject.next(null);
   }
 

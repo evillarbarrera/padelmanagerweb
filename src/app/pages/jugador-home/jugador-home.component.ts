@@ -36,10 +36,23 @@ export class JugadorHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.userId = Number(localStorage.getItem('userId'));
+    const userRole = localStorage.getItem('userRole') || '';
+
     if (!this.userId) {
       this.router.navigate(['/login']);
       return;
     }
+
+    // Redirección de seguridad si el rol no es jugador
+    const role = userRole.toLowerCase();
+    if (role.includes('admin') || role.includes('administrador')) {
+      this.router.navigate(['/admin-club']);
+      return;
+    } else if (role.includes('entrenador')) {
+      this.router.navigate(['/entrenador-home']);
+      return;
+    }
+
     this.loadStats();
     this.loadEvaluaciones();
   }

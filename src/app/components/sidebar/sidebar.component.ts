@@ -14,11 +14,24 @@ export class SidebarComponent implements OnInit {
     @Input() jugadorNombre: string = 'Usuario';
     @Input() jugadorFoto: string | null = null;
     @Input() activePage: string = '';
-    @Input() role: 'jugador' | 'entrenador' = 'jugador';
+    @Input() role: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
 
     isOpen = false; // Mobile menu state
 
     constructor(private router: Router) { }
+
+    get computedRole(): string {
+        let r = (this.role || '').toLowerCase();
+        // Fallback to localStorage if role is not provided or is default
+        if (r === 'jugador' || !r) {
+            const storedRole = localStorage.getItem('userRole');
+            if (storedRole) r = storedRole.toLowerCase();
+        }
+
+        if (r.includes('admin')) return 'administrador_club';
+        if (r.includes('entrenador')) return 'entrenador';
+        return 'jugador';
+    }
 
     ngOnInit() { }
 

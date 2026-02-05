@@ -1,0 +1,125 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="clubes">
+    </app-sidebar>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="breadcrumbs">
+                <span>Reservas</span>
+                <span class="separator">/</span>
+                <span class="current">Alquiler de Canchas</span>
+            </div>
+
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="name">{{ userName }}</span>
+                    <span class="role">{{ userRole === 'jugador' ? 'Jugador' : 'Usuario' }}</span>
+                </div>
+                <img class="avatar-circle" [src]="userFoto || 'assets/images/placeholder_avatar.png'"
+                    style="object-fit: cover;">
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <div class="header-main">
+                <h1>Reserva tu Cancha</h1>
+                <p>Encuentra el mejor club y asegura tu partido en segundos.</p>
+            </div>
+
+            <div class="booking-flow">
+                <!-- 1. SELECCIÓN DE CLUB -->
+                <section class="section-container">
+                    <div class="section-header">
+                        <span class="icon">🏢</span>
+                        <h2>1. Selecciona un Club</h2>
+                    </div>
+                    <div class="clubs-horizontal-scroll">
+                        <div *ngFor="let club of clubes" class="club-card-rect"
+                            [class.active]="selectedClub?.id === club.id" (click)="onSelectClub(club)">
+                            <div class="club-image-box">
+                                <img [src]="club.logo || 'assets/images/club_placeholder.jpg'" alt="Club">
+                            </div>
+                            <div class="club-info-footer">
+                                <h3>{{ club.nombre }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FILA PRINCIPAL -->
+                <div class="booking-main-grid animate-up" *ngIf="selectedClub">
+
+                    <!-- COLUMNA IZQUIERDA: DÍA -->
+                    <aside class="config-sidebar">
+                        <section class="section-container">
+                            <div class="section-header">
+                                <span class="icon">📅</span>
+                                <h2>2. Día</h2>
+                            </div>
+
+                            <div class="config-card">
+                                <div class="config-group">
+                                    <div class="days-list-vertical">
+                                        <div *ngFor="let day of weekDays" class="day-v-item"
+                                            [class.active]="selectedFecha === day.fullDate"
+                                            (click)="onSelectDate(day.fullDate)">
+                                            <span class="d-text">{{ day.nombre }} {{ day.numero }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+
+                    <!-- COLUMNA DERECHA: CANCHAS Y HORARIOS -->
+                    <main class="schedules-area">
+                        <!-- SELECCIÓN DE CANCHA (AHORA AQUÍ ARRIBA) -->
+                        <div class="cancha-top-selection">
+                            <span class="sub-label">Selecciona tu Cancha</span>
+                            <div class="cancha-pills-horizontal">
+                                <div *ngFor="let cancha of canchas" class="cancha-h-item"
+                                    [class.active]="selectedCancha?.id === cancha.id" (click)="onSelectCancha(cancha)">
+                                    🎾 {{ cancha.nombre }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="section-divider" *ngIf="selectedCancha">
+
+                        <!-- SELECCIÓN DE HORARIO -->
+                        <section class="section-container" *ngIf="selectedCancha">
+                            <div class="section-header">
+                                <span class="icon">⏰</span>
+                                <h2>3. Selecciona tu Horario</h2>
+                            </div>
+
+                            <div class="horarios-wall-grid">
+                                <div *ngFor="let h of horarios" class="hour-card-premium"
+                                    [class.disabled]="!h.disponible" (click)="reservar(h)">
+                                    <span class="h-time">{{ h.hora_inicio | slice:0:5 }}</span>
+                                    <span class="h-status">{{ h.disponible ? 'Libre' : 'Ocupado' }}</span>
+                                </div>
+                            </div>
+
+                            <div *ngIf="horarios.length === 0" class="no-data-msg">
+                                <p>Cargando disponibilidad...</p>
+                            </div>
+                        </section>
+
+                        <!-- Mensaje si no ha seleccionado cancha -->
+                        <div class="empty-state-schedules" *ngIf="!selectedCancha">
+                            <div class="empty-icon">🎾</div>
+                            <h3>¡Casi listo! Selecciona una cancha</h3>
+                            <p>Elige arriba la cancha donde quieres jugar para ver los horarios.</p>
+                        </div>
+                    </main>
+
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

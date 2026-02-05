@@ -29,7 +29,9 @@ export class EntrenadorHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.userId = Number(localStorage.getItem('userId'));
+    const userRole = localStorage.getItem('userRole') || '';
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
     if (user) {
       if (user.nombre) this.coachNombre = user.nombre;
       if (user.foto_perfil) this.coachFoto = user.foto_perfil;
@@ -39,6 +41,20 @@ export class EntrenadorHomeComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+
+    // Redirección de seguridad
+    const role = userRole.toLowerCase();
+    if (role.includes('admin') || role.includes('administrador')) {
+      this.router.navigate(['/admin-club']);
+      return;
+    } else if (role.includes('jugador') || role.includes('alumno')) {
+      // Si un administrador entra aquí, o un jugador, etc.
+      // Pero si somos entrenadores seguimos.
+    } else if (!role.includes('entrenador')) {
+      this.router.navigate(['/jugador-home']);
+      return;
+    }
+
     this.loadData();
   }
 

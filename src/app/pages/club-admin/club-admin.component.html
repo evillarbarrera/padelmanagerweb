@@ -1,0 +1,99 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="club-admin">
+    </app-sidebar>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="breadcrumbs">
+                <span>Administración</span>
+                <span class="separator">/</span>
+                <span class="current">Gestión de Club</span>
+            </div>
+
+            <div class="user-profile frc">
+                <div class="user-info">
+                    <span class="name">{{ userName }}</span>
+                    <span class="role">Admin Club</span>
+                </div>
+                <img class="avatar-circle" [src]="userFoto || 'assets/images/placeholder_avatar.png'"
+                    style="object-fit: cover;">
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-container">
+            <div class="main-grid">
+                <!-- SECCIÓN CLUBES -->
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <span class="icon">🏢</span>
+                        <h2>Mis Clubes</h2>
+                    </div>
+
+                    <div class="club-list">
+                        <div *ngFor="let club of clubes" class="item-card clickable"
+                            [class.active]="selectedClub?.id === club.id" (click)="selectClub(club)">
+                            <div class="item-info">
+                                <h3>{{ club.nombre }}</h3>
+                                <p><span class="label-icon">📍</span>{{ club.direccion }}</p>
+                            </div>
+                            <span class="status-badge">Activo</span>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><span class="icon">➕</span>Crear Nuevo Club</h3>
+                        <div class="input-group">
+                            <input type="text" [(ngModel)]="newClub.nombre" placeholder="Nombre del Club">
+                            <input type="text" [(ngModel)]="newClub.direccion" placeholder="Dirección">
+                            <button class="btn-primary" (click)="createClub()">Registrar Club</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN CANCHAS -->
+                <div class="card glass-card" *ngIf="selectedClub">
+                    <div class="card-header">
+                        <span class="icon">🎾</span>
+                        <h2>Canchas en {{ selectedClub.nombre }}</h2>
+                    </div>
+
+                    <div class="cancha-list grid-list">
+                        <div *ngFor="let cancha of canchas" class="item-card cancha-item">
+                            <div class="cancha-top">
+                                <span class="cancha-type">{{ cancha.tipo }}</span>
+                                <h3>{{ cancha.nombre }}</h3>
+                            </div>
+                            <div class="cancha-body">
+                                <p>Superficie: <strong>{{ cancha.superficie }}</strong></p>
+                                <div class="price-tag">
+                                    <span class="currency">$</span>
+                                    <span class="amount">{{ cancha.precio_hora }}</span>
+                                    <span class="per">/hora</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><span class="icon">🏟️</span>Agregar Cancha</h3>
+                        <div class="form-grid">
+                            <input type="text" [(ngModel)]="newCancha.nombre" placeholder="Nombre de Cancha">
+                            <select [(ngModel)]="newCancha.tipo">
+                                <option value="Outdoor">Outdoor</option>
+                                <option value="Indoor">Indoor</option>
+                                <option value="Cubierta">Cubierta</option>
+                            </select>
+                            <input type="number" [(ngModel)]="newCancha.precio_hora" placeholder="Precio x Hora">
+                            <button class="btn-secondary" (click)="createCancha()">Vincular Cancha</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

@@ -43,7 +43,7 @@
             </div>
           </div>
           <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none">
-          <span class="role-badge">{{ profile.rol || 'JUGADOR' }}</span>
+          <span class="role-badge">{{ userRole }}</span>
 
           <!-- Moved Save Button Here for Grid Layout -->
           <div class="save-btn-container">
@@ -76,7 +76,7 @@
               <input type="tel" [(ngModel)]="profile.telefono" placeholder="+56 9 ...">
             </div>
 
-            <div class="nike-item">
+            <div class="nike-item" *ngIf="userRole === 'jugador'">
               <label>Categoría</label>
               <select [(ngModel)]="profile.categoria">
                 <option value="" disabled selected>Selecciona tu nivel</option>

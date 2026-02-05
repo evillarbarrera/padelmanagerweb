@@ -15,6 +15,10 @@ import { JugadorPacksComponent } from './pages/jugador-packs/jugador-packs.compo
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 import { AceptarInvitacionComponent } from './pages/aceptar-invitacion/aceptar-invitacion.component';
 import { EntrenadorAgendarComponent } from './pages/entrenador-agendar/entrenador-agendar.component';
+import { ClubAdminComponent } from './pages/club-admin/club-admin.component';
+import { TorneoAmericanoComponent } from './pages/torneo-americano/torneo-americano.component';
+import { ClubesJugadorComponent } from './pages/clubes-jugador/clubes-jugador.component';
+import { ClubReservasComponent } from './pages/club-reservas/club-reservas.component';
 
 export const routes: Routes = [
   { path: 'unete', component: AceptarInvitacionComponent },
@@ -29,6 +33,8 @@ export const routes: Routes = [
   { path: 'jugador-reservas', component: JugadorReservasComponent },
   { path: 'jugador-calendario', component: JugadorCalendarioComponent },
   { path: 'jugador-packs', component: JugadorPacksComponent },
+  { path: 'clubes-reservar', component: ClubesJugadorComponent },
+  { path: 'club-reservas', component: ClubReservasComponent },
   {
     path: 'mis-habilidades',
     loadComponent: () => import('./pages/mis-habilidades/mis-habilidades.component').then(m => m.MisHabilidadesComponent)
@@ -40,6 +46,8 @@ export const routes: Routes = [
   { path: 'entrenador-calendario', component: EntrenadorAgendaComponent },
   { path: 'entrenador-packs', component: EntrenadorPacksComponent },
   { path: 'disponibilidad-entrenador', component: DisponibilidadEntrenadorComponent },
+  { path: 'admin-club', component: ClubAdminComponent },
+  { path: 'crear-americano', component: TorneoAmericanoComponent },
 
   // Shared Routes
   { path: 'perfil', component: PerfilComponent },

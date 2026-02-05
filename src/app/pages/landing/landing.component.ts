@@ -14,7 +14,7 @@ import { EntrenamientoService } from '../../services/entrenamientos.service';
 })
 export class LandingComponent implements OnInit {
   isAuthenticated = false;
-  userRole: 'jugador' | 'entrenador' | null = null;
+  userRole: 'jugador' | 'entrenador' | 'administrador_club' | null = null;
   userName = '';
   userId: number | null = null;
   isLoading = true;
@@ -53,13 +53,16 @@ export class LandingComponent implements OnInit {
     }
 
     // Redirect to the actual home page based on role
-    if (userRole === 'jugador') {
-      this.router.navigate(['/jugador-home']);
-    } else if (userRole === 'entrenador') {
+    const role = (userRole as string).toLowerCase();
+    if (role.includes('administrador') || role.includes('admin')) {
+      this.router.navigate(['/admin-club']);
+    } else if (role.includes('entrenador')) {
       this.router.navigate(['/entrenador-home']);
+    } else if (role.includes('jugador') || role.includes('alumno')) {
+      this.router.navigate(['/jugador-home']);
     } else {
       this.isAuthenticated = true;
-      this.userRole = userRole as 'jugador' | 'entrenador';
+      this.userRole = userRole as any;
       this.cargarDatos();
     }
   }
@@ -141,10 +144,13 @@ export class LandingComponent implements OnInit {
   }
 
   irAHome(): void {
-    if (this.userRole === 'jugador') {
-      this.router.navigate(['/jugador-home']);
-    } else {
+    const role = (this.userRole as string)?.toLowerCase() || '';
+    if (role.includes('administrador') || role.includes('admin')) {
+      this.router.navigate(['/admin-club']);
+    } else if (role.includes('entrenador')) {
       this.router.navigate(['/entrenador-home']);
+    } else {
+      this.router.navigate(['/jugador-home']);
     }
   }
 

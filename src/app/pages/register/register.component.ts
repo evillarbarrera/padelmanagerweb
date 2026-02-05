@@ -17,7 +17,7 @@ export class RegisterComponent {
     email = '';
     password = '';
     confirmPassword = '';
-    rol = 'jugador'; // Default role matching mobile app
+    rol = 'jugador'; // Default role
     showPassword = false;
     isLoading = false;
     error = '';
@@ -54,27 +54,40 @@ export class RegisterComponent {
 
         const userData = {
             nombre: this.nombre,
-            email: this.email, // Fixed: Send email instead of usuario
+            email: this.email,
             password: this.password,
             rol: this.rol
         };
 
         this.apiService.register(userData).subscribe({
             next: (response: any) => {
-                if (response.success || response.id) {
-                    // Auto login after register
-                    this.authService.setCurrentUser(response);
-                    localStorage.setItem('userId', response.id);
-                    localStorage.setItem('userRole', response.rol || 'jugador');
-                    this.router.navigate(['/jugador-home']);
+                if (response.success) {
+                    // Extract user data from response
+                    const user = response.usuario;
+
+                    // Auto login after register - sync both services
+                    this.authService.setCurrentUser(user);
+                    this.apiService.setCurrentUser(user);
+
+                    // Redirige según el rol
+                    const role = (user.rol || '').toLowerCase();
+                    if (role.includes('administrador') || role.includes('admin')) {
+                        this.router.navigate(['/admin-club']);
+                    } else if (role.includes('entrenador')) {
+                        this.router.navigate(['/entrenador-home']);
+                    } else if (role.includes('jugador') || role.includes('alumno')) {
+                        this.router.navigate(['/jugador-home']);
+                    } else {
+                        this.router.navigate(['/']);
+                    }
                 } else {
-                    this.error = response.message || 'Error al registrarse';
+                    this.error = response.error || 'Error al registrarse';
                 }
                 this.isLoading = false;
             },
             error: (err) => {
                 console.error('Register error:', err);
-                this.error = 'Error al registrarse. Inténtalo de nuevo.';
+                this.error = err.error?.error || 'Error al registrarse. Inténtalo de nuevo.';
                 this.isLoading = false;
             }
         });

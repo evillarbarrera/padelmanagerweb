@@ -1,0 +1,201 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" activePage="club-reservas">
+    </app-sidebar>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-left">
+                <h2>Agenda de Reservas</h2>
+                <div class="club-selector" *ngIf="clubes.length > 1">
+                    <select [(ngModel)]="selectedClub" (change)="selectClub(selectedClub)">
+                        <option *ngFor="let c of clubes" [ngValue]="c">{{c.nombre}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="week-nav">
+                <button class="nav-btn" (click)="onFechaChange()">&lt;</button>
+                <div class="days-container">
+                    <div class="day-item" *ngFor="let day of weekDays" [class.active]="day.full === selectedFecha"
+                        (click)="selectWeekDay(day.full)">
+                        <span class="day-name">{{day.short}}</span>
+                        <span class="day-num">{{day.num}}</span>
+                    </div>
+                </div>
+                <button class="nav-btn" (click)="onFechaChange()">&gt;</button>
+            </div>
+
+            <div class="date-picker">
+                <input type="date" [(ngModel)]="selectedFecha" (change)="onFechaChange()">
+            </div>
+        </header>
+
+        <div class="grid-container" *ngIf="selectedClub">
+            <div class="reservas-grid">
+                <!-- Header Horarios -->
+                <div class="grid-header">
+                    <div class="time-col">Hora</div>
+                    <div class="cancha-col" *ngFor="let c of canchas">
+                        {{c.nombre}}
+                    </div>
+                </div>
+
+                <!-- Body Grid -->
+                <div class="grid-body">
+                    <div class="grid-row" *ngFor="let slot of timeSlots">
+                        <div class="time-cell">{{slot}}</div>
+                        <div class="cancha-cell" *ngFor="let c of canchas" (dragover)="onDragOver($event)"
+                            (drop)="onDrop(c.id, slot)">
+                            <ng-container *ngIf="getReservaInSlot(c.id, slot) as res">
+                                <!-- Render solo en el inicio con altura que cubre el total -->
+                                <div class="reserva-item occupied single-block" *ngIf="isStartOfReserva(res, slot)"
+                                    [ngClass]="getReservaClass(res)" [style.height]="getReservaHeight(res)"
+                                    [title]="res.estado === 'Bloqueada' ? 'Horario Bloqueado' : res.nombre_externo"
+                                    draggable="true" (dragstart)="onDragStart(res)" (click)="editarReserva(res)">
+                                    <span class="res-name">{{res.estado === 'Bloqueada' ? '🔒 BLOQUEADO' :
+                                        (res.nombre_externo || 'Ocupado')}}</span>
+                                    <span class="res-time">{{res.hora_inicio.substring(0,5)}} -
+                                        {{res.hora_fin.substring(0,5)}}</span>
+                                </div>
+                            </ng-container>
+
+                            <!-- Slot Libre: solo si no hay NINGUNA reserva en este slot -->
+                            <div class="reserva-item free" *ngIf="!getReservaInSlot(c.id, slot)"
+                                (click)="openQuickBook(c.id, slot)">
+                                <span class="plus">+</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PopUp de Reserva -->
+        <div class="modal-overlay" *ngIf="showAddForm">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3>{{newReserva.id ? 'Editar Reserva' : 'Nueva Reserva'}} - Cancha {{newReserva.cancha_id}}</h3>
+                    <button class="close-modal" (click)="showAddForm = false">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="type-selector">
+                        <button [class.active]="newReserva.estado === 'Confirmada'"
+                            (click)="newReserva.estado = 'Confirmada'">Reserva Jugador</button>
+                        <button [class.active]="newReserva.estado === 'Bloqueada'"
+                            (click)="newReserva.estado = 'Bloqueada'">Bloqueo Admin</button>
+                    </div>
+
+                    <div class="info-strip">
+                        <span>📅 {{newReserva.fecha}}</span>
+                        <span>⏰ {{newReserva.hora_inicio}}</span>
+                    </div>
+
+                    <div class="duration-selector">
+                        <label>Duración</label>
+                        <div class="duration-options">
+                            <button [class.active]="newReserva.duracion === 60" (click)="newReserva.duracion = 60">60
+                                Min</button>
+                            <button [class.active]="newReserva.duracion === 90" (click)="newReserva.duracion = 90">90
+                                Min</button>
+                            <button [class.active]="newReserva.duracion === 120" (click)="newReserva.duracion = 120">120
+                                Min</button>
+                        </div>
+                    </div>
+
+                    <div class="players-section" *ngIf="newReserva.estado === 'Confirmada'">
+                        <div class="players-grid">
+                            <!-- Jugador 1 -->
+                            <div class="player-input-box">
+                                <label>
+                                    Jugador 1 (Titular)
+                                    <span class="badge registered" *ngIf="newReserva.jugador_id">Registrado</span>
+                                    <span class="badge guest"
+                                        *ngIf="!newReserva.jugador_id && newReserva.nombre_externo">Invitado</span>
+                                </label>
+                                <input type="text" [(ngModel)]="newReserva.nombre_externo" placeholder="Nombre completo"
+                                    (input)="searchUsers()" (focus)="activePlayerSlot=1; searchUsers()">
+                            </div>
+                            <!-- Jugador 2 -->
+                            <div class="player-input-box">
+                                <label>
+                                    Jugador 2
+                                    <span class="badge registered" *ngIf="newReserva.jugador2_id">Registrado</span>
+                                    <span class="badge guest"
+                                        *ngIf="!newReserva.jugador2_id && newReserva.nombre_externo2">Invitado</span>
+                                </label>
+                                <input type="text" [(ngModel)]="newReserva.nombre_externo2"
+                                    placeholder="Nombre o Invitado" (input)="searchUsers()"
+                                    (focus)="activePlayerSlot=2; searchUsers()">
+                            </div>
+                            <!-- Jugador 3 -->
+                            <div class="player-input-box">
+                                <label>
+                                    Jugador 3
+                                    <span class="badge registered" *ngIf="newReserva.jugador3_id">Registrado</span>
+                                    <span class="badge guest"
+                                        *ngIf="!newReserva.jugador3_id && newReserva.nombre_externo3">Invitado</span>
+                                </label>
+                                <input type="text" [(ngModel)]="newReserva.nombre_externo3"
+                                    placeholder="Nombre o Invitado" (input)="searchUsers()"
+                                    (focus)="activePlayerSlot=3; searchUsers()">
+                            </div>
+                            <!-- Jugador 4 -->
+                            <div class="player-input-box">
+                                <label>
+                                    Jugador 4
+                                    <span class="badge registered" *ngIf="newReserva.jugador4_id">Registrado</span>
+                                    <span class="badge guest"
+                                        *ngIf="!newReserva.jugador4_id && newReserva.nombre_externo4">Invitado</span>
+                                </label>
+                                <input type="text" [(ngModel)]="newReserva.nombre_externo4"
+                                    placeholder="Nombre o Invitado" (input)="searchUsers()"
+                                    (focus)="activePlayerSlot=4; searchUsers()">
+                            </div>
+                        </div>
+
+                        <!-- Buscador de usuarios -->
+                        <div class="search-results-mini" *ngIf="filteredUsers.length > 0">
+                            <div class="user-suggestion" *ngFor="let u of filteredUsers" (click)="selectUser(u)">
+                                <span>{{u.nombre}}</span>
+                                <small>{{u.usuario}}</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>Precio ($)</label>
+                                <input type="number" [(ngModel)]="newReserva.precio">
+                            </div>
+                            <div class="input-group">
+                                <label>Estado de Pago</label>
+                                <select [(ngModel)]="newReserva.pagado">
+                                    <option [ngValue]="1">Pagado</option>
+                                    <option [ngValue]="0">Pendiente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="block-section" *ngIf="newReserva.estado === 'Bloqueada'">
+                        <div class="block-info">
+                            <span class="icon">🔒</span>
+                            <p>Este horario quedará bloqueado para mantenimiento o eventos privados. No se podrá
+                                reservar desde la App de jugadores.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-delete-link" *ngIf="newReserva.id"
+                        (click)="cancelarReserva(newReserva.id)">Eliminar</button>
+                    <div class="spacer"></div>
+                    <button class="btn-cancel" (click)="showAddForm = false">Cerrar</button>
+                    <button class="btn-save" (click)="crearReserva()">
+                        {{newReserva.id ? 'Guardar' : (newReserva.estado === 'Bloqueada' ? 'Bloquear' : 'Reservar')}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

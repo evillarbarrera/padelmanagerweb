@@ -26,7 +26,7 @@ export class PerfilComponent implements OnInit {
     categoria: ''
   };
 
-  userRole: 'jugador' | 'entrenador' = 'jugador';
+  userRole: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
 
   direccion: any = {
     region: '',
@@ -89,8 +89,8 @@ export class PerfilComponent implements OnInit {
 
   ngOnInit(): void {
     this.userId = Number(localStorage.getItem('userId'));
-    const storedRole = localStorage.getItem('userRole');
-    if (storedRole === 'entrenador' || storedRole === 'jugador') {
+    const storedRole = localStorage.getItem('userRole') as any;
+    if (storedRole) {
       this.userRole = storedRole;
     }
 
@@ -109,6 +109,7 @@ export class PerfilComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.profile = { ...this.profile, ...res.user };
+          this.userRole = res.user.rol; // Update userRole based on fetched profile
           if (res.direccion) {
             this.direccion = { ...res.direccion };
             this.updateComunas(true);
@@ -217,7 +218,14 @@ export class PerfilComponent implements OnInit {
   }
 
   irAInicio(): void {
-    this.router.navigate(['/jugador-home']);
+    const role = this.userRole?.toLowerCase() || '';
+    if (role.includes('administrador') || role.includes('admin')) {
+      this.router.navigate(['/admin-club']);
+    } else if (role.includes('entrenador')) {
+      this.router.navigate(['/entrenador-home']);
+    } else {
+      this.router.navigate(['/jugador-home']);
+    }
   }
 
   irACalendario(): void {

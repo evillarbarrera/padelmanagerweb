@@ -41,17 +41,18 @@ export class LoginComponent {
     this.apiService.login(this.email, this.password).subscribe({
       next: (response: any) => {
         if (response.id) {
-          // Guardar en auth service y localStorage
+          // Guardar en ambos servicios para evitar desincronización
           this.authService.setCurrentUser(response);
-          localStorage.setItem('userId', response.id);
-          localStorage.setItem('userRole', response.rol || 'jugador');
+          this.apiService.setCurrentUser(response);
 
           // Redirige según el rol
-          const userRole = response.rol || 'jugador';
-          if (userRole === 'jugador') {
-            this.router.navigate(['/jugador-home']);
-          } else if (userRole === 'entrenador') {
+          const userRole = (response.rol || 'jugador').toLowerCase();
+          if (userRole.includes('administrador') || userRole.includes('admin')) {
+            this.router.navigate(['/admin-club']);
+          } else if (userRole.includes('entrenador')) {
             this.router.navigate(['/entrenador-home']);
+          } else if (userRole.includes('jugador') || userRole.includes('alumno')) {
+            this.router.navigate(['/jugador-home']);
           } else {
             this.router.navigate(['/']);
           }
