@@ -539,52 +539,109 @@
                             <!-- TAB: POSICIONES (RANKING) -->
                             <div class="tab-content animate-in" *ngIf="activeDetailTab === 'ranking'">
                                 <div class="ranking-table-container premium-ranking">
-                                    <table class="ranking-table">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 60px;">Pos</th>
-                                                <th>Pareja</th>
-                                                <th class="txt-center" title="Partidos Jugados">PJ</th>
-                                                <th class="txt-center" title="Partidos Ganados">PG</th>
-                                                <th class="txt-center" title="Juegos a Favor">JF</th>
-                                                <th class="txt-center" title="Juegos en Contra">JC</th>
-                                                <th class="txt-center" title="Diferencia de Games">Dif</th>
-                                                <th class="txt-center" style="color: #2563eb;">Total Puntos</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr *ngFor="let p of participantes; let i = index">
-                                                <td class="rank-pos">
-                                                    <div class="pos-badge" [class.gold]="i===0" [class.silver]="i===1"
-                                                        [class.bronze]="i===2">
-                                                        {{ i < 3 ? '' : i + 1 }} <span *ngIf="i===0">🥇</span>
-                                                            <span *ngIf="i===1">🥈</span>
-                                                            <span *ngIf="i===2">🥉</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="team-players-stack">
-                                                        <span class="p-main">{{ p.jugador1_nombre }}</span>
-                                                        <span class="p-main">{{ p.jugador2_nombre }}</span>
-                                                    </div>
-                                                </td>
-                                                <td class="txt-center font-bold">{{ p.partidos_jugados || 0 }}</td>
-                                                <td class="txt-center font-bold" style="color: #16a34a;">{{
-                                                    p.partidos_ganados || 0 }}</td>
-                                                <td class="txt-center">{{ p.games_ganados || 0 }}</td>
-                                                <td class="txt-center">{{ p.games_perdidos || 0 }}</td>
-                                                <td class="txt-center font-bold"
-                                                    [style.color]="(p.diferencia_games > 0) ? '#16a34a' : ((p.diferencia_games < 0) ? '#dc2626' : '#64748b')">
-                                                    {{ p.diferencia_games > 0 ? '+' : ''}}{{ p.diferencia_games || 0 }}
-                                                </td>
-                                                <td class="txt-center total-pts">
-                                                    <span class="pts-pill">{{ p.puntos_totales }}</span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <div *ngIf="participantes.length === 0" class="empty-table">No hay registros aún.
+                                    <!-- VISTA DE PODIO PARA AMERICANO MINI TORNEO (GRUPOS) -->
+                                    <div *ngIf="isGrupos; else standardRanking" class="podium-view">
+                                        <h3 class="podium-title">🏆 Cuadro de Honor</h3>
+
+                                        <div class="podium-grid">
+                                            <!-- COPA DE ORO -->
+                                            <div class="podium-card gold-card">
+                                                <div class="card-badge gold">🥇 Copa de Oro</div>
+
+                                                <div class="winner-row" *ngFor="let p of participantes"
+                                                    [hidden]="p.final_rank !== 1">
+                                                    <span class="crown">👑 CAMPEONES</span>
+                                                    <div class="pair-names-big">{{ p.jugador1_nombre }} & {{
+                                                        p.jugador2_nombre }}</div>
+                                                </div>
+
+                                                <div class="runner-row" *ngFor="let p of participantes"
+                                                    [hidden]="p.final_rank !== 2">
+                                                    <span class="sub-label">Subcampeones</span>
+                                                    <div class="pair-names-small">{{ p.jugador1_nombre }} & {{
+                                                        p.jugador2_nombre }}</div>
+                                                </div>
+
+                                                <div class="empty-state-mini" *ngIf="!hasRank(1) && !hasRank(2)">
+                                                    Final de Oro pendiente...
+                                                </div>
+                                            </div>
+
+                                            <!-- COPA DE PLATA -->
+                                            <div class="podium-card silver-card">
+                                                <div class="card-badge silver">🥈 Copa de Plata</div>
+
+                                                <div class="winner-row" *ngFor="let p of participantes"
+                                                    [hidden]="p.final_rank !== 3">
+                                                    <span class="crown">👑 CAMPEONES</span>
+                                                    <div class="pair-names-big">{{ p.jugador1_nombre }} & {{
+                                                        p.jugador2_nombre }}</div>
+                                                </div>
+
+                                                <div class="runner-row" *ngFor="let p of participantes"
+                                                    [hidden]="p.final_rank !== 4">
+                                                    <span class="sub-label">Subcampeones</span>
+                                                    <div class="pair-names-small">{{ p.jugador1_nombre }} & {{
+                                                        p.jugador2_nombre }}</div>
+                                                </div>
+
+                                                <div class="empty-state-mini" *ngIf="!hasRank(3) && !hasRank(4)">
+                                                    Final de Plata pendiente...
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <!-- TABLA ESTÁNDAR PARA OTROS TORNEOS -->
+                                    <ng-template #standardRanking>
+                                        <table class="ranking-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 60px;">Pos</th>
+                                                    <th>Pareja</th>
+                                                    <th class="txt-center" title="Partidos Jugados">PJ</th>
+                                                    <th class="txt-center" title="Partidos Ganados">PG</th>
+                                                    <th class="txt-center" title="Juegos a Favor">JF</th>
+                                                    <th class="txt-center" title="Juegos en Contra">JC</th>
+                                                    <th class="txt-center" title="Diferencia de Games">Dif</th>
+                                                    <th class="txt-center" style="color: #2563eb;">Total Puntos</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let p of participantes; let i = index">
+                                                    <td class="rank-pos">
+                                                        <div class="pos-badge" [class.gold]="i===0"
+                                                            [class.silver]="i===1" [class.bronze]="i===2">
+                                                            {{ i < 3 ? '' : i + 1 }} <span *ngIf="i===0">🥇</span>
+                                                                <span *ngIf="i===1">🥈</span>
+                                                                <span *ngIf="i===2">🥉</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="team-players-stack">
+                                                            <span class="p-main">{{ p.jugador1_nombre }}</span>
+                                                            <span class="p-main">{{ p.jugador2_nombre }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="txt-center font-bold">{{ p.partidos_jugados || 0 }}</td>
+                                                    <td class="txt-center font-bold" style="color: #16a34a;">{{
+                                                        p.partidos_ganados || 0 }}</td>
+                                                    <td class="txt-center">{{ p.games_ganados || 0 }}</td>
+                                                    <td class="txt-center">{{ p.games_perdidos || 0 }}</td>
+                                                    <td class="txt-center font-bold"
+                                                        [style.color]="(p.diferencia_games > 0) ? '#16a34a' : ((p.diferencia_games < 0) ? '#dc2626' : '#64748b')">
+                                                        {{ p.diferencia_games > 0 ? '+' : ''}}{{ p.diferencia_games || 0
+                                                        }}
+                                                    </td>
+                                                    <td class="txt-center total-pts">
+                                                        <span class="pts-pill">{{ p.puntos_totales }}</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div *ngIf="participantes.length === 0" class="empty-table">No hay registros
+                                            aún.</div>
+                                    </ng-template>
                                 </div>
                             </div>
                         </div>

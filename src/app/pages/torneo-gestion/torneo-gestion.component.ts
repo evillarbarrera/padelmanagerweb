@@ -255,6 +255,24 @@ export class TorneoGestionComponent implements OnInit {
         });
     }
 
+    cargarCategoriasStandard() {
+        this.newTorneo.categorias = [
+            // Varones
+            { nombre: '1ra Varones', max_parejas: 16, puntos_repartir: 1000 },
+            { nombre: '2da Varones', max_parejas: 16, puntos_repartir: 750 },
+            { nombre: '3ra Varones', max_parejas: 24, puntos_repartir: 500 },
+            { nombre: '4ta Varones', max_parejas: 32, puntos_repartir: 250 },
+            { nombre: '5ta Varones', max_parejas: 32, puntos_repartir: 100 },
+            { nombre: '6ta Varones', max_parejas: 32, puntos_repartir: 50 },
+            // Damas
+            { nombre: 'Damas A', max_parejas: 16, puntos_repartir: 500 },
+            { nombre: 'Damas B', max_parejas: 16, puntos_repartir: 250 },
+            { nombre: 'Damas C', max_parejas: 24, puntos_repartir: 100 },
+            { nombre: 'Damas D', max_parejas: 24, puntos_repartir: 50 }
+        ];
+        Swal.fire('Cargadas', 'Se han cargado las categorías estándar (Varones 1-6, Damas A-D)', 'success');
+    }
+
     // INSCRIPCIÓN MANUAL
     manualInscripcion: any = {
         jugador1_id: 0,

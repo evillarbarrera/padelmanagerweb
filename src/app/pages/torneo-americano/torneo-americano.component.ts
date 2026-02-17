@@ -628,4 +628,8 @@ export class TorneoAmericanoComponent implements OnInit {
     hasHistoryTournaments(): boolean {
         return this.torneos.some(t => t.estado !== 'Abierto');
     }
+
+    hasRank(rank: number): boolean {
+        return this.participantes.some(p => p.final_rank === rank);
+    }
 }

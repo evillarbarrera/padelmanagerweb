@@ -72,8 +72,14 @@
 
                 <!-- CATEGORIAS A REPARTIR -->
                 <div class="categories-setup" style="margin-top: 30px;">
-                    <h3 style="font-size: 14px; font-weight: 800; color: #888; text-transform: uppercase;">Categorías y
-                        Puntos</h3>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3
+                            style="font-size: 14px; font-weight: 800; color: #888; text-transform: uppercase; margin: 0;">
+                            Categorías y Puntos</h3>
+                        <button class="btn-outline" (click)="cargarCategoriasStandard()"
+                            style="font-size: 11px; padding: 5px 10px;">Cargar Estándar (CL)</button>
+                    </div>
                     <div class="cat-setup-grid" style="display: grid; gap: 10px; margin-top: 15px;">
                         <div class="cat-setup-row" *ngFor="let cat of newTorneo.categorias; let i = index"
                             style="display: grid; grid-template-columns: 2fr 1fr 1fr 50px; gap: 10px; align-items: end;">
