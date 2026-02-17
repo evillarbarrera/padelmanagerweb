@@ -65,19 +65,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 35px;
+            margin-bottom: 20px;
             flex-shrink: 0;
             position: relative;
 
-            &::after {
-                content: '';
-                position: absolute;
-                bottom: -15px;
-                width: 40px;
-                height: 2px;
-                background: #ccff00;
-                border-radius: 2px;
-            }
+            // ... existing styles ... 
 
             .avatar-img-large {
                 width: 80px;
@@ -92,6 +84,106 @@
                 &:hover {
                     transform: scale(1.05) rotate(3deg);
                     border-color: #ccff00;
+                }
+            }
+        }
+
+        // PROFILE SWITCHER STYLES
+        .profile-switcher {
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding-bottom: 15px;
+
+            .current-profile-btn {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 15px;
+                background: #f8f9fa;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: #fff;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                }
+
+                .info {
+                    display: flex;
+                    flex-direction: column;
+                    text-align: left;
+
+                    .role-label {
+                        font-weight: 700;
+                        font-size: 0.9rem;
+                        color: #111;
+                    }
+                }
+
+                .arrow {
+                    font-size: 0.8rem;
+                    color: #999;
+                    transition: transform 0.3s;
+
+                    &.rotated {
+                        transform: rotate(180deg);
+                    }
+                }
+            }
+
+            .switch-menu {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+                margin-top: 5px;
+                border-radius: 12px;
+                background: #fff;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+                &.expanded {
+                    max-height: 300px;
+                    border: 1px solid #eee;
+                }
+
+                .switch-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px 15px;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                    border-bottom: 1px solid #f8f9fa;
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    &:hover {
+                        background: #f1f5f9;
+                    }
+
+                    .p-icon {
+                        font-size: 1.2rem;
+                    }
+
+                    .p-text {
+                        display: flex;
+                        flex-direction: column;
+
+                        .p-club {
+                            font-weight: 700;
+                            font-size: 0.85rem;
+                            color: #333;
+                        }
+
+                        .p-rol {
+                            font-size: 0.75rem;
+                            color: #777;
+                        }
+                    }
                 }
             }
         }

@@ -24,6 +24,41 @@
             <img [src]="jugadorFoto || 'assets/images/placeholder_avatar.png'" class="avatar-img-large" alt="Perfil">
         </div>
 
+        <!-- PROFILE SWITCHER -->
+        <div class="profile-switcher">
+            <button class="current-profile-btn" (click)="toggleSwitchMenu()">
+                <div class="info">
+                    <span class="role-label">{{ computedRole | titlecase }}</span>
+                    <!-- We'd ideally show current club name, but it's not in Input, could be fetched or stored -->
+                    <span class="club-label" style="font-size: 0.75rem; opacity: 0.7;">
+                        {{ availableProfiles.length > 1 ? 'Cambiar Perfil' : 'Gestionar Perfil' }}
+                    </span>
+                </div>
+                <span class="arrow" [class.rotated]="showSwitchMenu">▼</span>
+            </button>
+
+            <div class="switch-menu" [class.expanded]="showSwitchMenu">
+                <div *ngFor="let p of availableProfiles" class="switch-item" (click)="switchProfile(p)">
+                    <span class="p-icon">{{ p.rol === 'administrador_club' ? '🏢' : (p.rol === 'entrenador' ? '🎾' :
+                        '👤') }}</span>
+                    <div class="p-text">
+                        <span class="p-club">{{ p.club_nombre || 'Sin Club' }}</span>
+                        <span class="p-rol">{{ p.rol | titlecase }}</span>
+                    </div>
+                </div>
+
+                <!-- Add New Profile Option -->
+                <div class="switch-item create-new" (click)="navigate('create-profile')"
+                    style="border-top: 1px dashed #eee; color: #2563eb;">
+                    <span class="p-icon">➕</span>
+                    <div class="p-text">
+                        <span class="p-club">Nuevo Rol</span>
+                        <span class="p-rol">Solicitar acceso</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="menu-sections">
             <!-- PLAYER MENU -->
             <ng-container *ngIf="computedRole === 'jugador'">

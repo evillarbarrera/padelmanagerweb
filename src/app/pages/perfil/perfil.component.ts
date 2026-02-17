@@ -6,6 +6,7 @@ import { MysqlService } from '../../services/mysql.service';
 import { ClubesService } from '../../services/clubes.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-perfil',
@@ -29,6 +30,33 @@ export class PerfilComponent implements OnInit {
   };
 
   userRole: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
+
+  openRoleRequest() {
+    Swal.fire({
+      title: 'Solicitar Nuevo Rol',
+      text: '¿Qué rol te gustaría añadir a tu perfil?',
+      input: 'radio',
+      inputOptions: {
+        'entrenador': '🎾 Entrenador',
+        'administrador_club': '🏢 Administrador de Club'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Enviar Solicitud',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0f172a'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const role = result.value;
+        if (!role) return;
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Solicitud Enviada',
+          text: 'Un administrador revisará tu solicitud para ' + (role === 'entrenador' ? 'Entrenador' : 'Admin Club') + '.'
+        });
+      }
+    });
+  }
 
   direccion: any = {
     region: '',

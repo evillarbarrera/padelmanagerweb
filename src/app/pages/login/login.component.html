@@ -11,7 +11,7 @@
     </div>
 
     <!-- Login Form -->
-    <div class="form-box" *ngIf="!showRecoverForm">
+    <div class="form-box" *ngIf="!showRecoverForm && !showProfileSelector">
       <div class="input-group">
         <label>Correo Electrónico</label>
         <div class="input-wrapper">
@@ -53,8 +53,31 @@
       </div>
     </div>
 
+    <!-- PROFILE SELECTOR -->
+    <div class="form-box profile-selector" *ngIf="showProfileSelector">
+      <h3>Selecciona un Perfil</h3>
+      <p class="subtitle-small">Tienes múltiples roles asociados a esta cuenta.</p>
+
+      <div class="profiles-list">
+        <button *ngFor="let p of availableProfiles" class="profile-btn" (click)="selectProfile(p)">
+          <div class="p-icon">
+            {{ p.rol === 'administrador_club' ? '🏢' : (p.rol === 'entrenador' ? '🎾' : '👤') }}
+          </div>
+          <div class="p-info">
+            <span class="p-club">{{ p.club_nombre || 'Sin Club' }}</span>
+            <span class="p-rol">{{ p.rol | titlecase }}</span>
+          </div>
+          <div class="p-arrow">➜</div>
+        </button>
+      </div>
+
+      <div class="register-prompt">
+        <a (click)="showProfileSelector = false">Volver</a>
+      </div>
+    </div>
+
     <!-- Recovery Form -->
-    <div class="form-box" *ngIf="showRecoverForm">
+    <div class="form-box" *ngIf="showRecoverForm && !showProfileSelector">
       <div class="input-group">
         <label>Correo Electrónico</label>
         <div class="input-wrapper">

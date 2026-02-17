@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -56,7 +57,38 @@ export class AuthService {
     localStorage.setItem('currentUser', JSON.stringify(user));
     localStorage.setItem('userId', user.id);
     localStorage.setItem('userRole', user.rol || 'jugador');
+
+    if (user.perfiles && user.perfiles.length > 0) {
+      localStorage.setItem('availableProfiles', JSON.stringify(user.perfiles));
+    }
+
     this.currentUserSubject.next(user);
+  }
+
+  getProfiles(): any[] {
+    const p = localStorage.getItem('availableProfiles');
+    return p ? JSON.parse(p) : [];
+  }
+
+  switchProfile(perfil: any): void {
+    const currentUser = this.currentUserSubject.value;
+    if (!currentUser) return;
+
+    const updatedUser = {
+      ...currentUser,
+      rol: perfil.rol,
+      club_id: perfil.club_id,
+      club_nombre: perfil.club_nombre,
+      // Keep perfiles array intact
+      perfiles: this.getProfiles()
+    };
+
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser)); // Update stored session
+    localStorage.setItem('userRole', updatedUser.rol);
+    this.currentUserSubject.next(updatedUser);
+
+    // Force reload/navigation to apply new role permissions
+    window.location.href = '/';
   }
 
   getCurrentUser(): any {
@@ -83,5 +115,28 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return this.currentUserSubject.value !== null;
+  }
+
+  addProfile(usuario_id: number, club_id: number, rol: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/clubes/add_profile.php`, { usuario_id, club_id, rol });
+  }
+
+  refreshSession(userId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/user/refresh_session.php?user_id=${userId}`).pipe(
+      tap((res: any) => {
+        if (res.success && res.user) {
+          const freshUser = res.user;
+          const currentSession = this.currentUserSubject.value || {};
+
+          if (freshUser.perfiles && freshUser.perfiles.length > 0) {
+            localStorage.setItem('availableProfiles', JSON.stringify(freshUser.perfiles));
+
+            const updatedUser = { ...currentSession, perfiles: freshUser.perfiles };
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            this.currentUserSubject.next(updatedUser);
+          }
+        }
+      })
+    );
   }
 }

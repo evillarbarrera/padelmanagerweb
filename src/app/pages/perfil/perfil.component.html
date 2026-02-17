@@ -61,10 +61,15 @@
           <span class="role-badge">{{ userRole }}</span>
 
           <!-- Moved Save Button Here for Grid Layout -->
-          <div class="save-btn-container">
+          <div class="save-btn-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
             <button class="save-btn" (click)="guardarCambios()" [disabled]="isLoading">
               <span *ngIf="isLoading" class="spinner"></span>
-              <span *ngIf="!isLoading">GUARDAR</span>
+              <span *ngIf="!isLoading">GUARDAR CAMBIOS</span>
+            </button>
+
+            <button class="btn-secondary-role" (click)="openRoleRequest()"
+              style="background: transparent; border: 1px dashed #cbd5e1; color: #64748b; padding: 8px; font-size: 11px; border-radius: 8px; cursor: pointer;">
+              ➕ Solicitar Nuevo Rol
             </button>
           </div>
         </div>

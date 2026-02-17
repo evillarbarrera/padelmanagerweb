@@ -29,6 +29,9 @@ export class LoginComponent {
     private router: Router
   ) { }
 
+  availableProfiles: any[] = [];
+  showProfileSelector = false;
+
   login(): void {
     if (!this.email || !this.password) {
       this.error = 'Email y contraseña requeridos';
@@ -40,26 +43,21 @@ export class LoginComponent {
 
     this.apiService.login(this.email, this.password).subscribe({
       next: (response: any) => {
+        this.isLoading = false;
         if (response.id) {
-          // Guardar en ambos servicios para evitar desincronización
-          this.authService.setCurrentUser(response);
-          this.apiService.setCurrentUser(response);
-
-          // Redirige según el rol
-          const userRole = (response.rol || 'jugador').toLowerCase();
-          if (userRole.includes('administrador') || userRole.includes('admin')) {
-            this.router.navigate(['/admin-club']);
-          } else if (userRole.includes('entrenador')) {
-            this.router.navigate(['/entrenador-home']);
-          } else if (userRole.includes('jugador') || userRole.includes('alumno')) {
-            this.router.navigate(['/jugador-home']);
+          // Si hay múltiples perfiles, mostrar selector
+          if (response.perfiles && response.perfiles.length > 1) {
+            this.authService.setCurrentUser(response); // Guardamos user base
+            this.availableProfiles = response.perfiles;
+            this.showProfileSelector = true;
           } else {
-            this.router.navigate(['/']);
+            // Caso único perfil (o legacy)
+            const perfil = (response.perfiles && response.perfiles.length > 0) ? response.perfiles[0] : null;
+            this.finalizeLogin(response, perfil);
           }
         } else {
           this.error = 'Credenciales inválidas';
         }
-        this.isLoading = false;
       },
       error: (err) => {
         console.error('Login error:', err);
@@ -67,6 +65,36 @@ export class LoginComponent {
         this.isLoading = false;
       }
     });
+  }
+
+  selectProfile(perfil: any) {
+    const user = this.authService.getCurrentUser();
+    this.finalizeLogin(user, perfil);
+  }
+
+  finalizeLogin(user: any, perfil: any) {
+    // Merge selected profile data into user object for session
+    const finalUser = {
+      ...user,
+      rol: perfil ? perfil.rol : user.rol,
+      club_id: perfil ? perfil.club_id : user.club_id,
+      club_nombre: perfil ? perfil.club_nombre : ''
+    };
+
+    this.authService.setCurrentUser(finalUser);
+    this.apiService.setCurrentUser(finalUser);
+
+    // Redirige según el rol
+    const userRole = (finalUser.rol || 'jugador').toLowerCase();
+    if (userRole.includes('administrador') || userRole.includes('admin')) {
+      this.router.navigate(['/admin-club']);
+    } else if (userRole.includes('entrenador')) {
+      this.router.navigate(['/entrenador-home']);
+    } else if (userRole.includes('jugador') || userRole.includes('alumno')) {
+      this.router.navigate(['/jugador-home']);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   toggleRecoverMode(): void {
