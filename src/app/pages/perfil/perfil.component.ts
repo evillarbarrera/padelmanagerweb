@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
+import { ClubesService } from '../../services/clubes.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
 
@@ -23,7 +24,8 @@ export class PerfilComponent implements OnInit {
     instagram: '',
     facebook: '',
     foto_perfil: '',
-    categoria: ''
+    categoria: '',
+    descripcion: ''
   };
 
   userRole: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
@@ -37,6 +39,13 @@ export class PerfilComponent implements OnInit {
     latitud: null,
     longitud: null
   };
+
+  // Tournament Filters
+  filterRegion: string = '';
+  filterComuna: string = '';
+  filteredComunasFilter: string[] = [];
+  availableTournaments: any[] = [];
+  activeTab: string = 'profile'; // 'profile' | 'tournaments'
 
   regions = [
     { id: '13', name: 'Metropolitana de Santiago' },
@@ -83,6 +92,7 @@ export class PerfilComponent implements OnInit {
 
   constructor(
     private mysqlService: MysqlService,
+    private clubesService: ClubesService,
     private router: Router,
     private popupService: PopupService
   ) { }
@@ -113,6 +123,14 @@ export class PerfilComponent implements OnInit {
           if (res.direccion) {
             this.direccion = { ...res.direccion };
             this.updateComunas(true);
+
+            // Initialize filters for tournaments
+            if (this.userRole === 'jugador') {
+              this.filterRegion = this.direccion.region;
+              this.updateFilterComunas(true);
+              this.filterComuna = this.direccion.comuna;
+              this.loadTournaments();
+            }
           }
         }
         this.isLoading = false;
@@ -197,6 +215,7 @@ export class PerfilComponent implements OnInit {
       facebook: this.profile.facebook,
       foto_perfil: this.profile.foto_perfil, // Include the photo URL
       categoria: this.profile.categoria,
+      descripcion: this.profile.descripcion,
       ...this.direccion
     };
 
@@ -246,6 +265,39 @@ export class PerfilComponent implements OnInit {
         localStorage.clear();
         this.router.navigate(['/login']);
       }
+    });
+  }
+
+  updateFilterComunas(keepComuna = false): void {
+    const selectedRegion = this.regions.find(r => r.name === this.filterRegion);
+
+    if (selectedRegion) {
+      this.filteredComunasFilter = this.allComunas[selectedRegion.id] || [];
+      if (!keepComuna) {
+        this.filterComuna = '';
+        this.loadTournaments();
+      }
+    } else {
+      this.filteredComunasFilter = [];
+      this.filterComuna = '';
+      this.loadTournaments();
+    }
+  }
+
+  onFilterRegionChange(): void {
+    this.updateFilterComunas();
+  }
+
+  onFilterComunaChange(): void {
+    this.loadTournaments();
+  }
+
+  loadTournaments(): void {
+    this.clubesService.getTorneosPublicos(this.filterRegion, this.filterComuna).subscribe({
+      next: (res) => {
+        this.availableTournaments = res;
+      },
+      error: (err) => console.error(err)
     });
   }
 

@@ -25,6 +25,39 @@
     }
 }
 
+.trainers-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+
+    .tab-btn {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 14px;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+
+        &:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+        }
+
+        &.active {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+    }
+}
+
 .card {
     background: #fff;
     border-radius: 20px;

@@ -27,11 +27,22 @@ export class JugadorPacksComponent implements OnInit {
     jugadorFoto: string | null = null;
 
     // Location Filter
-    useLocation = false;
+    useLocation = true; // Enabled by default as requested
     userLat: number | null = null;
     userLng: number | null = null;
-    searchRadius = 20; // Default 20km
+    searchRadius = 50; // Default 50km
     isLoadingLocation = false;
+
+    // View State
+    viewMode: 'trainers' | 'packs' = 'trainers';
+    selectedTrainer: any = null;
+
+    // Categorized Packs
+    activeCategoryTab: 'individual' | 'multi' | 'grupal' = 'individual';
+    nextSaturday: string = '';
+    packsIndividual: any[] = [];
+    packsSmallGroups: any[] = [];
+    packsGrupales: any[] = [];
 
     constructor(
         private mysqlService: MysqlService,
@@ -49,8 +60,20 @@ export class JugadorPacksComponent implements OnInit {
             return;
         }
         this.loadUserProfile();
-        this.loadPacks(); // Initial load without location
+        this.getCurrentLocation(); // Auto-request location
         this.checkPaymentStatus();
+        this.calculateNextSaturday();
+    }
+
+    calculateNextSaturday(): void {
+        const today = new Date();
+        const nextSat = new Date();
+        // 6 is Saturday. If today is Sat, it adds 7 days to get NEXT sat.
+        const daysToSaturday = (6 - today.getDay() + 7) % 7 || 7;
+        nextSat.setDate(today.getDate() + daysToSaturday);
+
+        const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
+        this.nextSaturday = nextSat.toLocaleDateString('es-ES', options);
     }
 
     checkPaymentStatus(): void {
@@ -149,22 +172,53 @@ export class JugadorPacksComponent implements OnInit {
             if (p.entrenador_id && !map.has(p.entrenador_id)) {
                 map.set(p.entrenador_id, {
                     id: p.entrenador_id,
-                    nombre: p.entrenador_nombre
+                    nombre: p.entrenador_nombre,
+                    foto: p.entrenador_foto,
+                    descripcion: p.entrenador_descripcion || 'Sin descripción disponible.',
+                    distancia: p.distancia,
+                    comuna: p.trainer_comuna
                 });
             }
         });
-        this.entrenadores = Array.from(map.values());
+        // Sort by distance if available
+        this.entrenadores = Array.from(map.values()).sort((a, b) => (a.distancia || 999) - (b.distancia || 999));
+    }
+
+    selectTrainer(trainer: any): void {
+        this.selectedTrainer = trainer;
+        this.selectedEntrenador = trainer.id;
+        this.viewMode = 'packs';
+        this.filtrarPacks();
+    }
+
+    backToTrainers(): void {
+        this.selectedTrainer = null;
+        this.selectedEntrenador = null;
+        this.viewMode = 'trainers';
     }
 
     filtrarPacks(): void {
         let filtered = [...this.packs];
 
-        // Filter by Coach
         if (this.selectedEntrenador) {
             filtered = filtered.filter(p => p.entrenador_id == this.selectedEntrenador);
         }
 
         this.packsFiltrados = filtered;
+
+        // Sort by price (Lower to Higher)
+        this.packsFiltrados.sort((a, b) => Number(a.precio) - Number(b.precio));
+
+        // Categorize with more robust checks (handles strings and nulls)
+        this.packsIndividual = this.packsFiltrados.filter(p =>
+            p.tipo === 'individual' && (Number(p.cantidad_personas) <= 1 || !p.cantidad_personas)
+        );
+        this.packsSmallGroups = this.packsFiltrados.filter(p =>
+            p.tipo === 'individual' && Number(p.cantidad_personas) > 1
+        );
+        this.packsGrupales = this.packsFiltrados.filter(p =>
+            p.tipo === 'grupal'
+        );
     }
 
     onEntrenadorChange(event: any): void {
@@ -187,32 +241,23 @@ export class JugadorPacksComponent implements OnInit {
     procesarCompra(pack: any): void {
         if (!this.userId) return;
 
-        // CLIENT-SIDE TOKEN GENERATION (Bypass Remote Mock Bank)
-        try {
-            const payload = JSON.stringify({
-                pack_id: pack.id,
-                jugador_id: this.userId,
-                origin: window.location.href.split('?')[0]
-            });
-            const token = btoa(payload);
-            const confirmUrl = 'https://api.padelmanager.cl/pagos/confirm_transaction.php';
+        this.popupService.info('Procesando...', 'Estamos activando tu pack.');
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = confirmUrl;
+        const payload = {
+            pack_id: pack.id,
+            jugador_id: this.userId
+        };
 
-            const inputToken = document.createElement('input');
-            inputToken.type = 'hidden';
-            inputToken.name = 'token_ws';
-            inputToken.value = token;
-
-            form.appendChild(inputToken);
-            document.body.appendChild(form);
-            form.submit();
-        } catch (e) {
-            console.error('Error constructing purchase token', e);
-            this.popupService.error('Error', 'No se pudo iniciar la compra.');
-        }
+        this.alumnoService.insertPack(payload).subscribe({
+            next: (res: any) => {
+                this.popupService.success('¡Pack Activado!', `El pack "${pack.nombre}" ya está disponible en tu cuenta.`);
+                this.router.navigate(['/mis-packs-activos']);
+            },
+            error: (err) => {
+                console.error('Error al activar pack:', err);
+                this.popupService.error('Error', 'No se pudo activar el pack. Inténtalo más tarde.');
+            }
+        });
     }
 
 

@@ -20,14 +20,29 @@ export class ClubesService {
     }
 
     // CLUBES
-    getClubes(): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/clubes/get_clubes.php`, {
+    getClubes(adminId?: number): Observable<any[]> {
+        let url = `${this.apiUrl}/clubes/get_clubes.php`;
+        if (adminId) url += `?admin_id=${adminId}`;
+
+        return this.http.get<any[]>(url, {
             headers: this.getHeaders()
         });
     }
 
     addClub(clubData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/clubes/add_club.php`, clubData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    updateClub(clubData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/clubes/update_club.php`, clubData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    deleteClub(id: number, adminId: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/clubes/delete_club.php`, { id, admin_id: adminId }, {
             headers: this.getHeaders()
         });
     }
@@ -47,6 +62,18 @@ export class ClubesService {
 
     getDisponibilidadCancha(canchaId: number, fecha: string): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/clubes/get_disponibilidad.php?cancha_id=${canchaId}&fecha=${fecha}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    updateCancha(canchaData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/clubes/update_cancha.php`, canchaData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    deleteCancha(id: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/clubes/delete_cancha.php`, { id }, {
             headers: this.getHeaders()
         });
     }
@@ -78,6 +105,23 @@ export class ClubesService {
 
     getTorneosAdmin(adminId: number): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/torneos/get_torneos_admin.php?admin_id=${adminId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getMyTournaments(userId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_user_tournaments.php?user_id=${userId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getTorneosPublicos(region?: string, comuna?: string, showAll: boolean = false): Observable<any[]> {
+        let url = `${this.apiUrl}/torneos/get_torneos_public.php?1=1`;
+        if (region) url += `&region=${encodeURIComponent(region)}`;
+        if (comuna) url += `&comuna=${encodeURIComponent(comuna)}`;
+        if (showAll) url += `&all=1`;
+
+        return this.http.get<any[]>(url, {
             headers: this.getHeaders()
         });
     }
@@ -130,11 +174,137 @@ export class ClubesService {
         });
     }
 
-    joinTorneoManual(torneoId: number, userId: number): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl}/torneos/join_torneo.php`, {
-            torneo_id: torneoId,
-            usuario_id: userId
+    joinTorneoManual(data: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/join_torneo.php`, data, {
+            headers: this.getHeaders()
+        });
+    }
+
+    cancelarTorneoAmericano(torneoId: number): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/cancelar_americano.php`, {
+            torneo_id: torneoId
         }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    closeTorneoAmericano(torneoId: number): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/close_americano.php`, {
+            torneo_id: torneoId
+        }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    generatePlayoffs(torneoId: number): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/close_groups_playoffs.php`, {
+            torneo_id: torneoId
+        }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    generateFinals(torneoId: number): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/generate_finals.php`, {
+            torneo_id: torneoId
+        }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    removeParticipante(torneoId: number, participanteId: number): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/remove_participante.php`, {
+            torneo_id: torneoId,
+            participante_id: participanteId
+        }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    updateParticipante(data: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/update_participante.php`, data, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getRanking(categoria: string = 'General'): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_ranking.php?categoria=${categoria}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // TORNEOS V2 (Groups + Playoffs)
+    createTorneoV2(torneoData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/create_torneo_v2.php`, torneoData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getTorneosAdminV2(adminId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_torneos_admin_v2.php?admin_id=${adminId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getCategoriasTorneo(torneoId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_categorias.php?torneo_id=${torneoId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    generarGrupos(categoriaId: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/generar_grupos.php`, { categoria_id: categoriaId }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getRankingGrupo(grupoId: number): Observable<any> {
+        return this.http.get(`${this.apiUrl}/torneos/get_ranking_grupo.php?grupo_id=${grupoId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getInscripciones(categoriaId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_inscripciones.php?categoria_id=${categoriaId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    validarInscripcion(inscripcionId: number, validado: boolean): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/validar_inscripcion.php`, {
+            inscripcion_id: inscripcionId,
+            validado: validado ? 1 : 0
+        }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    inscribirParejaV2(data: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/join_torneo_v2.php`, data, {
+            headers: this.getHeaders()
+        });
+    }
+
+    cerrarFaseGrupos(categoriaId: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/cerrar_grupos.php`, { categoria_id: categoriaId }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getPartidosRonda(categoriaId: number, ronda: string): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_partidos_ronda.php?categoria_id=${categoriaId}&ronda=${ronda}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getPartidosCategoria(categoriaId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_partidos_categoria.php?categoria_id=${categoriaId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    updateMatchResultV2(matchData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/update_match_result.php`, matchData, {
             headers: this.getHeaders()
         });
     }

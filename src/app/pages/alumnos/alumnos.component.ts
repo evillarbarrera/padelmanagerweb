@@ -68,6 +68,7 @@ export class AlumnosComponent implements OnInit {
           ...a,
           sesiones_pagadas: Number(a.sesiones_pagadas),
           sesiones_reservadas: a.sesiones_reservadas,
+          sesiones_grupales: a.sesiones_grupales,
           sesiones_restantes: a.sesiones_pendientes,
           // If we want to show current active pack names
           pack_nombre: a.pack_nombres

@@ -62,8 +62,12 @@
                 <span class="value">{{ alumno.sesiones_pagadas || 0 }}</span>
               </div>
               <div class="session-stat">
-                <span class="label">Reservadas</span>
+                <span class="label">Reservas</span>
                 <span class="value">{{ alumno.sesiones_reservadas }}</span>
+              </div>
+              <div class="session-stat">
+                <span class="label">Grupales</span>
+                <span class="value" style="color: #2196f3; font-weight: 800;">{{ alumno.sesiones_grupales || 0 }}</span>
               </div>
               <div class="session-stat">
                 <span class="label">Restantes</span>

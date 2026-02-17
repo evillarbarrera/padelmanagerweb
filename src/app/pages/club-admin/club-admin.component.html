@@ -29,28 +29,96 @@
             <div class="main-grid">
                 <!-- SECCIÓN CLUBES -->
                 <div class="card glass-card">
-                    <div class="card-header">
-                        <span class="icon">🏢</span>
-                        <h2>Mis Clubes</h2>
+                    <!-- Tab Navigation -->
+                    <div class="main-tabs-nav" style="margin-bottom: 20px;">
+                        <button class="tab-btn" [class.active]="activeTab === 'list'" (click)="activeTab = 'list'">
+                            <span class="icon">🏢</span> Mis Clubes
+                        </button>
+                        <button class="tab-btn" [class.active]="activeTab === 'create'" (click)="activeTab = 'create'">
+                            <span class="icon">➕</span> Crear Nuevo Club
+                        </button>
                     </div>
 
-                    <div class="club-list">
-                        <div *ngFor="let club of clubes" class="item-card clickable"
-                            [class.active]="selectedClub?.id === club.id" (click)="selectClub(club)">
-                            <div class="item-info">
-                                <h3>{{ club.nombre }}</h3>
-                                <p><span class="label-icon">📍</span>{{ club.direccion }}</p>
+                    <!-- VISTA LISTA -->
+                    <div *ngIf="activeTab === 'list'">
+                        <div class="club-list">
+                            <div *ngFor="let club of clubes" class="item-card clickable"
+                                [class.active]="selectedClub?.id === club.id" (click)="selectClub(club)">
+                                <div class="item-info">
+                                    <h3>{{ club.nombre }}</h3>
+                                    <p><span class="label-icon">📍</span>{{ club.direccion }}</p>
+                                    <p style="font-size: 11px; margin-top: 5px;" *ngIf="club.region">
+                                        {{ club.region }} - {{ club.comuna }}
+                                    </p>
+                                </div>
+                                <div class="item-actions">
+                                    <span class="status-badge">Activo</span>
+                                    <div class="frc" style="gap: 8px;">
+                                        <button class="btn-icon" (click)="editClub(club, $event)" title="Editar Club">
+                                            ✏️
+                                        </button>
+                                        <button class="btn-delete-mini" (click)="deleteClub(club, $event)"
+                                            title="Borrar Club">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <span class="status-badge">Activo</span>
+
+                            <!-- Add new club shortcut card -->
+                            <div class="item-card add-card clickable" (click)="activeTab = 'create'">
+                                <div class="add-content">
+                                    <span class="plus-icon">➕</span>
+                                    <span>Agregar Club</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-section">
-                        <h3><span class="icon">➕</span>Crear Nuevo Club</h3>
-                        <div class="input-group">
-                            <input type="text" [(ngModel)]="newClub.nombre" placeholder="Nombre del Club">
-                            <input type="text" [(ngModel)]="newClub.direccion" placeholder="Dirección">
-                            <button class="btn-primary" (click)="createClub()">Registrar Club</button>
+                    <!-- VISTA CREAR / EDITAR -->
+                    <div *ngIf="activeTab === 'create'" class="create-view animate-in">
+                        <div class="form-section" style="border-top: none; margin-top: 0; padding-top: 0;">
+                            <h3>{{ editingClubId ? 'Editar Club' : 'Registrar un Nuevo Club' }}</h3>
+                            <div class="input-group">
+                                <label>Nombre del Club</label>
+                                <input type="text" [(ngModel)]="newClub.nombre" placeholder="Ej: Padel Center">
+
+                                <label>Región</label>
+                                <select [(ngModel)]="newClub.region" (change)="updateComunas()">
+                                    <option value="" disabled selected>Selecciona región</option>
+                                    <option *ngFor="let r of regions" [value]="r.name">{{ r.name }}</option>
+                                </select>
+
+                                <label>Comuna</label>
+                                <select [(ngModel)]="newClub.comuna" [disabled]="!newClub.region">
+                                    <option value="" disabled selected>Selecciona comuna</option>
+                                    <option *ngFor="let c of filteredComunas" [value]="c">{{ c }}</option>
+                                </select>
+
+                                <label>Calle / Dirección</label>
+                                <input type="text" [(ngModel)]="newClub.direccion" placeholder="Ej: Av. Principal 123">
+
+                                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div class="input-item">
+                                        <label>Teléfono (Opcional)</label>
+                                        <input type="text" [(ngModel)]="newClub.telefono" placeholder="+56 9 ...">
+                                    </div>
+                                    <div class="input-item">
+                                        <label>Instagram (Opcional)</label>
+                                        <input type="text" [(ngModel)]="newClub.instagram" placeholder="@club_padel">
+                                    </div>
+                                </div>
+
+                                <label>Email de Contacto (Opcional)</label>
+                                <input type="email" [(ngModel)]="newClub.email" placeholder="contacto@club.com">
+
+                                <div class="actions-row" style="margin-top: 20px;">
+                                    <button class="btn-primary" (click)="createClub()">
+                                        {{ editingClubId ? 'Actualizar Club' : 'Guardar Club' }}
+                                    </button>
+                                    <button class="btn-cancel" (click)="cancelEditClub()">Cancelar</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -63,9 +131,15 @@
                     </div>
 
                     <div class="cancha-list grid-list">
-                        <div *ngFor="let cancha of canchas" class="item-card cancha-item">
+                        <div *ngFor="let cancha of canchas" class="item-card cancha-item"
+                            [class.editing-card]="editingCanchaId === cancha.id">
                             <div class="cancha-top">
                                 <span class="cancha-type">{{ cancha.tipo }}</span>
+                                <div class="cancha-actions">
+                                    <button class="btn-icon" (click)="editCancha(cancha)" title="Editar">✏️</button>
+                                    <button class="btn-icon delete" (click)="deleteCancha(cancha)"
+                                        title="Eliminar">🗑️</button>
+                                </div>
                                 <h3>{{ cancha.nombre }}</h3>
                             </div>
                             <div class="cancha-body">
@@ -79,17 +153,31 @@
                         </div>
                     </div>
 
-                    <div class="form-section">
-                        <h3><span class="icon">🏟️</span>Agregar Cancha</h3>
+                    <div class="form-section cancha-form-section">
+                        <h3>
+                            <span class="icon">{{ editingCanchaId ? '✏️' : '🏟️' }}</span>
+                            {{ editingCanchaId ? 'Editar Cancha' : 'Agregar Cancha' }}
+                        </h3>
                         <div class="form-grid">
-                            <input type="text" [(ngModel)]="newCancha.nombre" placeholder="Nombre de Cancha">
+                            <input type="text" [(ngModel)]="newCancha.nombre"
+                                placeholder="Nombre de Cancha (Ej: Pista 1)">
                             <select [(ngModel)]="newCancha.tipo">
                                 <option value="Outdoor">Outdoor</option>
                                 <option value="Indoor">Indoor</option>
                                 <option value="Cubierta">Cubierta</option>
                             </select>
+                            <select [(ngModel)]="newCancha.superficie">
+                                <option value="Césped Sintético">Césped Sintético</option>
+                                <option value="Cemento">Cemento</option>
+                                <option value="Arcilla">Arcilla</option>
+                            </select>
                             <input type="number" [(ngModel)]="newCancha.precio_hora" placeholder="Precio x Hora">
-                            <button class="btn-secondary" (click)="createCancha()">Vincular Cancha</button>
+
+                            <button class="btn-secondary" [class.btn-update]="editingCanchaId" (click)="saveCancha()">
+                                {{ editingCanchaId ? 'Actualizar Cancha' : 'Vincular Cancha' }}
+                            </button>
+                            <button *ngIf="editingCanchaId" class="btn-cancel"
+                                (click)="cancelEditCancha()">Cancelar</button>
                         </div>
                     </div>
                 </div>

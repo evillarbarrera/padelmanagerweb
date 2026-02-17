@@ -11,19 +11,35 @@
         </header>
 
         <div class="dashboard-grid">
-            <div class="booking-container animate-up">
+            <!-- Loading Overlay -->
+            <div *ngIf="isLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <p>Sincronizando disponibilidad...</p>
+            </div>
+
+            <div class="booking-container animate-up" [class.loading-fade]="isLoading">
 
                 <!-- Step 1: Select Student -->
                 <section class="section-card">
-                    <h2 class="section-title"><span>1</span> Selecciona al Alumno</h2>
+                    <h2 class="section-title">
+                        <div class="step-num">1</div>
+                        Selecciona al Alumno
+                    </h2>
                     <div class="student-list">
                         <div *ngFor="let a of alumnos" class="student-item"
                             [class.selected]="alumnoSeleccionado?.pack_jugador_id === a.pack_jugador_id"
                             (click)="seleccionarAlumno(a)">
-                            <img [src]="a.jugador_foto || 'assets/images/placeholder_avatar.png'" class="avatar-sm">
+
+                            <div class="avatar-wrapper">
+                                <img [src]="a.jugador_foto || 'assets/images/placeholder_avatar.png'">
+                            </div>
+
                             <div class="info">
                                 <span class="name">{{ a.jugador_nombre }}</span>
-                                <span class="pack-info">{{ a.pack_nombre }} ({{ a.sesiones_restantes }} cred.)</span>
+                                <span class="pack-info">
+                                    {{ a.pack_nombre }}
+                                    <span class="badge">• {{ a.sesiones_restantes }} cred.</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -31,9 +47,14 @@
 
                 <!-- Step 2: Recurrence -->
                 <section class="section-card">
-                    <h2 class="section-title"><span>2</span> Opciones de Recurrencia</h2>
+                    <h2 class="section-title">
+                        <div class="step-num">2</div>
+                        Opciones de Recurrencia
+                    </h2>
                     <div class="recurrence-box">
-                        <label>Repetir reserva por:</label>
+                        <div class="label-group">
+                            <label>¿Repetir reserva por varias semanas?</label>
+                        </div>
                         <select [(ngModel)]="recurrencia" class="nike-select">
                             <option [value]="1">Solo esta vez</option>
                             <option [value]="2">2 Semanas</option>
@@ -48,28 +69,88 @@
                 <div class="booking-layout">
                     <!-- Calendario lateral -->
                     <section class="section-card calendar-column">
-                        <h2 class="section-title"><span>3</span> Selecciona el Día</h2>
-                        <div class="days-grid">
+                        <h2 class="section-title">
+                            <div class="step-num">3</div>
+                            Selecciona el Día
+                        </h2>
+                        <div class="days-grid" *ngIf="dias.length > 0">
                             <button *ngFor="let d of dias" class="day-btn" [class.active]="diaSeleccionado === d"
                                 (click)="seleccionarDia(d)">
                                 <span class="day-name">{{ d | date:'EEE':'':'es' }}</span>
                                 <span class="day-num">{{ d | date:'dd' }}</span>
                             </button>
                         </div>
+
+                        <!-- Empty state when no days are found -->
+                        <div *ngIf="dias.length === 0" class="no-selection">
+                            <div class="empty-icon">⚠️</div>
+                            <p>No tienes disponibilidad vigente cargada.</p>
+                            <span style="font-size: 0.8rem; opacity: 0.8;">Configúrala en el menú lateral.</span>
+                        </div>
                     </section>
 
                     <!-- Horarios -->
                     <section class="section-card times-column">
                         <h2 class="section-title">Selecciona la Hora</h2>
-                        <div class="times-grid" *ngIf="diaSeleccionado">
-                            <button *ngFor="let h of horariosPorDia[diaSeleccionado]" class="time-btn"
-                                [disabled]="h.ocupado || isLoading" [class.occupied]="h.ocupado"
-                                (click)="reservarHorario(h)">
-                                {{ h.hora_inicio | date:'HH:mm' }}
-                            </button>
+
+                        <div
+                            *ngIf="diaSeleccionado && horariosPorDia[diaSeleccionado] && horariosPorDia[diaSeleccionado].length > 0">
+                            <!-- Morning -->
+                            <div class="time-category"
+                                *ngIf="getSlotsByCategory(diaSeleccionado, 'morning').length > 0">
+                                <span class="category-label">Mañana</span>
+                                <div class="times-grid">
+                                    <button *ngFor="let h of getSlotsByCategory(diaSeleccionado, 'morning')"
+                                        class="time-btn" [disabled]="h.ocupado || isLoading"
+                                        [class.occupied]="h.ocupado" [class.with-info]="h.jugador_nombre"
+                                        (click)="reservarHorario(h)">
+                                        <div class="time-main">{{ h.hora_inicio | date:'HH:mm' }}</div>
+                                        <div class="time-sub" *ngIf="h.jugador_nombre">{{ h.jugador_nombre }}</div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Afternoon -->
+                            <div class="time-category"
+                                *ngIf="getSlotsByCategory(diaSeleccionado, 'afternoon').length > 0">
+                                <span class="category-label">Tarde</span>
+                                <div class="times-grid">
+                                    <button *ngFor="let h of getSlotsByCategory(diaSeleccionado, 'afternoon')"
+                                        class="time-btn" [disabled]="h.ocupado || isLoading"
+                                        [class.occupied]="h.ocupado" [class.with-info]="h.jugador_nombre"
+                                        (click)="reservarHorario(h)">
+                                        <div class="time-main">{{ h.hora_inicio | date:'HH:mm' }}</div>
+                                        <div class="time-sub" *ngIf="h.jugador_nombre">{{ h.jugador_nombre }}</div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Evening -->
+                            <div class="time-category"
+                                *ngIf="getSlotsByCategory(diaSeleccionado, 'evening').length > 0">
+                                <span class="category-label">Noche</span>
+                                <div class="times-grid">
+                                    <button *ngFor="let h of getSlotsByCategory(diaSeleccionado, 'evening')"
+                                        class="time-btn" [disabled]="h.ocupado || isLoading"
+                                        [class.occupied]="h.ocupado" [class.with-info]="h.jugador_nombre"
+                                        (click)="reservarHorario(h)">
+                                        <div class="time-main">{{ h.hora_inicio | date:'HH:mm' }}</div>
+                                        <div class="time-sub" *ngIf="h.jugador_nombre">{{ h.jugador_nombre }}</div>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- No selection or empty states -->
                         <div *ngIf="!diaSeleccionado" class="no-selection">
-                            Selecciona un día para ver horarios disponibles
+                            <div class="empty-icon">📅</div>
+                            <p>Selecciona un día para ver horarios</p>
+                        </div>
+
+                        <div *ngIf="diaSeleccionado && horariosPorDia[diaSeleccionado] && horariosPorDia[diaSeleccionado].length === 0"
+                            class="no-selection">
+                            <div class="empty-icon">😴</div>
+                            <p>No hay horarios disponibles para este día</p>
                         </div>
                     </section>
                 </div>

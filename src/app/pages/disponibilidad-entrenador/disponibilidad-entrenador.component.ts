@@ -45,6 +45,20 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   // Cache of existing availability keys "YYYY-MM-DD HH:MM:00-YYYY-MM-DD HH:MM:00"
   disponibilidadExistente: Set<string> = new Set();
 
+  // Default Week Config
+  showDefaultModal = false;
+  diasSemana = [
+    { id: 1, name: 'Lunes' },
+    { id: 2, name: 'Martes' },
+    { id: 3, name: 'Miércoles' },
+    { id: 4, name: 'Jueves' },
+    { id: 5, name: 'Viernes' },
+    { id: 6, name: 'Sábado' },
+    { id: 0, name: 'Domingo' }
+  ];
+  templateBlocks: { [dayId: number]: { time: string, selected: boolean }[] } = {};
+  selectedDayTemplate: number = 1; // Default Lunes
+
   constructor(
     private entrenamientoService: EntrenamientoService,
     private mysqlService: MysqlService,
@@ -87,7 +101,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
-    const TOTAL_DIAS = 10;
+    const TOTAL_DIAS = 30;
     const nombresDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
     this.dias = [];
@@ -98,13 +112,20 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
 
       this.dias.push({
         nombre: nombresDias[fecha.getDay()],
-        fecha: fecha.toISOString().split('T')[0],
+        fecha: this.getLocalISODate(fecha),
         hora_inicio: '07:00',
         hora_fin: '21:00',
         duracion: 60
       });
     }
     this.diaSeleccionado = this.dias[0].fecha;
+  }
+
+  getLocalISODate(date: Date): string {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 
   generarBloquesSemana() {
@@ -301,6 +322,157 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
       error: (err: any) => {
         console.error('Error syncing disponibilidad:', err);
         this.popupService.error('Error', 'No se pudieron guardar los cambios');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /* =============================
+     DEFAULT WEEK CONFIG
+  ============================== */
+
+  openDefaultModal() {
+    this.isLoading = true;
+    this.initTemplateBlocks();
+    this.entrenamientoService.getDefaultConfig(this.userId!).subscribe({
+      next: (res) => {
+        // Expand ranges to blocks
+        res.forEach(range => {
+          const dayId = range.dia_semana;
+          const start = range.hora_inicio;
+          const end = range.hora_fin;
+
+          if (this.templateBlocks[dayId]) {
+            this.templateBlocks[dayId].forEach(b => {
+              if (b.time >= start && b.time < end) {
+                b.selected = true;
+              }
+            });
+          }
+        });
+        this.showDefaultModal = true;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.popupService.error('Error', 'No se pudo cargar la configuración');
+      }
+    });
+  }
+
+  initTemplateBlocks() {
+    this.templateBlocks = {};
+    const horas: string[] = [];
+    for (let h = 7; h <= 22; h++) {
+      const hh = h < 10 ? '0' + h : h;
+      horas.push(`${hh}:00`);
+      // Si quieres bloques de 30 min, podrías añadir `${hh}:30` aquí
+    }
+
+    this.diasSemana.forEach(d => {
+      this.templateBlocks[d.id] = horas.map(h => ({ time: h, selected: false }));
+    });
+  }
+
+  toggleTemplateBlock(dayId: number, block: any) {
+    block.selected = !block.selected;
+  }
+
+  seleccionarTodoDiaTemplate(dayId: number) {
+    this.templateBlocks[dayId].forEach(b => b.selected = true);
+  }
+
+  deseleccionarTodoDiaTemplate(dayId: number) {
+    this.templateBlocks[dayId].forEach(b => b.selected = false);
+  }
+
+  async saveDefaultConfig() {
+    this.isLoading = true;
+    const config: any[] = [];
+
+    // Compress selected blocks back to ranges
+    Object.keys(this.templateBlocks).forEach(dayKey => {
+      const dayId = parseInt(dayKey);
+      const blocks = this.templateBlocks[dayId];
+
+      let currentRange: any = null;
+
+      blocks.forEach((b, idx) => {
+        if (b.selected) {
+          if (!currentRange) {
+            currentRange = {
+              dia_semana: dayId,
+              hora_inicio: b.time,
+              duracion_bloque: 60
+            };
+          }
+        } else {
+          if (currentRange) {
+            currentRange.hora_fin = b.time;
+            config.push(currentRange);
+            currentRange = null;
+          }
+        }
+
+        // Si es el último bloque y está seleccionado
+        if (idx === blocks.length - 1 && currentRange) {
+          // Asumimos fin a la hora siguiente del último bloque
+          const lastH = parseInt(b.time.split(':')[0]);
+          currentRange.hora_fin = (lastH + 1 < 10 ? '0' : '') + (lastH + 1) + ':00';
+          config.push(currentRange);
+        }
+      });
+    });
+
+    const payload = {
+      entrenador_id: this.userId,
+      config: config
+    };
+
+    this.entrenamientoService.saveDefaultConfig(payload).subscribe({
+      next: () => {
+        this.popupService.success('Éxito', 'Plantilla semanal guardada');
+        this.showDefaultModal = false;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.popupService.error('Error', 'No se pudo guardar la configuración');
+      }
+    });
+  }
+
+  applyDefaultConfig() {
+    this.isLoading = true;
+    // Primero verificamos si hay algo configurado
+    this.entrenamientoService.getDefaultConfig(this.userId!).subscribe({
+      next: (res) => {
+        if (res.length === 0) {
+          this.isLoading = false;
+          this.popupService.info('Sin Plantilla', 'Primero debes configurar y guardar tu semana por defecto.');
+          return;
+        }
+
+        this.popupService.confirm('Aplicar Plantilla', 'Esto generará automáticamente tus bloques de disponibilidad para los próximos 30 días. ¿Continuar?')
+          .then(conf => {
+            if (conf) {
+              this.entrenamientoService.applyDefaultConfig({ entrenador_id: this.userId, days_ahead: 30 }).subscribe({
+                next: () => {
+                  this.popupService.success('Completado', 'Horarios aplicados para los próximos 30 días.');
+                  this.disponibilidadExistente.clear();
+                  this.cargarDisponibilidadExistente();
+                },
+                error: () => {
+                  this.isLoading = false;
+                  this.popupService.error('Error', 'No se pudo aplicar la plantilla');
+                }
+              });
+            } else {
+              this.isLoading = false;
+            }
+          });
+      },
+      error: () => {
         this.isLoading = false;
       }
     });

@@ -25,11 +25,13 @@ export class PacksService {
     );
   }
 
-  getAllPacks(lat?: number, lng?: number, radius?: number): Observable<any> {
+  getAllPacks(lat?: number, lng?: number, radius?: number, region?: string, comuna?: string): Observable<any> {
     let params = new HttpParams();
     if (lat) params = params.set('lat', lat.toString());
     if (lng) params = params.set('lng', lng.toString());
     if (radius) params = params.set('radius', radius.toString());
+    if (region) params = params.set('region', region);
+    if (comuna) params = params.set('comuna', comuna);
 
     return this.http.get(`${this.apiUrl}/get_all_packs.php`, { headers: this.headers, params });
   }

@@ -59,10 +59,10 @@ export class EntrenadorAgendaComponent implements OnInit {
     const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const hoy = new Date();
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       const fecha = new Date();
       fecha.setDate(hoy.getDate() + i);
-      const fechaStr = fecha.toISOString().split('T')[0];
+      const fechaStr = this.getLocalISODate(fecha);
       const diaNumero = fecha.getDay();
 
       this.dias.push({
@@ -73,6 +73,13 @@ export class EntrenadorAgendaComponent implements OnInit {
       });
     }
     this.diaSeleccionado = this.dias[0].fecha;
+  }
+
+  getLocalISODate(date: Date): string {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 
   loadAgenda(): void {
@@ -87,37 +94,59 @@ export class EntrenadorAgendaComponent implements OnInit {
       next: (res: any) => {
         const todasReservas: any[] = [];
 
-        // Add traditional reservations
+        // Add traditional and aggregated group reservations
         if (res.reservas_tradicionales && Array.isArray(res.reservas_tradicionales)) {
-          todasReservas.push(...res.reservas_tradicionales);
+          const mappedReservas = res.reservas_tradicionales.map((r: any) => {
+            const names = r.jugador_nombre ? r.jugador_nombre.split(', ') : [];
+            const dur = this.calculateDuration(r.hora_inicio, r.hora_fin);
+            return {
+              ...r,
+              inscritos: r.tipo === 'pack_grupal' ? names.map((n: string) => ({ nombre: n })) : [],
+              cupos_ocupados: r.tipo === 'pack_grupal' ? names.length : (r.inscritos || 1),
+              capacidad_maxima: r.capacidad || 1,
+              duracion_calculada: dur
+            };
+          });
+          todasReservas.push(...mappedReservas);
         }
 
-        // Add group packs
+        // Add recurring profile packs only if there's no specific reservation for that slot
         if (res.packs_grupales && Array.isArray(res.packs_grupales)) {
-          const packsGrupalesMapeados = res.packs_grupales.map((pack: any) => ({
-            ...pack,
-            reserva_id: pack.id || pack.pack_id,
-            fecha: null, // Group packs are recurrent, handled by day_of_week match
-            tipo: 'grupal',
-            estado: pack.estado_grupo,
-            estado_grupo: pack.estado_grupo
-          }));
+          const packsGrupalesMapeados = res.packs_grupales.map((pack: any) => {
+            const dur = this.calculateDuration(pack.hora_inicio, pack.hora_fin);
+            return {
+              ...pack,
+              reserva_id: pack.id || pack.pack_id,
+              fecha: null, // Recurring template
+              tipo: 'grupal_template',
+              estado: pack.estado_grupo,
+              estado_grupo: pack.estado_grupo,
+              cupos_ocupados: pack.cupos_ocupados,
+              capacidad_maxima: pack.capacidad_maxima,
+              duracion_calculada: dur
+            };
+          });
           todasReservas.push(...packsGrupalesMapeados);
         }
 
         // Distribute into days
         this.dias.forEach(dia => {
-          const diaBDFormato = dia.diaNumero; // 0-6
+          let diaBDFormato = dia.diaNumero;
+          if (diaBDFormato === 0) diaBDFormato = 7;
 
-          dia.data = todasReservas.filter(r => {
-            if (r.tipo === 'grupal') {
-              // Group packs match by day of week (0-6)
-              return diaBDFormato === r.dia_semana;
-            } else {
-              // Traditional reservations match by exact date
-              return r.fecha === dia.fecha;
-            }
-          });
+          // Filter reservations specifically for this day
+          const directReservations = todasReservas.filter(r => r.fecha === dia.fecha);
+
+          // Get templates that don't have a direct reservation for that time
+          const templatesForDay = todasReservas.filter(r =>
+            r.tipo === 'grupal_template' &&
+            Number(r.dia_semana) === diaBDFormato &&
+            !directReservations.some(dr => dr.hora_inicio === r.hora_inicio)
+          );
+
+          dia.data = [...directReservations, ...templatesForDay];
+          // Sort by time
+          dia.data.sort((a, b) => (a.hora_inicio || '').localeCompare(b.hora_inicio || ''));
         });
 
         this.isLoading = false;
@@ -127,6 +156,17 @@ export class EntrenadorAgendaComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  calculateDuration(start: string, end: string): number {
+    if (!start || !end) return 0;
+    try {
+      const [hS, mS] = start.split(':').map(Number);
+      const [hE, mE] = end.split(':').map(Number);
+      return (hE * 60 + mE) - (hS * 60 + mS);
+    } catch (e) {
+      return 0;
+    }
   }
 
   get agendaActual(): any[] {
@@ -174,6 +214,9 @@ export class EntrenadorAgendaComponent implements OnInit {
   }
 
   getEstadoText(item: any): string {
-    return item.tipo === 'grupal' ? (item.estado_grupo || 'desconocido') : (item.estado || 'desconocido');
+    if (item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template') {
+      return item.estado_grupo || 'activo';
+    }
+    return item.status || item.estado || 'activo';
   }
 }

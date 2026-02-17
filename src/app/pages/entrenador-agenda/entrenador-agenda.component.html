@@ -62,15 +62,17 @@
 
         <div class="session-card animate-up" *ngFor="let item of agendaActual; let i = index"
           [style.animation-delay]="(i * 0.05) + 's'"
-          [ngClass]="item.tipo === 'grupal' ? 'pack-grupal' : 'reserva-individual'">
+          [ngClass]="(item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template') ? 'pack-grupal' : 'reserva-individual'">
 
           <div class="card-header">
             <div class="time-badge">
               <span class="icon">🕒</span>
-              <ng-container *ngIf="item.tipo === 'grupal'">
-                <span>{{ item.hora_inicio | slice:0:5 }}</span>
+              <ng-container
+                *ngIf="item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template'">
+                <span>{{ item.hora_inicio | slice:0:5 }} - {{ item.hora_fin | slice:0:5 }}</span>
               </ng-container>
-              <ng-container *ngIf="item.tipo !== 'grupal'">
+              <ng-container
+                *ngIf="item.tipo !== 'grupal' && item.tipo !== 'pack_grupal' && item.tipo !== 'grupal_template'">
                 <span>{{ item.hora_inicio | slice:0:5 }} - {{ item.hora_fin | slice:0:5 }}</span>
               </ng-container>
             </div>
@@ -81,7 +83,8 @@
 
           <div class="card-body">
             <!-- INDIVIDUAL -->
-            <div *ngIf="item.tipo !== 'grupal'" class="player-profile">
+            <div *ngIf="item.tipo !== 'grupal' && item.tipo !== 'pack_grupal' && item.tipo !== 'grupal_template'"
+              class="player-profile">
               <div class="avatar-circle-small">👤</div>
               <div class="player-details">
                 <h3>{{ item.jugador_nombre }}</h3>
@@ -90,7 +93,8 @@
             </div>
 
             <!-- GRUPAL Info -->
-            <div *ngIf="item.tipo === 'grupal'" class="grupal-info">
+            <div *ngIf="item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template'"
+              class="grupal-info">
               <div class="grupal-header">
                 <div class="tipo-badge">👥 GRUPAL</div>
                 <span class="categoria">{{ item.categoria }}</span>
@@ -102,13 +106,16 @@
                 <span class="duracion">⏱️ {{ item.duracion_calculada || 0 }}min</span>
               </div>
 
-              <!-- Lista de Inscritos -->
+              <!-- Lista de Inscritos (Nombres Completos) -->
               <div class="inscritos-list" *ngIf="item.inscritos && item.inscritos.length > 0">
                 <p class="inscritos-title">Inscritos:</p>
-                <div class="inscritos-avatars">
-                  <div *ngFor="let inscrito of item.inscritos" class="inscrito-avatar" [title]="inscrito.nombre">
-                    <span class="avatar-icon">👤</span>
-                    <span class="nombre-corto">{{ inscrito.nombre | slice:0:1 }}</span>
+                <div class="inscritos-container">
+                  <div *ngFor="let inscrito of item.inscritos" class="inscrito-row">
+                    <div class="avatar-mini">👤</div>
+                    <div class="inscrito-detail">
+                      <span class="full-name">{{ inscrito.nombre }}</span>
+                      <span class="email-sub">{{ inscrito.email }}</span>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -21,7 +21,8 @@ export class JugadorHomeComponent implements OnInit {
   stats: any = {
     pagadas: 0,
     reservadas: 0,
-    disponibles: 0
+    disponibles: 0,
+    grupales: 0
   };
   isLoading = true;
   userId: number | null = null;
@@ -85,6 +86,7 @@ export class JugadorHomeComponent implements OnInit {
           this.stats.pagadas = parseInt(packs.pagadas || packs.pagada) || 0;
           this.stats.reservadas = parseInt(packs.reservadas || packs.reservada) || 0;
           this.stats.disponibles = parseInt(packs.disponibles || packs.disponible) || 0;
+          this.stats.grupales = parseInt(packs.grupales || packs.grupal) || 0;
         }
 
         this.isLoading = false;
@@ -109,20 +111,16 @@ export class JugadorHomeComponent implements OnInit {
 
           // Radar Chart (Latest Evaluation)
           const latest = sorted[sorted.length - 1];
-          // Check if scores is object or needs parsing (backend sends object if handled correctly in PHP, but strictly typed it might be string if not cast)
-          // In get_evaluaciones.php we did json_decode, so it should be object.
           if (latest && latest.scores) {
             const radarLabels = Object.keys(latest.scores);
             const radarData = radarLabels.map(key => {
               const s = latest.scores[key];
-              // If s has tecnica, control etc as properties
               if (s && typeof s === 'object') {
                 return (Number(s.tecnica) + Number(s.control) + Number(s.direccion) + Number(s.decision)) / 4;
               }
               return 0;
             });
 
-            // Slight delay to ensure canvas exists and isn't blocking main thread
             setTimeout(() => this.renderRadarChart(radarLabels, radarData), 100);
           }
         }

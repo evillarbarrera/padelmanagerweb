@@ -95,4 +95,18 @@ export class MysqlService {
       headers: this.headers
     });
   }
+
+  getEntrenadores(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user/get_users.php?rol=entrenador`, {
+      headers: this.headers
+    });
+  }
+
+  getAllPacks(entrenadorId?: number): Observable<any[]> {
+    let url = `${this.apiUrl}/packs/get_all_packs.php`;
+    if (entrenadorId) {
+      url += `?entrenador_id=${entrenadorId}`;
+    }
+    return this.http.get<any[]>(url, { headers: this.headers });
+  }
 }

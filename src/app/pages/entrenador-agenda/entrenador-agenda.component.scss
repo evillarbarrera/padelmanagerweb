@@ -256,22 +256,59 @@
           margin-bottom: 8px;
         }
 
-        .inscritos-avatars {
+        .inscritos-container {
           display: flex;
-          gap: 8px;
+          flex-direction: column;
+          gap: 10px;
 
-          .inscrito-avatar {
-            width: 32px;
-            height: 32px;
-            background: #eff6ff;
-            border: 2px solid #2563eb;
-            color: #2563eb;
-            border-radius: 50%;
+          .inscrito-row {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 800;
+            gap: 12px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 12px;
+            transition: background 0.2s;
+
+            &:hover {
+              background: #f3f4f6;
+            }
+
+            .avatar-mini {
+              width: 32px;
+              height: 32px;
+              background: #fff;
+              border: 1px solid #e5e7eb;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 14px;
+              flex-shrink: 0;
+            }
+
+            .inscrito-detail {
+              display: flex;
+              flex-direction: column;
+              min-width: 0;
+
+              .full-name {
+                font-size: 13px;
+                font-weight: 700;
+                color: #111;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+
+              .email-sub {
+                font-size: 11px;
+                color: #6b7280;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+            }
           }
         }
       }

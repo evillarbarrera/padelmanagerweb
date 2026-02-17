@@ -19,6 +19,8 @@ import { ClubAdminComponent } from './pages/club-admin/club-admin.component';
 import { TorneoAmericanoComponent } from './pages/torneo-americano/torneo-americano.component';
 import { ClubesJugadorComponent } from './pages/clubes-jugador/clubes-jugador.component';
 import { ClubReservasComponent } from './pages/club-reservas/club-reservas.component';
+import { TorneoGestionComponent } from './pages/torneo-gestion/torneo-gestion.component';
+import { TorneoJugadorComponent } from './pages/torneo-jugador/torneo-jugador.component';
 
 export const routes: Routes = [
   { path: 'unete', component: AceptarInvitacionComponent },
@@ -39,6 +41,7 @@ export const routes: Routes = [
     path: 'mis-habilidades',
     loadComponent: () => import('./pages/mis-habilidades/mis-habilidades.component').then(m => m.MisHabilidadesComponent)
   },
+  { path: 'mis-torneos', component: TorneoJugadorComponent },
 
   // Trainer Routes
   { path: 'entrenador-home', component: EntrenadorHomeComponent },
@@ -48,6 +51,7 @@ export const routes: Routes = [
   { path: 'disponibilidad-entrenador', component: DisponibilidadEntrenadorComponent },
   { path: 'admin-club', component: ClubAdminComponent },
   { path: 'crear-americano', component: TorneoAmericanoComponent },
+  { path: 'torneos', component: TorneoGestionComponent },
 
   // Shared Routes
   { path: 'perfil', component: PerfilComponent },
@@ -62,6 +66,10 @@ export const routes: Routes = [
   {
     path: 'mis-packs-activos',
     loadComponent: () => import('./pages/alumno-mis-packs/alumno-mis-packs').then(m => m.AlumnoMisPacks)
+  },
+  {
+    path: 'ranking',
+    loadComponent: () => import('./pages/ranking/ranking.component').then(m => m.RankingComponent)
   },
 
   {

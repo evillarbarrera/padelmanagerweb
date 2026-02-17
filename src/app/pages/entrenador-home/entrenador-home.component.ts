@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PopupService } from '../../services/popup.service';
 
 @Component({
   selector: 'app-entrenador-home',
@@ -24,7 +25,8 @@ export class EntrenadorHomeComponent implements OnInit {
 
   constructor(
     private mysqlService: MysqlService,
-    private router: Router
+    private router: Router,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -70,6 +72,17 @@ export class EntrenadorHomeComponent implements OnInit {
         if (res.success) {
           this.coachNombre = res.user.nombre || 'Entrenador';
           this.coachFoto = res.user.foto_perfil || res.user.link_foto || null;
+
+          // Address Validation
+          // Check if address exists in the separate 'direccion' object
+          if (!res.direccion || !res.direccion.calle) {
+            this.popupService.warning(
+              'Completa tu Perfil',
+              'Es importante que registres tu dirección para que los jugadores puedan encontrarte fácilmente al buscar entrenamientos cercanos.'
+            ).then(() => {
+              this.router.navigate(['/perfil']);
+            });
+          }
         }
       },
       error: (err) => console.error(err)
@@ -79,53 +92,62 @@ export class EntrenadorHomeComponent implements OnInit {
     this.mysqlService.getEntrenadorStats(this.userId).subscribe({
       next: (res) => {
         const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const fechaHoy = `${yyyy}-${mm}-${dd}`;
+        const tomorrow = new Date();
+        tomorrow.setDate(today.getDate() + 1);
 
-        // Adjust JS Day (0=Sun) to DB Day (0=Mon... wait, DB uses 0=Mon? Or Standard?)
-        // Let's assume standard 0=Sun, 1=Mon... but usually DB maps Mon=0 or 1.
-        // In other files I observed logic mapping.
-        // Let's check get_agenda.php output or assume 0-6 match.
-        // Usually PHP/JS Day mapping matches if handled correctly.
-        // In EntrenadorEntrenamientosPage we saw explicit mapping logic.
-        // Let's rely on standard getDay(). If 0 is Sunday.
-        const diaSemanaHoy = today.getDay(); // 0-6
+        const formatDate = (date: Date) => {
+          const yyyy = date.getFullYear();
+          const mm = String(date.getMonth() + 1).padStart(2, '0');
+          const dd = String(date.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
+        };
+
+        const fechaHoy = formatDate(today);
+        const fechaManana = formatDate(tomorrow);
+
+        const diaSemanaHoy = today.getDay() === 0 ? 7 : today.getDay();
+        const diaSemanaManana = tomorrow.getDay() === 0 ? 7 : tomorrow.getDay();
 
         let clases = [];
 
-        // 1. Individuales
+        // 1. Individuales y Grupales con Fecha específica
         if (res.reservas_tradicionales) {
-          const indiv = res.reservas_tradicionales.filter((r: any) => r.fecha === fechaHoy);
-          clases.push(...indiv.map((r: any) => ({
+          const proximas = res.reservas_tradicionales.filter((r: any) => r.fecha === fechaHoy || r.fecha === fechaManana);
+          clases.push(...proximas.map((r: any) => ({
+            fecha: r.fecha,
+            diaLabel: r.fecha === fechaHoy ? 'Hoy' : 'Mañana',
             hora: r.hora_inicio.substring(0, 5),
-            tipo: 'Individual',
-            titulo: r.jugador_nombre,
+            tipo: r.tipo === 'pack_grupal' ? 'Grupal' : 'Individual',
+            titulo: r.jugador_nombre || 'Clase Grupal',
             subtitulo: r.pack_nombre,
             estado: r.estado
           })));
         }
 
-        // 2. Grupales
+        // 2. Packs Grupales Recurrentes (solo si no hay reserva específica ya cargada para ese bloque)
         if (res.packs_grupales) {
-          // DB dia_semana: likely 0=Mon or 1=Mon? 
-          // Previous Context: In Step 509, EntrenadorEntrenamientosPage logic was complex.
-          // Standard JS: 0=Sun, 1=Mon.
-          // DB often: 0=Mon??? Or 1=Mon?
-          // I'll stick to direct match for now, or match logic:
-          // If today.getDay() is 3 (Wed), match DB 2 or 3?
-          // Let's map JS (0=Sun) to 0-6 (Mon=0..Sun=6)?
-          // Let's check `EntrenadorEntrenamientosPage`.
-          // It had `const diaBDFormato = (dia.id - 1);` -> implies 0-based.
+          const grupHoy = res.packs_grupales.filter((g: any) =>
+            Number(g.dia_semana) === diaSemanaHoy &&
+            !clases.some(c => c.fecha === fechaHoy && c.hora === g.hora_inicio.substring(0, 5))
+          );
+          const grupManana = res.packs_grupales.filter((g: any) =>
+            Number(g.dia_semana) === diaSemanaManana &&
+            !clases.some(c => c.fecha === fechaManana && c.hora === g.hora_inicio.substring(0, 5))
+          );
 
-          // Let's assume standard logic matches or display all and filter later.
-          // Actually, let's map JS -> Mon=0, Tue=1, ... Sun=6
-          let diaHoyDB = diaSemanaHoy - 1;
-          if (diaHoyDB < 0) diaHoyDB = 6; // Sunday
+          clases.push(...grupHoy.map((g: any) => ({
+            fecha: fechaHoy,
+            diaLabel: 'Hoy',
+            hora: g.hora_inicio.substring(0, 5),
+            tipo: 'Grupal',
+            titulo: g.pack_nombre,
+            subtitulo: `${g.inscritos_confirmados || 0} inscritos`,
+            estado: 'activo'
+          })));
 
-          const grup = res.packs_grupales.filter((g: any) => Number(g.dia_semana) === diaHoyDB);
-          clases.push(...grup.map((g: any) => ({
+          clases.push(...grupManana.map((g: any) => ({
+            fecha: fechaManana,
+            diaLabel: 'Mañana',
             hora: g.hora_inicio.substring(0, 5),
             tipo: 'Grupal',
             titulo: g.pack_nombre,
@@ -134,8 +156,11 @@ export class EntrenadorHomeComponent implements OnInit {
           })));
         }
 
-        // Sort by time
-        clases.sort((a, b) => a.hora.localeCompare(b.hora));
+        // Sort by date then time
+        clases.sort((a, b) => {
+          if (a.fecha !== b.fecha) return a.fecha.localeCompare(b.fecha);
+          return a.hora.localeCompare(b.hora);
+        });
 
         this.clasesHoyList = clases;
         this.isLoading = false;

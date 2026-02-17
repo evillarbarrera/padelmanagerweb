@@ -53,13 +53,33 @@ export class EntrenadorAgendarComponent implements OnInit {
         });
     }
 
-    loadDisponibilidad(): void {
-        if (!this.entrenadorId) return;
-        this.entrenamientoService.getDisponibilidadEntrenador(this.entrenadorId).subscribe({
+    loadDisponibilidad(packId?: number): void {
+        if (!this.entrenadorId) {
+            console.warn('No hay entrenadorId definido');
+            return;
+        }
+
+        console.log('Cargando disponibilidad para entrenador:', this.entrenadorId, 'Pack:', packId);
+        this.isLoading = true;
+        this.horariosPorDia = {};
+        this.dias = [];
+        this.diaSeleccionado = '';
+
+        this.entrenamientoService.getDisponibilidadEntrenador(this.entrenadorId, packId).subscribe({
             next: (res: any) => {
-                this.generarBloquesHorarios(res);
+                console.log('Respuesta del servidor:', res);
+                if (res && res.length > 0) {
+                    this.generarBloquesHorarios(res);
+                } else {
+                    console.log('El servidor no devolvió bloques de disponibilidad');
+                }
+                this.isLoading = false;
             },
-            error: (err: any) => console.error('Error loading availability:', err)
+            error: (err: any) => {
+                console.error('Error loading availability:', err);
+                this.isLoading = false;
+                this.popupService.error('Error de Conexión', 'No se pudo obtener tu disponibilidad. Revisa la consola para más detalles.');
+            }
         });
     }
 
@@ -69,12 +89,14 @@ export class EntrenadorAgendarComponent implements OnInit {
         const bloquesUnicos = new Set<string>();
         const ahora = new Date();
 
-        if (!disponibilidades) return;
+        console.log('Generando bloques para ahora:', ahora.toLocaleString());
+
+        if (!disponibilidades || disponibilidades.length === 0) return;
 
         disponibilidades.forEach(d => {
-            let inicio = new Date(d.fecha_inicio);
-            const fin = new Date(d.fecha_fin);
-            const ocupado = Boolean(d.ocupado);
+            let inicio = new Date(d.fecha_inicio.replace(' ', 'T'));
+            const fin = new Date(d.fecha_fin.replace(' ', 'T'));
+            const ocupado = Number(d.ocupado) === 1;
 
             while (inicio < fin) {
                 const bloqueInicio = new Date(inicio);
@@ -82,7 +104,11 @@ export class EntrenadorAgendarComponent implements OnInit {
                 bloqueFin.setHours(bloqueFin.getHours() + 1);
 
                 if (bloqueInicio > ahora && bloqueFin <= fin) {
-                    const fecha = bloqueInicio.toISOString().split('T')[0];
+                    const Y = bloqueInicio.getFullYear();
+                    const M = (bloqueInicio.getMonth() + 1).toString().padStart(2, '0');
+                    const D = bloqueInicio.getDate().toString().padStart(2, '0');
+                    const fecha = `${Y}-${M}-${D}`;
+
                     const horaInicio = bloqueInicio.toTimeString().slice(0, 5);
                     const horaFin = bloqueFin.toTimeString().slice(0, 5);
                     const key = `${fecha} ${horaInicio}-${horaFin}`;
@@ -102,7 +128,9 @@ export class EntrenadorAgendarComponent implements OnInit {
                         fecha,
                         hora_inicio: bloqueInicio,
                         hora_fin: bloqueFin,
-                        ocupado
+                        ocupado,
+                        jugador_nombre: d.jugador_nombre,
+                        reserva_tipo: d.reserva_tipo
                     });
                 }
                 inicio.setHours(inicio.getHours() + 1);
@@ -117,6 +145,8 @@ export class EntrenadorAgendarComponent implements OnInit {
 
     seleccionarAlumno(alumno: any) {
         this.alumnoSeleccionado = alumno;
+        // No pasamos pack_id ya que el entrenador debe ver toda su disponibilidad general
+        this.loadDisponibilidad();
     }
 
     seleccionarDia(d: string): void {
@@ -147,7 +177,8 @@ export class EntrenadorAgendarComponent implements OnInit {
                     hora_fin: horario.hora_fin.toTimeString().slice(0, 5),
                     jugador_id: this.alumnoSeleccionado.jugador_id,
                     estado: 'reservado',
-                    recurrencia: this.recurrencia
+                    recurrencia: this.recurrencia,
+                    tipo: 'individual'
                 };
 
                 this.isLoading = true;
@@ -155,7 +186,7 @@ export class EntrenadorAgendarComponent implements OnInit {
                     next: () => {
                         this.isLoading = false;
                         this.popupService.success('¡Agendado!', 'La clase se ha guardado correctamente.');
-                        this.loadDisponibilidad();
+                        this.loadDisponibilidad(this.alumnoSeleccionado?.pack_id);
                         this.loadAlumnos(); // Update remaining sessions
                     },
                     error: (err: any) => {
@@ -168,4 +199,14 @@ export class EntrenadorAgendarComponent implements OnInit {
         });
     }
 
+    getSlotsByCategory(dia: string, category: 'morning' | 'afternoon' | 'evening'): any[] {
+        const slots = this.horariosPorDia[dia] || [];
+        return slots.filter(slot => {
+            const hora = slot.hora_inicio.getHours();
+            if (category === 'morning') return hora < 12;
+            if (category === 'afternoon') return hora >= 12 && hora < 18;
+            if (category === 'evening') return hora >= 18;
+            return false;
+        });
+    }
 }

@@ -19,6 +19,13 @@
             </div>
 
             <!-- Charts Section -->
+            <div class="trainers-tabs" *ngIf="trainers.length > 1">
+                <button *ngFor="let t of trainers" class="tab-btn" [class.active]="selectedTrainerId === t.id"
+                    (click)="selectTrainer(t.id)">
+                    {{t.nombre}}
+                </button>
+            </div>
+
             <div class="charts-row" *ngIf="!isLoading && hasData">
                 <div class="card chart-card">
                     <div class="card-title">Distribución Técnica</div>

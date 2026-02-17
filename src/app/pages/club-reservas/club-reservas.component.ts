@@ -18,7 +18,7 @@ export class ClubReservasComponent implements OnInit {
     clubes: any[] = [];
     selectedClub: any = null;
     reservas: any[] = [];
-    selectedFecha: string = new Date().toISOString().split('T')[0];
+    selectedFecha: string = '';
 
     userId: number | null = null;
     userName: string = '';
@@ -60,6 +60,11 @@ export class ClubReservasComponent implements OnInit {
     // User search per slot
     activePlayerSlot: number = 1;
 
+    // TV Mode (Dashboard View)
+    isTVMode: boolean = false;
+    refreshInterval: any;
+    currentTime: string = '';
+
     constructor(
         private clubesService: ClubesService,
         private apiService: ApiService,
@@ -80,23 +85,67 @@ export class ClubReservasComponent implements OnInit {
             this.userName = user.nombre;
             this.userFoto = user.foto_perfil;
             this.userRole = user.rol;
+
+            // Fetch fresh profile data
+            this.apiService.getPerfil(this.userId!).subscribe({
+                next: (res) => {
+                    if (res.success && res.user) {
+                        this.userFoto = res.user.foto_perfil || this.userFoto;
+                        this.userName = res.user.nombre || this.userName;
+                    }
+                }
+            });
         }
 
+        this.selectedFecha = this.getLocalISODate();
+        this.newReserva.fecha = this.selectedFecha;
         this.generateTimeSlots();
         this.generateCurrentWeek();
 
-        this.clubesService.getClubes().subscribe(res => {
-            this.clubes = res;
-            if (this.clubes.length > 0) {
-                this.selectClub(this.clubes[0]);
-            }
-        });
+        if (this.userId) {
+            this.clubesService.getClubes(this.userId).subscribe(res => {
+                this.clubes = res;
+                if (this.clubes.length > 0) {
+                    this.selectClub(this.clubes[0]);
+                }
+            });
+        }
 
         this.clubesService.getUsers().subscribe(res => {
             this.allUsers = res;
         });
 
-        this.newReserva.fecha = this.selectedFecha;
+        this.updateTime();
+        setInterval(() => this.updateTime(), 60000);
+    }
+
+    getLocalISODate(date: Date = new Date()): string {
+        const y = date.getFullYear();
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const d = date.getDate().toString().padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    updateTime() {
+        const now = new Date();
+        this.currentTime = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    toggleTVMode() {
+        this.isTVMode = !this.isTVMode;
+        if (this.isTVMode) {
+            // Auto-refresh every 60s in TV mode
+            this.refreshInterval = setInterval(() => {
+                this.loadReservas();
+            }, 60000);
+            // Optional: Request fullscreen
+            document.documentElement.requestFullscreen().catch(() => { });
+        } else {
+            if (this.refreshInterval) clearInterval(this.refreshInterval);
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
+        }
     }
 
     generateTimeSlots() {
@@ -109,15 +158,24 @@ export class ClubReservasComponent implements OnInit {
     }
 
     generateCurrentWeek() {
-        const curr = new Date(this.selectedFecha);
-        const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1); // Monday
+        if (!this.selectedFecha) return;
+        const [y, m, d] = this.selectedFecha.split('-').map(Number);
+        const curr = new Date(y, m - 1, d);
+
+        // Find Monday of the current week
+        const dayOfWeek = curr.getDay(); // 0 is Sunday, 1 is Monday
+        const diff = curr.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        const monday = new Date(y, m - 1, diff);
+
         const week = [];
         for (let i = 0; i < 7; i++) {
-            const d = new Date(curr.setDate(first + i));
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+
             week.push({
-                full: d.toISOString().split('T')[0],
-                short: d.toLocaleDateString('es-ES', { weekday: 'short' }),
-                num: d.getDate()
+                full: this.getLocalISODate(date),
+                short: date.toLocaleDateString('es-ES', { weekday: 'short' }),
+                num: date.getDate()
             });
         }
         this.weekDays = week;

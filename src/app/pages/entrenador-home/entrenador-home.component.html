@@ -27,8 +27,22 @@
       </div>
     </header>
 
+    <!-- Skeleton Loading -->
+    <div class="dashboard-grid" *ngIf="isLoading">
+      <h3 class="section-title skeleton text" style="width: 200px; height: 32px;">Loading...</h3>
+      <div class="actions-grid">
+        <div class="action-card skeleton card" *ngFor="let i of [1,2,3,4]"></div>
+      </div>
+      <div class="today-classes-section">
+        <h3 class="section-title skeleton text" style="width: 300px; height: 32px;">Loading...</h3>
+        <div class="classes-list">
+          <div class="class-card skeleton" style="height: 100px;" *ngFor="let i of [1,2]"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Dashboard Content -->
-    <div class="dashboard-grid" *ngIf="!isLoading">
+    <div class="dashboard-grid fade-in" *ngIf="!isLoading">
 
 
 
@@ -72,13 +86,14 @@
         </div>
       </div>
 
-      <!-- Clases de Hoy Section -->
+      <!-- Clases de Hoy y Mañana Section -->
       <div class="today-classes-section">
-        <h3 class="section-title">Clases del Día</h3>
+        <h3 class="section-title">Próximas Clases</h3>
 
         <div class="classes-list" *ngIf="clasesHoyList.length > 0">
           <div class="class-card" *ngFor="let clase of clasesHoyList">
             <div class="time-col">
+              <span class="day-badge" [class.tomorrow]="clase.diaLabel === 'Mañana'">{{ clase.diaLabel }}</span>
               <span class="time">{{ clase.hora }}</span>
             </div>
             <div class="info-col">
@@ -94,7 +109,7 @@
         </div>
 
         <div class="empty-classes" *ngIf="clasesHoyList.length === 0">
-          <p>No hay clases para hoy 🎉</p>
+          <p>No hay clases para hoy ni mañana 🎉</p>
         </div>
       </div>
 

@@ -12,7 +12,7 @@
       <div class="breadcrumbs">
         <span>Panel de Control</span>
         <span class="separator">/</span>
-        <span class="current">{{ vistaActual === 'activas' ? 'Mis Reservas' : 'Historial' }}</span>
+        <span class="current">{{ vistaActual === 'activas' ? 'Mis Clases' : 'Historial' }}</span>
       </div>
 
       <div class="user-profile">
@@ -104,9 +104,9 @@
                   </ng-container>
                 </td>
                 <td>
-                  <button class="btn-icon danger" title="Cancelar" (click)="cancelarReserva(reserva)"
+                  <button class="btn-cancel-action" (click)="cancelarReserva(reserva)"
                     [disabled]="reserva.estado !== 'reservado' && reserva.estado !== 'activo' && reserva.estado !== 'pendiente'">
-                    ✕
+                    Cancelar reserva
                   </button>
                 </td>
               </tr>
@@ -139,7 +139,8 @@
                 </div>
               </div>
               <div class="card-actions-mobile">
-                <button class="btn-text danger" (click)="cancelarReserva(reserva)">Cancelar</button>
+                <button class="btn-cancel-action full-width" (click)="cancelarReserva(reserva)">Cancelar
+                  reserva</button>
               </div>
             </div>
           </div>

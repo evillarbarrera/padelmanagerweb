@@ -260,33 +260,32 @@
       }
     }
 
-    .btn-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      border: none;
-      background: transparent;
-      color: #999;
+    .btn-cancel-action {
+      background: #fef2f2;
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       transition: all 0.2s;
-      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
 
-      &:hover {
-        background: #f5f5f5;
-        color: #111;
-      }
-
-      &.danger:hover {
-        background: #fff5f5;
-        color: #d32f2f;
+      &:hover:not(:disabled) {
+        background: #ef4444;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
       }
 
       &:disabled {
         opacity: 0.3;
         cursor: not-allowed;
+      }
+
+      &.full-width {
+        width: 100%;
       }
     }
   }

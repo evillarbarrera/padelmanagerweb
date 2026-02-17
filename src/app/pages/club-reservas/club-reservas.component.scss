@@ -27,6 +27,14 @@
     color: #1e293b;
 }
 
+.club-single-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #22c55e;
+    display: block;
+    margin-top: -2px;
+}
+
 .week-nav {
     display: flex;
     align-items: center;
@@ -612,5 +620,188 @@
     small {
         color: #64748b;
         font-size: 12px;
+    }
+}
+
+// TV MODE OVERRIDES
+.admin-layout.tv-mode {
+    background: #0f172a; // Fondo muy oscuro para TV
+    padding: 0;
+
+    .main-content {
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.tv-header {
+    background: #1e293b;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #334155;
+    color: white;
+
+    .tv-left {
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            color: #22c55e;
+        }
+
+        p {
+            margin: 5px 0 0;
+            font-size: 16px;
+            color: #94a3b8;
+            text-transform: capitalize;
+        }
+    }
+
+    .tv-right {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .tv-clock {
+        font-size: 40px;
+        font-weight: 800;
+        font-family: monospace;
+        color: white;
+    }
+
+    .btn-exit-tv {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+
+        &:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+    }
+}
+
+.tv-grid {
+    border-radius: 0;
+    border: none;
+    flex: 1;
+    background: #0f172a;
+    box-shadow: none;
+
+    .reservas-grid {
+        height: 100%;
+    }
+
+    .grid-header {
+        background: #1e293b;
+        border-bottom: 3px solid #334155;
+        grid-template-columns: 120px repeat(auto-fit, minmax(200px, 1fr));
+
+        div {
+            color: white;
+            padding: 20px;
+            font-size: 18px;
+            border-right: 1px solid #334155;
+        }
+    }
+
+    .grid-body {
+        max-height: calc(100vh - 100px);
+        background: #0f172a;
+    }
+
+    .grid-row {
+        grid-template-columns: 110px repeat(auto-fit, minmax(190px, 1fr));
+        border-bottom: 1px solid #1e293b;
+        min-height: 80px; // Celdas más altas para TV
+
+        &:hover {
+            background: #1e293b;
+        }
+    }
+
+    .time-cell {
+        background: #141e33;
+        color: #94a3b8;
+        font-size: 18px;
+        border-right: 1px solid #334155;
+    }
+
+    .cancha-cell {
+        border-right: 1px solid #1e293b;
+    }
+
+    .reserva-item {
+        border-radius: 14px;
+
+        &.occupied.single-block {
+            top: 4px;
+            left: 4px;
+            width: calc(100% - 8px);
+        }
+
+        .res-name {
+            font-size: 15px; // Texto más grande para TV
+            margin-bottom: 4px;
+        }
+
+        .res-time {
+            font-size: 13px;
+        }
+    }
+}
+
+.btn-tv-mode {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 20px;
+
+    &:hover {
+        background: #e2e8f0;
+        transform: translateY(-2px);
+    }
+}
+
+/* Utils */
+.frc {
+    display: flex;
+    align-items: center;
+}
+
+.gap-10 {
+    gap: 10px;
+}
+
+.animate-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

@@ -32,9 +32,61 @@
           <p>Selecciona los bloques horarios en los que deseas dar clases</p>
         </div>
 
-        <button class="save-btn-desktop" (click)="guardarDisponibilidad()">
-          💾 Guardar Cambios
-        </button>
+        <div class="hero-actions">
+          <button class="btn-secondary" (click)="openDefaultModal()">
+            ⚙️ Configurar Semana Defecto
+          </button>
+          <button class="btn-secondary" (click)="applyDefaultConfig()">
+            🪄 Aplicar Plantilla (30 días)
+          </button>
+          <button class="save-btn-desktop" (click)="guardarDisponibilidad()">
+            💾 Guardar Cambios
+          </button>
+        </div>
+      </div>
+
+      <!-- Configuración Semana Defecto Modal -->
+      <div class="picker-overlay" *ngIf="showDefaultModal" (click)="showDefaultModal = false">
+        <div class="picker-content default-modal animate-slide-up" (click)="$event.stopPropagation()">
+          <div class="picker-header">
+            <h3>Plantilla de Semana por Defecto</h3>
+            <button class="close-btn" (click)="showDefaultModal = false">✕</button>
+          </div>
+
+          <!-- Day Selector for Template -->
+          <div class="template-day-tabs">
+            <button *ngFor="let d of diasSemana" class="template-day-tab" [class.active]="selectedDayTemplate === d.id"
+              (click)="selectedDayTemplate = d.id">
+              {{ d.name.slice(0,3) }}
+            </button>
+          </div>
+
+          <div class="modal-body-fixed">
+            <div class="toolbar-mini">
+              <span class="day-title-modal">Horario del Coach (Base)</span>
+              <div class="mini-actions">
+                <button class="mini-btn" (click)="seleccionarTodoDiaTemplate(selectedDayTemplate)">Marcar Todo</button>
+                <button class="mini-btn danger"
+                  (click)="deseleccionarTodoDiaTemplate(selectedDayTemplate)">Limpiar</button>
+              </div>
+            </div>
+
+            <!-- Blocks Grid Template -->
+            <div class="template-blocks-grid">
+              <div *ngFor="let b of templateBlocks[selectedDayTemplate]" class="template-block-card"
+                [class.selected]="b.selected" (click)="toggleTemplateBlock(selectedDayTemplate, b)">
+                <span class="time">{{ b.time }}</span>
+                <div class="check-dot"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <p class="modal-hint">Los bloques "pincados" (verdes) se copiarán a los próximos 30 días al aplicar la
+              plantilla.</p>
+            <button class="btn-primary" (click)="saveDefaultConfig()">💾 Guardar Plantilla</button>
+          </div>
+        </div>
       </div>
 
       <!-- Loading State -->

@@ -12,7 +12,7 @@
       <div class="breadcrumbs">
         <span>Panel de Control</span>
         <span class="separator">/</span>
-        <span class="current">Mi Perfil</span>
+        <span class="current">{{ activeTab === 'profile' ? 'Mi Perfil' : 'Torneos Disponibles' }}</span>
       </div>
 
       <div class="user-profile">
@@ -28,10 +28,25 @@
     <!-- Content -->
     <div class="dashboard-grid">
 
-      <!-- Nike Header simplified (optional, or just title) -->
-      <!-- Keeping the design the user worked on, but wrapped -->
+      <!-- TABS -->
+      <div class="main-tabs-nav" style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <button class="tab-btn" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'"
+          style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; background: #f1f5f9; color: #64748b;"
+          [style.background]="activeTab === 'profile' ? '#111' : '#f1f5f9'"
+          [style.color]="activeTab === 'profile' ? '#fff' : '#64748b'">
+          👤 Mi Perfil
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'tournaments'" (click)="activeTab = 'tournaments'"
+          *ngIf="userRole === 'jugador'"
+          style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; background: #f1f5f9; color: #64748b;"
+          [style.background]="activeTab === 'tournaments' ? '#111' : '#f1f5f9'"
+          [style.color]="activeTab === 'tournaments' ? '#fff' : '#64748b'">
+          🏆 Torneos Disponibles
+        </button>
+      </div>
 
-      <div class="profile-container animate-up">
+      <!-- PROFILE VIEW -->
+      <div class="profile-container animate-up" *ngIf="activeTab === 'profile'">
 
         <!-- Avatar & Role -->
         <div class="avatar-section">
@@ -98,6 +113,15 @@
                   <option value="Principiante">Principiante</option>
                 </optgroup>
               </select>
+            </div>
+
+            <div class="nike-item" *ngIf="userRole === 'entrenador'">
+              <label>Curriculum / Resumen (Bio)</label>
+              <textarea [(ngModel)]="profile.descripcion"
+                placeholder="Describe tu experiencia, certificaciones y estilo de enseñanza..." rows="4"
+                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; font-family: inherit; font-size: 14px; resize: vertical; margin-top: 8px;"></textarea>
+              <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">Este texto aparecerá cuando
+                los alumnos vean tus packs.</small>
             </div>
 
           </div>
@@ -181,6 +205,82 @@
 
       </div>
 
+      <!-- TOURNAMENTS VIEW -->
+      <div class="tournaments-container animate-up" *ngIf="activeTab === 'tournaments'">
+        <!-- Filters -->
+        <div class="filters-card glass-card"
+          style="padding: 24px; border-radius: 16px; background: white; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9;">
+          <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 18px; color: #1e293b;">Filtrar Torneos</h3>
+          <div class="nike-input-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="nike-item">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Región</label>
+              <select [(ngModel)]="filterRegion" (change)="onFilterRegionChange()"
+                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 14px; color: #1e293b; background-color: #fff;">
+                <option value="">Todas las regiones</option>
+                <option *ngFor="let r of regions" [value]="r.name">{{ r.name }}</option>
+              </select>
+            </div>
+            <div class="nike-item">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Comuna</label>
+              <select [(ngModel)]="filterComuna" (change)="onFilterComunaChange()" [disabled]="!filterRegion"
+                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 14px; color: #1e293b; background-color: #fff;">
+                <option value="">Todas las comunas</option>
+                <option *ngFor="let c of filteredComunasFilter" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- List -->
+        <div class="tournaments-list" style="display: flex; flex-direction: column; gap: 16px;">
+          <div *ngFor="let t of availableTournaments" class="tournament-item glass-card"
+            style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #f1f5f9; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s;"
+            onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+
+            <div class="t-info" style="flex: 1; min-width: 250px;">
+              <h4 style="margin: 0; font-size: 18px; color: #1e293b; font-weight: 700; margin-bottom: 6px;">{{ t.nombre
+                }}</h4>
+              <div
+                style="font-size: 13px; color: #64748b; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px;">
+                <span style="display: flex; align-items: center; gap: 4px;">🏢 <b>{{ t.club_nombre }}</b></span>
+                <span class="separator" style="color: #cbd5e1;">|</span>
+                <span style="display: flex; align-items: center; gap: 4px;">📅 {{ t.fecha | date:'dd/MM/yyyy' }} {{
+                  t.hora_inicio ? (t.hora_inicio | slice:0:5) : '' }}</span>
+                <span class="separator" style="color: #cbd5e1;">|</span>
+                <span style="display: flex; align-items: center; gap: 4px;">📍 {{ t.club_comuna || 'Ubicación no
+                  disponible' }}</span>
+              </div>
+              <div class="tags" style="display: flex; gap: 8px;">
+                <span class="badge"
+                  style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;">{{
+                  t.genero }}</span>
+                <span class="badge"
+                  style="background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;">{{
+                  t.categoria }}</span>
+                <span class="badge"
+                  style="background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;">{{
+                  t.modalidad }}</span>
+              </div>
+            </div>
+
+            <div class="t-action" style="margin-top: 10px; flex-shrink: 0;">
+              <!-- Placeholder action -->
+              <button
+                style="background: #1e293b; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 13px; transition: background 0.2s;"
+                onmouseover="this.style.background='#0f172a'" onmouseout="this.style.background='#1e293b'">
+                Ver Torneo
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="availableTournaments.length === 0"
+            style="text-align: center; padding: 60px; color: #94a3b8; background: #f8fafc; border-radius: 16px; border: 2px dashed #e2e8f0;">
+            <div style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;">🎾</div>
+            <p style="font-weight: 600; margin: 0;">No se encontraron torneos en esta ubicación.</p>
+            <p style="font-size: 13px; margin-top: 5px;">Intenta cambiar los filtros de búsqueda.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>

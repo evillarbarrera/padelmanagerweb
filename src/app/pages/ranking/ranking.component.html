@@ -1,0 +1,126 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="ranking">
+    </app-sidebar>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-content">
+                <div class="title-section">
+                    <h1>Ranking del Club</h1>
+                    <p class="subtitle">Clasificación general basada en puntos de torneos</p>
+                </div>
+                <div class="category-tabs">
+                    <button *ngFor="let cat of categorias" class="cat-tab" [class.active]="selectedCategoria === cat"
+                        (click)="setCategoria(cat)">
+                        {{ cat }}
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <!-- PODIUM (Top 3) -->
+            @if (ranking.length > 0) {
+            <div class="podium-container">
+                <!-- 2nd Place -->
+                <div class="podium-spot second" [style.visibility]="ranking[1] ? 'visible' : 'hidden'">
+                    <div class="avatar-container">
+                        <img [src]="ranking[1]?.foto || 'assets/images/placeholder_avatar.png'" alt="2nd">
+                        <div class="rank-badge">2</div>
+                    </div>
+                    <div class="player-info">
+                        <span class="name">{{ ranking[1]?.nombre }}</span>
+                        <span class="points">{{ ranking[1]?.puntos_ranking }} pts</span>
+                    </div>
+                </div>
+
+                <!-- 1st Place -->
+                <div class="podium-spot first">
+                    <div class="avatar-container">
+                        <div class="crown">👑</div>
+                        <img [src]="ranking[0]?.foto || 'assets/images/placeholder_avatar.png'" alt="1st">
+                        <div class="rank-badge">1</div>
+                    </div>
+                    <div class="player-info">
+                        <span class="name">{{ ranking[0]?.nombre }}</span>
+                        <span class="points">{{ ranking[0]?.puntos_ranking }} pts</span>
+                    </div>
+                </div>
+
+                <!-- 3rd Place -->
+                <div class="podium-spot third" [style.visibility]="ranking[2] ? 'visible' : 'hidden'">
+                    <div class="avatar-container">
+                        <img [src]="ranking[2]?.foto || 'assets/images/placeholder_avatar.png'" alt="3rd">
+                        <div class="rank-badge">3</div>
+                    </div>
+                    <div class="player-info">
+                        <span class="name">{{ ranking[2]?.nombre }}</span>
+                        <span class="points">{{ ranking[2]?.puntos_ranking }} pts</span>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <!-- RANKING TABLE -->
+            <div class="ranking-card">
+                <div class="card-header">
+                    <h2>Tabla de Clasificación</h2>
+                    <div class="badge-total">{{ ranking.length }} Jugadores</div>
+                </div>
+
+                <div class="table-container">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th class="pos-th">Puesto</th>
+                                <th>Jugador</th>
+                                <th class="text-right">Puntos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (player of ranking; track player.id; let i = $index) {
+                            <tr [class.top-3]="i < 3">
+                                <td class="pos-td">
+                                    <span class="rank-circle" [ngClass]="'rank-' + (i+1)">
+                                        {{ i + 1 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="player-cell">
+                                        <img [src]="player.foto || 'assets/images/placeholder_avatar.png'"
+                                            class="avatar-mini">
+                                        <div class="name-box">
+                                            <span class="player-name">{{ player.nombre }}</span>
+                                            <span class="player-email">{{ player.usuario }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-right points-cell">
+                                    <strong>{{ player.puntos_ranking }}</strong>
+                                    <span class="pts-label">PTS</span>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    @if (ranking.length === 0 && !loading) {
+                    <div class="empty-state">
+                        <div class="empty-icon">🏆</div>
+                        <h3>No hay ranking disponible</h3>
+                        <p>Los jugadores aparecerán aquí cuando sumen puntos en torneos.</p>
+                    </div>
+                    }
+
+                    @if (loading) {
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Cargando ranking...</p>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

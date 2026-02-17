@@ -74,4 +74,34 @@ export class EntrenamientoService {
       { headers: this.headers }
     );
   }
+
+  preReservar(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/disponibilidad/pre_reserva.php`, payload, {
+      headers: this.headers
+    });
+  }
+
+  initTransaction(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/pagos/init_transaction.php`, payload, {
+      headers: this.headers
+    });
+  }
+
+  getDefaultConfig(entrenadorId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/disponibilidad/get_config.php?entrenador_id=${entrenadorId}`, {
+      headers: this.headers
+    });
+  }
+
+  saveDefaultConfig(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/disponibilidad/save_config.php`, payload, {
+      headers: this.headers
+    });
+  }
+
+  applyDefaultConfig(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/disponibilidad/apply_config.php`, payload, {
+      headers: this.headers
+    });
+  }
 }

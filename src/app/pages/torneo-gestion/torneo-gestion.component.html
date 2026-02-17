@@ -1,0 +1,361 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="torneos">
+    </app-sidebar>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-title">
+                <h1>Gestión de Torneos <span class="badge">PRO</span></h1>
+                <p>Configuración de Fase de Grupos y Cuadros Eliminatorios</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" (click)="activeTab = 'create'">
+                    <span class="icon">➕</span> Nuevo Torneo
+                </button>
+            </div>
+        </header>
+
+        <!-- TABS PRINCIPALES -->
+        <div class="tabs-nav">
+            <button [class.active]="activeTab === 'list'" (click)="activeTab = 'list'">Mis Torneos</button>
+            <button [class.active]="activeTab === 'create'" (click)="activeTab = 'create'">Configurar Nuevo</button>
+        </div>
+
+        <!-- LISTADO DE TORNEOS -->
+        <section class="torneos-list" *ngIf="activeTab === 'list' && !selectedTorneo">
+            <div class="torneo-card" *ngFor="let t of torneos" (click)="selectTorneo(t)">
+                <div class="card-status" [attr.data-status]="t.estado">{{ t.estado }}</div>
+                <div class="card-info">
+                    <h3>{{ t.nombre }}</h3>
+                    <p><span class="icon">📅</span> {{ t.fecha_inicio | date:'dd MMM, yyyy' }}</p>
+                    <p><span class="icon">🏆</span> {{ t.tipo }}</p>
+                </div>
+                <div class="card-action">
+                    <button class="btn-outline">Gestionar</button>
+                </div>
+            </div>
+
+            <div class="empty-state" *ngIf="torneos.length === 0">
+                <div class="empty-icon">🎾</div>
+                <p>No tienes torneos activos. ¡Crea el primero!</p>
+            </div>
+        </section>
+
+        <!-- CREACIÓN DE TORNEO -->
+        <section class="create-form-container" *ngIf="activeTab === 'create'">
+            <div class="form-card">
+                <h2>Detalles del Torneo</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre del Torneo</label>
+                        <input type="text" [(ngModel)]="newTorneo.nombre" placeholder="Ej: Open Verano Padel Center">
+                    </div>
+                    <div class="form-group">
+                        <label>Club Anfitrión</label>
+                        <select [(ngModel)]="newTorneo.club_id">
+                            <option *ngFor="let c of clubes" [value]="c.id">{{ c.nombre }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Inicio</label>
+                        <input type="date" [(ngModel)]="newTorneo.fecha_inicio">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Formato</label>
+                        <select [(ngModel)]="newTorneo.tipo">
+                            <option value="Grupos + Playoffs">Grupos + Playoffs</option>
+                            <option value="Eliminación Directa">Eliminación Directa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CATEGORIAS A REPARTIR -->
+                <div class="categories-setup" style="margin-top: 30px;">
+                    <h3 style="font-size: 14px; font-weight: 800; color: #888; text-transform: uppercase;">Categorías y
+                        Puntos</h3>
+                    <div class="cat-setup-grid" style="display: grid; gap: 10px; margin-top: 15px;">
+                        <div class="cat-setup-row" *ngFor="let cat of newTorneo.categorias; let i = index"
+                            style="display: grid; grid-template-columns: 2fr 1fr 1fr 50px; gap: 10px; align-items: end;">
+                            <div class="form-group">
+                                <label *ngIf="i === 0">Nombre Categoría</label>
+                                <input type="text" [(ngModel)]="cat.nombre" placeholder="Ej: 5ta">
+                            </div>
+                            <div class="form-group">
+                                <label *ngIf="i === 0">Parejas Máx</label>
+                                <input type="number" [(ngModel)]="cat.max_parejas">
+                            </div>
+                            <div class="form-group">
+                                <label *ngIf="i === 0">Puntos Repartir</label>
+                                <input type="number" [(ngModel)]="cat.puntos_repartir">
+                            </div>
+                            <button class="btn-mini danger" (click)="newTorneo.categorias.splice(i, 1)"
+                                style="margin-bottom: 5px;">X</button>
+                        </div>
+                    </div>
+                    <button class="btn-outline"
+                        (click)="newTorneo.categorias.push({nombre:'', max_parejas:16, puntos_repartir:0})"
+                        style="margin-top: 15px; font-size: 11px;">+ Añadir Otra Categoría</button>
+                </div>
+
+                <div class="form-group full-width" style="margin-top: 20px;">
+                    <label>Descripción / Reglas</label>
+                    <textarea [(ngModel)]="newTorneo.descripcion" rows="3"></textarea>
+                </div>
+                <div class="form-footer" style="margin-top: 30px;">
+                    <button class="btn-primary" (click)="crearTorneo()">Crear Torneo Principal</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- GESTIÓN DE TORNEO SELECCIONADO -->
+        <section class="torneo-details" *ngIf="selectedTorneo">
+            <div class="details-header" style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+                <button class="btn-outline" (click)="selectedTorneo = null" style="padding: 8px 15px;">←</button>
+                <h2 style="margin: 0; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">{{
+                    selectedTorneo.nombre }}</h2>
+            </div>
+
+            <div class="details-tabs">
+                <button [class.active]="activeDetailTab === 'config'"
+                    (click)="activeDetailTab = 'config'">Categorías</button>
+                <button [class.active]="activeDetailTab === 'inscripciones'"
+                    (click)="activeDetailTab = 'inscripciones'">Inscripciones</button>
+                <button [class.active]="activeDetailTab === 'grupos'"
+                    (click)="activeDetailTab = 'grupos'">Grupos</button>
+                <button [class.active]="activeDetailTab === 'playoffs'"
+                    (click)="activeDetailTab = 'playoffs'">Playoffs</button>
+            </div>
+
+            <div class="details-content">
+                <!-- CATEGORÍAS -->
+                <div *ngIf="activeDetailTab === 'config'">
+                    <div class="categorias-grid">
+                        <div class="categoria-item" *ngFor="let cat of categorias"
+                            [class.selected]="selectedCategoria?.id === cat.id" (click)="selectCategoria(cat)">
+                            <h4>{{ cat.nombre }}</h4>
+                            <p>{{ cat.max_parejas }} PAREJAS MÁX.</p>
+                            <div class="pts-badge"
+                                style="font-size: 10px; color: #fff; background: #000; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-top: 10px;">
+                                {{ cat.puntos_repartir }} PTS</div>
+                        </div>
+                        <button class="btn-add-cat">+ NUEVA CATEGORÍA</button>
+                    </div>
+                </div>
+
+                <!-- INSCRIPCIONES -->
+                <div *ngIf="activeDetailTab === 'inscripciones'">
+                    <div class="section-header-inline"
+                        style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-weight: 800; text-transform: uppercase; font-size: 16px;">Parejas Inscritas: {{
+                            selectedCategoria?.nombre }}</h3>
+                        <span class="badge" style="background: #eee; color: #666;">{{ inscripciones.length }} / {{
+                            selectedCategoria?.max_parejas }}</span>
+                    </div>
+
+                    <!-- FORMULARIO DE INSCRIPCIÓN MANUAL -->
+                    <div class="manual-registration-box"
+                        style="background: #f9f9f9; padding: 20px; border-radius: 15px; margin-bottom: 30px; border: 1px solid #eee;">
+                        <h4
+                            style="font-size: 12px; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; color: #555;">
+                            Inscribir Pareja Manualmente</h4>
+                        <div class="registration-grid"
+                            style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <!-- Jugador 1 -->
+                            <div class="form-group-mini">
+                                <label style="font-size: 10px; font-weight: 700; color: #888;">Jugador 1
+                                    (Sistema)</label>
+                                <select [(ngModel)]="manualInscripcion.jugador1_id"
+                                    style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
+                                    <option [value]="0">-- Usuario No Registrado --</option>
+                                    <option *ngFor="let u of allUsers" [value]="u.id">{{ u.nombre }}</option>
+                                </select>
+                                <input *ngIf="manualInscripcion.jugador1_id == 0" type="text"
+                                    [(ngModel)]="manualInscripcion.jugador1_nombre_manual" placeholder="Nombre completo"
+                                    style="margin-top: 5px; width: 100%; border-radius: 8px; border: 1px solid #ddd; padding: 8px;">
+                            </div>
+                            <!-- Jugador 2 -->
+                            <div class="form-group-mini">
+                                <label style="font-size: 10px; font-weight: 700; color: #888;">Jugador 2
+                                    (Sistema)</label>
+                                <select [(ngModel)]="manualInscripcion.jugador2_id"
+                                    style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
+                                    <option [value]="0">-- Usuario No Registrado --</option>
+                                    <option *ngFor="let u of allUsers" [value]="u.id">{{ u.nombre }}</option>
+                                </select>
+                                <input *ngIf="manualInscripcion.jugador2_id == 0" type="text"
+                                    [(ngModel)]="manualInscripcion.jugador2_nombre_manual" placeholder="Nombre completo"
+                                    style="margin-top: 5px; width: 100%; border-radius: 8px; border: 1px solid #ddd; padding: 8px;">
+                            </div>
+                            <!-- Nombre Pareja -->
+                            <div class="form-group-mini">
+                                <label style="font-size: 10px; font-weight: 700; color: #888;">Nombre de Pareja
+                                    (Opcional)</label>
+                                <input type="text" [(ngModel)]="manualInscripcion.nombre_pareja"
+                                    placeholder="Ej: Los Galácticos"
+                                    style="width: 100%; border-radius: 8px; border: 1px solid #ddd; padding: 8px;">
+                                <button class="btn-primary" (click)="inscribirParejaManual()"
+                                    style="margin-top: 5px; width: 100%; padding: 10px; font-size: 12px;">INSCRIBIR
+                                    AHORA</button>
+                            </div>
+                        </div>
+                        <p style="font-size: 10px; color: #888; margin-top: 10px; font-style: italic;">* Los usuarios no
+                            registrados no sumarán puntos para el ranking automático.</p>
+                    </div>
+
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Pareja</th>
+                                <th>Jugadores</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let ins of inscripciones">
+                                <td>{{ ins.nombre_pareja }}</td>
+                                <td>{{ ins.jugador1_nombre }} & {{ ins.jugador2_nombre }}</td>
+                                <td>
+                                    <span class="status-indicator" [class.valid]="ins.validado">
+                                        {{ ins.validado ? 'VALIDADO' : 'PENDIENTE' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-mini" [class.danger]="ins.validado"
+                                        (click)="validarInscripcion(ins)">
+                                        {{ ins.validado ? 'Quitar' : 'Validar' }}
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state-mini" *ngIf="inscripciones.length === 0"
+                        style="padding: 40px; text-align: center; color: #888;">
+                        <p>No hay inscripciones aún.</p>
+                    </div>
+                </div>
+
+                <!-- GRUPOS -->
+                <div *ngIf="activeDetailTab === 'grupos'">
+                    <div class="actions-bar-groups">
+                        <div class="info-box">
+                            <p><strong>{{ inscripciones.length }}</strong> parejas inscritas en <strong>{{
+                                    selectedCategoria?.nombre }}</strong>.</p>
+                        </div>
+                        <div class="group-actions" style="display: flex; gap: 10px;">
+                            <button class="btn-primary" (click)="generarGrupos()"
+                                style="font-size: 12px; padding: 10px 20px;">⚡ GENERAR GRUPOS</button>
+                            <button class="btn-outline" (click)="cerrarGrupos()"
+                                style="font-size: 12px; padding: 10px 20px;">🔒 CERRAR Y PLAYOFFS</button>
+                        </div>
+                    </div>
+
+                    <div class="groups-layout" style="display: flex; flex-direction: column; gap: 40px;">
+                        <div class="group-block" *ngFor="let g of grupos">
+                            <h3
+                                style="font-weight: 900; text-transform: uppercase; color: #000; margin-bottom: 20px; font-size: 20px;">
+                                {{ g.nombre }}</h3>
+
+                            <div class="group-grid" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px;">
+                                <!-- Standing -->
+                                <div class="standing-table">
+                                    <table class="premium-table" style="font-size: 12px;">
+                                        <thead>
+                                            <tr>
+                                                <th>Pareja</th>
+                                                <th>PJ</th>
+                                                <th>PG</th>
+                                                <th>SF-SC</th>
+                                                <th>PTS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let r of groupRankings[g.id]">
+                                                <td>{{ r.nombre_pareja }}</td>
+                                                <td>{{ r.pj }}</td>
+                                                <td>{{ r.pg }}</td>
+                                                <td>{{ r.sf }}-{{ r.sc }}</td>
+                                                <td style="font-weight: 900;">{{ r.puntos }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Matches -->
+                                <div class="matches-list">
+                                    <div class="match-item-small" *ngFor="let m of groupMatches"
+                                        [hidden]="m.grupo_id !== g.id"
+                                        style="background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="font-size: 13px;">
+                                                <div [style.font-weight]="m.ganador_id == m.pareja1_id ? '900' : '500'">
+                                                    {{ m.pareja1_nombre }}</div>
+                                                <div [style.font-weight]="m.ganador_id == m.pareja2_id ? '900' : '500'">
+                                                    {{ m.pareja2_nombre }}</div>
+                                            </div>
+                                            <button class="btn-mini" (click)="cargarResultado(m)"
+                                                *ngIf="m.estado !== 'Finalizado'">Cargar</button>
+                                            <div *ngIf="m.estado === 'Finalizado'"
+                                                style="font-size: 12px; font-weight: 900; color: #00c853;">FINAL</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" *ngIf="grupos.length === 0"
+                        style="padding: 60px; text-align: center; color: #888;">
+                        <p>No se han generado grupos para esta categoría.</p>
+                    </div>
+                </div>
+
+                <!-- PLAYOFFS -->
+                <div *ngIf="activeDetailTab === 'playoffs'">
+                    <div class="playoff-bracket">
+                        <div class="empty-state" *ngIf="playoffMatches.length === 0"
+                            style="padding: 80px; text-align: center;">
+                            <p style="color: #888; font-weight: 500;">Todavía no se ha generado el cuadro eliminatorio.
+                            </p>
+                            <button class="btn-primary" (click)="activeDetailTab = 'grupos'"
+                                style="margin-top: 20px;">GENERAR DESDE GRUPOS</button>
+                        </div>
+
+                        <div class="matches-grid" *ngIf="playoffMatches.length > 0"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                            <div class="match-card-mini" *ngFor="let m of playoffMatches"
+                                style="background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+                                <div class="ronda-label"
+                                    style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #aaa; margin-bottom: 20px; letter-spacing: 1px;">
+                                    {{ m.ronda }}</div>
+                                <div class="teams" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div class="team" [style.font-weight]="m.ganador_id == m.pareja1_id ? '900' : '500'"
+                                        style="font-size: 15px;">{{ m.pareja1_nombre }}
+                                    </div>
+                                    <div class="vs"
+                                        style="font-size: 9px; color: #ddd; font-weight: 900; text-align: center;">VS
+                                    </div>
+                                    <div class="team" [style.font-weight]="m.ganador_id == m.pareja2_id ? '900' : '500'"
+                                        style="font-size: 15px;">{{ m.pareja2_nombre }}
+                                    </div>
+                                </div>
+                                <div class="match-footer"
+                                    style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div class="match-status"
+                                        [style.color]="m.estado === 'Finalizado' ? '#00c853' : '#888'"
+                                        style="font-size: 10px; font-weight: 800; text-transform: uppercase;">
+                                        {{ m.estado }}
+                                    </div>
+                                    <button class="btn-mini" (click)="cargarResultado(m)"
+                                        *ngIf="m.estado !== 'Finalizado'">Cargar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>

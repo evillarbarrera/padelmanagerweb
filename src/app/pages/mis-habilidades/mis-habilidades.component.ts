@@ -35,6 +35,11 @@ export class MisHabilidadesComponent implements OnInit {
 
     videos: any[] = [];
 
+    // Multi-Trainer Support
+    originalEvaluations: any[] = [];
+    trainers: any[] = [];
+    selectedTrainerId: number | null = null;
+
     constructor(
         private router: Router,
         private evaluacionService: EvaluacionService,
@@ -73,36 +78,34 @@ export class MisHabilidadesComponent implements OnInit {
 
         this.evaluacionService.getEvaluaciones(this.userId).subscribe({
             next: (data) => {
-                if (data && data.length > 0) {
-                    const sorted = data.sort((a: any, b: any) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+                this.originalEvaluations = data || [];
 
-                    this.storedLineLabels = sorted.map((e: any) => {
-                        const d = new Date(e.fecha);
-                        return `${d.getDate()}/${d.getMonth() + 1}`;
-                    });
-                    this.storedLineData = sorted.map((e: any) => Number(e.promedio_general));
-
-                    const latest = sorted[sorted.length - 1];
-                    if (latest && latest.scores) {
-                        this.storedRadarLabels = Object.keys(latest.scores);
-                        this.storedRadarData = this.storedRadarLabels.map(key => {
-                            const s = latest.scores[key];
-                            if (s && typeof s === 'object') {
-                                return (Number(s.tecnica) + Number(s.control) + Number(s.direccion) + Number(s.decision)) / 4;
-                            }
-                            return 0;
+                // Extract unique trainers
+                const trainerMap = new Map();
+                this.originalEvaluations.forEach(e => {
+                    const tId = e.entrenador_id || 0; // Handle null/0 as ID 0
+                    if (!trainerMap.has(tId)) {
+                        trainerMap.set(tId, {
+                            id: tId,
+                            nombre: e.entrenador || (tId === 0 ? 'General' : 'Entrenador Desconocido'),
+                            email: e.email_entrenador
                         });
-
-                        this.hasData = true;
-                        this.cdr.detectChanges();
-
-                        setTimeout(() => {
-                            this.renderCharts();
-                        }, 300);
                     }
+                });
+
+                this.trainers = Array.from(trainerMap.values());
+
+                if (this.trainers.length > 0) {
+                    // Try to restore previous selection, or default to first
+                    const initialId = (this.selectedTrainerId && trainerMap.has(this.selectedTrainerId))
+                        ? this.selectedTrainerId
+                        : this.trainers[0].id;
+
+                    this.selectTrainer(initialId);
                 } else {
                     this.hasData = false;
                 }
+
                 this.isLoading = false;
             },
             error: (err) => {
@@ -110,6 +113,47 @@ export class MisHabilidadesComponent implements OnInit {
                 this.isLoading = false;
             }
         });
+    }
+
+    selectTrainer(trainerId: number) {
+        this.selectedTrainerId = trainerId;
+        this.processDataForTrainer(trainerId);
+    }
+
+    processDataForTrainer(trainerId: number) {
+        // Filter evaluations by trainer
+        const trainerEvals = this.originalEvaluations.filter(e => (e.entrenador_id || 0) === trainerId);
+
+        if (trainerEvals && trainerEvals.length > 0) {
+            const sorted = trainerEvals.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+
+            this.storedLineLabels = sorted.map((e: any) => {
+                const d = new Date(e.fecha);
+                return `${d.getDate()}/${d.getMonth() + 1}`;
+            });
+            this.storedLineData = sorted.map((e: any) => Number(e.promedio_general));
+
+            const latest = sorted[sorted.length - 1]; // Latest evaluation determines current skills
+            if (latest && latest.scores) {
+                this.storedRadarLabels = Object.keys(latest.scores);
+                this.storedRadarData = this.storedRadarLabels.map(key => {
+                    const s = latest.scores[key];
+                    if (s && typeof s === 'object') {
+                        return (Number(s.tecnica) + Number(s.control) + Number(s.direccion) + Number(s.decision)) / 4;
+                    }
+                    return 0;
+                });
+
+                this.hasData = true;
+                this.cdr.detectChanges();
+
+                setTimeout(() => {
+                    this.renderCharts();
+                }, 300);
+            }
+        } else {
+            this.hasData = false;
+        }
     }
 
     renderCharts() {

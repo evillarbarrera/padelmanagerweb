@@ -1,15 +1,17 @@
-<div class="admin-layout">
-    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" activePage="club-reservas">
+<div class="admin-layout" [class.tv-mode]="isTVMode">
+    <app-sidebar *ngIf="!isTVMode" [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto"
+        activePage="club-reservas">
     </app-sidebar>
 
     <main class="main-content">
-        <header class="top-header">
+        <header class="top-header" *ngIf="!isTVMode">
             <div class="header-left">
                 <h2>Agenda de Reservas</h2>
-                <div class="club-selector" *ngIf="clubes.length > 1">
-                    <select [(ngModel)]="selectedClub" (change)="selectClub(selectedClub)">
+                <div class="club-selector" *ngIf="selectedClub">
+                    <select *ngIf="clubes.length > 1" [(ngModel)]="selectedClub" (change)="selectClub(selectedClub)">
                         <option *ngFor="let c of clubes" [ngValue]="c">{{c.nombre}}</option>
                     </select>
+                    <span class="club-single-name" *ngIf="clubes.length === 1">{{selectedClub.nombre}}</span>
                 </div>
             </div>
 
@@ -25,12 +27,29 @@
                 <button class="nav-btn" (click)="onFechaChange()">&gt;</button>
             </div>
 
-            <div class="date-picker">
-                <input type="date" [(ngModel)]="selectedFecha" (change)="onFechaChange()">
+            <div class="header-actions frc gap-10">
+                <button class="btn-tv-mode" (click)="toggleTVMode()" title="Modo Pantalla">
+                    <span>📺</span>
+                </button>
+                <div class="date-picker">
+                    <input type="date" [(ngModel)]="selectedFecha" (change)="onFechaChange()">
+                </div>
             </div>
         </header>
 
-        <div class="grid-container" *ngIf="selectedClub">
+        <!-- TV HEADER -->
+        <header class="tv-header animate-in" *ngIf="isTVMode">
+            <div class="tv-left">
+                <h1>{{selectedClub?.nombre}}</h1>
+                <p>Agenda de Reservas - {{selectedFecha | date:'fullDate':'':'es-ES'}}</p>
+            </div>
+            <div class="tv-right">
+                <div class="tv-clock">{{currentTime}}</div>
+                <button class="btn-exit-tv" (click)="toggleTVMode()">Salir ✕</button>
+            </div>
+        </header>
+
+        <div class="grid-container" *ngIf="selectedClub" [class.tv-grid]="isTVMode">
             <div class="reservas-grid">
                 <!-- Header Horarios -->
                 <div class="grid-header">

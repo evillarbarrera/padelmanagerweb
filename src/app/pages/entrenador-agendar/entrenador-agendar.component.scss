@@ -3,216 +3,421 @@
 .booking-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    max-width: 1000px;
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 60px;
 }
 
+// Global Step Styling
 .section-card {
     background: #fff;
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    transition: transform 0.3s ease;
 
     .section-title {
-        font-size: 0.95rem;
-        font-weight: 800;
+        font-size: 1.1rem;
+        font-weight: 900;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin: 0 0 20px 0;
+        margin: 0 0 24px 0;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
         color: #111;
 
-        span {
-            background: #000;
-            color: #fff;
-            width: 24px;
-            height: 24px;
+        .step-num {
+            background: #111;
+            color: #ccff00;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
-            font-size: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transform: rotate(-5deg);
         }
     }
 }
 
+// 1. Student Selection
 .student-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
 
     .student-item {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 12px;
-        border: 1px solid #eee;
+        gap: 16px;
+        padding: 20px;
+        border-radius: 18px;
+        border: 2px solid #f0f0f0;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: #fff;
 
         &:hover {
-            border-color: #000;
-            background: #fafafa;
+            border-color: #111;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         }
 
         &.selected {
-            background: #000;
-            border-color: #000;
+            background: #111;
+            border-color: #111;
             color: #fff;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 
             .info .pack-info {
-                color: #aaa;
+                color: #ccff00;
+                opacity: 1;
+            }
+
+            .avatar-wrapper {
+                border-color: #ccff00;
             }
         }
 
-        .avatar-sm {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
+        .avatar-wrapper {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            border: 2px solid transparent;
+            overflow: hidden;
+            transition: all 0.3s;
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
         }
 
         .info {
             display: flex;
             flex-direction: column;
+            gap: 2px;
 
             .name {
-                font-weight: 700;
-                font-size: 0.9rem;
+                font-weight: 800;
+                font-size: 1rem;
+                letter-spacing: -0.3px;
             }
 
             .pack-info {
                 font-size: 0.75rem;
-                color: #666;
+                color: #888;
+                font-weight: 600;
+                text-transform: uppercase;
             }
         }
     }
 }
 
+// 2. Recurrence
 .recurrence-box {
     display: flex;
     align-items: center;
-    gap: 15px;
+    justify-content: space-between;
+    background: #f9f9f9;
+    padding: 12px 24px;
+    border-radius: 16px;
 
-    label {
+    .label-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #111;
         font-weight: 700;
-        color: #666;
-        font-size: 0.9rem;
+
+        i {
+            font-size: 1.2rem;
+        }
     }
 
     .nike-select {
-        padding: 10px 15px;
-        border-radius: 10px;
-        border: 1px solid #eee;
-        font-weight: 700;
+        background: #fff;
+        padding: 12px 20px;
+        border-radius: 12px;
+        border: 2px solid #eee;
+        font-weight: 800;
         outline: none;
         cursor: pointer;
+        min-width: 200px;
+        transition: all 0.3s;
 
         &:focus {
-            border-color: #000;
+            border-color: #111;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
         }
     }
 }
 
+// 3. Layout Grid
 .booking-layout {
     display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 20px;
+    grid-template-columns: 380px 1fr;
+    gap: 32px;
 }
 
+// Calendar Styling
 .days-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 12px;
 
     .day-btn {
-        border: 1px solid #eee;
+        border: 2px solid #f0f0f0;
         background: #fff;
-        padding: 12px 5px;
-        border-radius: 12px;
+        padding: 16px 8px;
+        border-radius: 20px;
         cursor: pointer;
         display: flex;
         flex-direction: column;
         align-items: center;
-        transition: all 0.3s;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
         .day-name {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             color: #999;
             text-transform: uppercase;
             font-weight: 800;
+            margin-bottom: 4px;
         }
 
         .day-num {
-            font-size: 1.1rem;
+            font-size: 1.3rem;
             font-weight: 900;
-            margin-top: 2px;
+            letter-spacing: -1px;
+            color: #111;
         }
 
-        &:hover {
-            border-color: #000;
+        &:hover:not(.active) {
+            border-color: #aaa;
+            background: #fafafa;
         }
 
         &.active {
-            background: #000;
+            background: #111;
             color: #fff;
-            border-color: #000;
+            border-color: #111;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transform: scale(1.05);
 
             .day-name {
-                color: #888;
+                color: rgba(255, 255, 255, 0.5);
+            }
+
+            .day-num {
+                color: #fff;
             }
         }
+    }
+}
+
+// Time Slots Styling
+.time-category {
+    margin-bottom: 32px;
+
+    .category-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #999;
+        margin-bottom: 16px;
+        display: block;
+        letter-spacing: 1px;
     }
 }
 
 .times-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 14px;
 
     .time-btn {
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid #eee;
+        padding: 18px;
+        border-radius: 16px;
+        border: 2px solid #f0f0f0;
         background: #fff;
-        font-weight: 800;
+        font-weight: 900;
+        font-size: 1.1rem;
+        color: #111;
         cursor: pointer;
         transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+
+        &.with-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10px 5px;
+            gap: 2px;
+        }
+
+        .time-main {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .time-sub {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #ccff00;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
 
         &:hover:not(:disabled) {
-            border-color: #000;
-            background: #000;
+            border-color: #ccff00;
+            background: #111;
             color: #fff;
+            transform: scale(1.05);
         }
 
         &:disabled {
-            opacity: 0.3;
+            opacity: 0.4;
             cursor: not-allowed;
+            background: #f8f8f8;
+            border-style: dashed;
 
             &.occupied {
-                background: #fdfdfd;
-                color: #ddd;
+                background: #f0f0f0;
+                text-decoration: line-through;
             }
         }
     }
 }
 
+// Empty/Loading States
 .no-selection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    background: #f9f9f9;
+    border-radius: 20px;
+    border: 2px dashed #eee;
     color: #999;
-    text-align: center;
-    padding: 40px;
-    font-style: italic;
+    gap: 16px;
+
+    .empty-icon {
+        font-size: 3rem;
+        opacity: 0.3;
+    }
+
+    p {
+        margin: 0;
+        font-weight: 700;
+        font-style: italic;
+    }
 }
 
-@media (max-width: 768px) {
+// Loading Overlays
+.loading-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px 60px;
+    border-radius: 30px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    p {
+        margin: 0;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: #111;
+    }
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 6px solid #f0f0f0;
+    border-top: 6px solid #111;
+    border-radius: 50%;
+    animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-fade {
+    opacity: 0.3;
+    filter: blur(4px);
+    pointer-events: none;
+    transition: all 0.5s ease;
+}
+
+// Animations
+.animate-up {
+    animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 992px) {
     .booking-layout {
         grid-template-columns: 1fr;
     }
 
     .days-grid {
         grid-template-columns: repeat(7, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .section-card {
+        padding: 20px;
+    }
+
+    .days-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .recurrence-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .nike-select {
+        width: 100%;
     }
 }

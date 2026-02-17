@@ -45,6 +45,12 @@ export class ApiService {
     });
   }
 
+  getUsers(rol?: string): Observable<any> {
+    let url = `${this.apiUrl}/user/get_users.php`;
+    if (rol) url += `?rol=${rol}`;
+    return this.http.get(url, { headers: this.getHeaders() });
+  }
+
   getHomeStats(usuarioId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/alumno/get_home_stats.php?jugador_id=${usuarioId}`, {
       headers: this.getHeaders()

@@ -19,7 +19,7 @@ export class ClubesJugadorComponent implements OnInit {
     horarios: any[] = [];
     selectedClub: any = null;
     selectedCancha: any = null;
-    selectedFecha: string = new Date().toISOString().split('T')[0];
+    selectedFecha: string = '';
     weekDays: any[] = [];
 
     userId: number | null = null;
@@ -40,8 +40,16 @@ export class ClubesJugadorComponent implements OnInit {
             this.userFoto = user.foto_perfil;
             this.userRole = user.rol;
         }
+        this.selectedFecha = this.getLocalISODate(new Date());
         this.generateWeekDays();
         this.loadClubes();
+    }
+
+    getLocalISODate(date: Date): string {
+        const y = date.getFullYear();
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const d = date.getDate().toString().padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     generateWeekDays() {
@@ -52,7 +60,7 @@ export class ClubesJugadorComponent implements OnInit {
         for (let i = 0; i < 6; i++) { // Mostramos solo los próximos 6 días
             const d = new Date();
             d.setDate(today.getDate() + i);
-            const dateStr = d.toISOString().split('T')[0];
+            const dateStr = this.getLocalISODate(d);
             result.push({
                 nombre: days[d.getDay()],
                 numero: d.getDate(),
