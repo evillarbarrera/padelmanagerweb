@@ -71,6 +71,10 @@ export const routes: Routes = [
     path: 'ranking',
     loadComponent: () => import('./pages/ranking/ranking.component').then(m => m.RankingComponent)
   },
+  {
+    path: 'admin-dashboard',
+    loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+  },
 
   {
     path: 'mantenimiento',

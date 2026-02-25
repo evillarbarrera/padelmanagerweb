@@ -152,7 +152,6 @@ export class ClubReservasComponent implements OnInit {
         const slots = [];
         for (let i = 6; i <= 23; i++) {
             slots.push(`${i.toString().padStart(2, '0')}:00`);
-            slots.push(`${i.toString().padStart(2, '0')}:30`);
         }
         this.timeSlots = slots;
     }
@@ -221,29 +220,36 @@ export class ClubReservasComponent implements OnInit {
     }
 
     isStartOfReserva(res: any, hora: string): boolean {
-        return res.hora_inicio.startsWith(hora.substring(0, 5));
+        const [hSlot] = hora.split(':').map(Number);
+        const [hRes] = res.hora_inicio.split(':').map(Number);
+        return hSlot === hRes;
     }
 
     getReservaClass(res: any): string {
         if (res.estado === 'Bloqueada') return 'blocked-slot';
-
-        // Asumimos que si no tiene jugador_id o fue hecha desde este panel admin, es 'admin-reserva'
-        // Por ahora usamos una lógica simple: si tiene nombre_externo pero no jugador_id, o si el admin la creó aquí.
         if (!res.usuario_id && res.nombre_externo) return 'admin-reserva';
-
         return 'player-reserva';
     }
 
-    getReservaHeight(res: any): string {
+    getReservaStyle(res: any): any {
         try {
             const [hS, mS] = res.hora_inicio.split(':').map(Number);
             const [hE, mE] = res.hora_fin.split(':').map(Number);
-            const duration = (hE * 60 + mE) - (hS * 60 + mS);
-            const slots = duration / 30;
-            // Agregamos un pequeño ajuste para cubrir el gap del borde entre filas (opcional)
-            return `calc(${slots * 100}% + ${slots - 1}px)`;
+            const durationMinutes = (hE * 60 + mE) - (hS * 60 + mS);
+
+            const heightPercent = (durationMinutes / 60) * 100;
+            const topPercent = (mS / 60) * 100;
+
+            return {
+                'height': `calc(${heightPercent}% - 2px)`,
+                'top': `calc(${topPercent}% + 1px)`,
+                'position': 'absolute',
+                'left': '1px',
+                'width': 'calc(100% - 2px)',
+                'z-index': '15'
+            };
         } catch (e) {
-            return '100%';
+            return { height: '100%' };
         }
     }
 

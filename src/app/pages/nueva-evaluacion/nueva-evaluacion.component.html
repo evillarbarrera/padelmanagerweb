@@ -1,26 +1,8 @@
 <div class="admin-layout">
-    <app-sidebar [userId]="entrenadorId" [role]="'entrenador'" [activePage]="'alumnos'"></app-sidebar>
+    <app-sidebar [userId]="entrenadorId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+        [activePage]="'alumnos'"></app-sidebar>
 
     <main class="main-content">
-
-        <!-- Top Header -->
-        <header class="top-header">
-            <div class="breadcrumbs">
-                <span>Panel de Entrenador</span>
-                <span class="separator">/</span>
-                <span>Mis Alumnos</span>
-                <span class="separator">/</span>
-                <span class="current">Nueva Evaluación</span>
-            </div>
-
-            <div class="user-profile">
-                <div class="user-info">
-                    <span class="name">Entrenador</span>
-                    <span class="role">Staff</span>
-                </div>
-                <img class="avatar-circle" src="assets/images/placeholder_avatar.png" style="object-fit: cover;">
-            </div>
-        </header>
 
         <!-- Content Grid -->
         <div class="dashboard-grid">
@@ -28,7 +10,7 @@
             <div class="page-header-flex">
                 <div>
                     <h1 class="section-title">Nueva Evaluación</h1>
-                    <p class="section-subtitle">Califica el desempeño técnico y táctico.</p>
+                    <p class="section-subtitle">Evaluando a: <b>{{ alumnoNombre }}</b></p>
                 </div>
                 <div class="header-actions">
                     <button class="btn-cancel" (click)="cancelar()">Cancelar</button>
@@ -54,85 +36,76 @@
                     <div class="card-header">
                         <div class="header-main">
                             <h3>{{ golpe }}</h3>
-                            <div class="avg-badge">
+                            <div class="avg-badge"
+                                [class.high]="((evaluationData[golpe].tecnica + evaluationData[golpe].control + evaluationData[golpe].direccion + evaluationData[golpe].decision) / 4) >= 7">
                                 {{ ((evaluationData[golpe].tecnica + evaluationData[golpe].control +
                                 evaluationData[golpe].direccion + evaluationData[golpe].decision) / 4) | number:'1.1-1'
                                 }}
                             </div>
                         </div>
-                        <div class="stroke-quick-set">
-                            <button (click)="setStrokeScores(golpe, 1)">1</button>
-                            <button (click)="setStrokeScores(golpe, 5)">5</button>
-                            <button (click)="setStrokeScores(golpe, 8)">8</button>
-                            <button (click)="setStrokeScores(golpe, 10)">10</button>
-                        </div>
                     </div>
 
                     <div class="card-body">
 
-                        <!-- Metric Item: Técnica -->
+                        <!-- Metric: Técnica -->
                         <div class="metric-item">
-                            <div class="metric-label">
-                                <span>Técnica</span>
-                            </div>
+                            <span class="label">Técnica</span>
                             <div class="score-controls">
                                 <button class="step-btn" (click)="updateScore(golpe, 'tecnica', -1)">-</button>
-                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].tecnica"
-                                    class="score-input">
+                                <span class="score-val">{{ evaluationData[golpe].tecnica }}</span>
                                 <button class="step-btn" (click)="updateScore(golpe, 'tecnica', 1)">+</button>
                             </div>
                         </div>
 
-                        <!-- Metric Item: Control -->
+                        <!-- Metric: Control -->
                         <div class="metric-item">
-                            <div class="metric-label">
-                                <span>Control</span>
-                            </div>
+                            <span class="label">Control</span>
                             <div class="score-controls">
                                 <button class="step-btn" (click)="updateScore(golpe, 'control', -1)">-</button>
-                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].control"
-                                    class="score-input">
+                                <span class="score-val">{{ evaluationData[golpe].control }}</span>
                                 <button class="step-btn" (click)="updateScore(golpe, 'control', 1)">+</button>
                             </div>
                         </div>
 
-                        <!-- Metric Item: Dirección -->
+                        <!-- Metric: Dirección -->
                         <div class="metric-item">
-                            <div class="metric-label">
-                                <span>Dirección</span>
-                            </div>
+                            <span class="label">Dirección</span>
                             <div class="score-controls">
                                 <button class="step-btn" (click)="updateScore(golpe, 'direccion', -1)">-</button>
-                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].direccion"
-                                    class="score-input">
+                                <span class="score-val">{{ evaluationData[golpe].direccion }}</span>
                                 <button class="step-btn" (click)="updateScore(golpe, 'direccion', 1)">+</button>
                             </div>
                         </div>
 
-                        <!-- Metric Item: Decisión -->
+                        <!-- Metric: Decisión -->
                         <div class="metric-item">
-                            <div class="metric-label">
-                                <span>Decisión</span>
-                            </div>
+                            <span class="label">Decisión</span>
                             <div class="score-controls">
                                 <button class="step-btn" (click)="updateScore(golpe, 'decision', -1)">-</button>
-                                <input type="number" min="1" max="10" [(ngModel)]="evaluationData[golpe].decision"
-                                    class="score-input">
+                                <span class="score-val">{{ evaluationData[golpe].decision }}</span>
                                 <button class="step-btn" (click)="updateScore(golpe, 'decision', 1)">+</button>
                             </div>
                         </div>
 
+                        <div class="stroke-commentary">
+                            <textarea [(ngModel)]="evaluationData[golpe].comentario"
+                                placeholder="Notas sobre {{ golpe }}..."></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Comments Section -->
             <div class="comments-section">
-                <h3>Comentarios Generales</h3>
-                <textarea [(ngModel)]="comentarios"
-                    placeholder="Escribe aquí tus observaciones sobre el jugador..."></textarea>
+                <h3>Observaciones Finales</h3>
+                <textarea [(ngModel)]="comentarios" placeholder="Resumen del desempeño global del alumno..."></textarea>
             </div>
 
         </div>
+
+        <!-- Floating Save Button -->
+        <button class="fab-save" (click)="guardarEvaluacion()">
+            <span>✓</span>
+            <small>Guardar</small>
+        </button>
     </main>
 </div>

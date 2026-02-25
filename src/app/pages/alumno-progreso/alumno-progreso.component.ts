@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvaluacionService } from '../../services/evaluacion.service';
@@ -24,6 +25,7 @@ export class AlumnoProgresoComponent implements OnInit {
 
     alumnoNombre: string = '';
     alumnoFoto: string | null = null;
+    coachFoto: string | null = null;
 
     isLoading = true;
     hasData = false;
@@ -36,8 +38,24 @@ export class AlumnoProgresoComponent implements OnInit {
     storedLineData: number[] = [];
     storedRadarLabels: string[] = [];
     storedRadarData: number[] = [];
+    detailedScores: any = null;
 
     videos: any[] = [];
+    videosCoach: any[] = [];
+    videosPersonales: any[] = [];
+    groupedVideos: { [category: string]: any[] } = {};
+    activeCategory: string = 'Todos';
+    activeOrigin: 'todos' | 'coach' | 'personal' = 'todos';
+    availableCategories: string[] = ['Todos'];
+
+    // Comparison Feature
+    isComparisonMode = false;
+    selectedVideos: any[] = [];
+    showComparison = false;
+
+    aiResults: { [key: number]: any } = {};
+    aiActiveResult: any = null;
+    isAnalyzing: { [key: number]: boolean } = {};
 
     constructor(
         private route: ActivatedRoute,
@@ -46,14 +64,55 @@ export class AlumnoProgresoComponent implements OnInit {
         private mysqlService: MysqlService,
         private alumnoService: AlumnoService,
         private popupService: PopupService,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private http: HttpClient
     ) { }
+
+    verDetalleGolpe(golpe: string) {
+        const detail = this.detailedScores ? this.detailedScores[golpe] : null;
+
+        if (!detail) {
+            this.popupService.info(golpe, 'Este golpe aún no ha sido evaluado en la última sesión de este alumno.');
+            return;
+        }
+
+        let message = `
+            <div style="text-align: left; font-family: 'Inter', sans-serif;">
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid #ccff00; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 8px 0; color: #111; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">💡 Feedback del Coach</h4>
+                    <p style="margin: 0; color: #444; font-style: italic; line-height: 1.5;">
+                        ${detail.comentario ? `"${detail.comentario}"` : 'Sin comentarios específicos para este golpe.'}
+                    </p>
+                </div>
+                
+                <h4 style="margin: 0 0 12px 0; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">📊 Desglose de Puntos</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Técnica:</b> ${detail.tecnica || 0}/10</div>
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Control:</b> ${detail.control || 0}/10</div>
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Dirección:</b> ${detail.direccion || 0}/10</div>
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Decisión:</b> ${detail.decision || 0}/10</div>
+                </div>
+            </div>
+        `;
+
+        this.popupService.open({
+            title: `${golpe}`,
+            message: message,
+            icon: 'info',
+            buttons: [{ text: 'Entendido', value: true, type: 'primary' }]
+        });
+    }
 
     ngOnInit() {
         this.userId = Number(localStorage.getItem('userId'));
         const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
         if (user) {
             this.coachNombre = user.nombre || 'Entrenador';
+            let foto = user.foto_perfil || user.link_foto || user.foto || null;
+            if (foto && !foto.startsWith('http')) {
+                foto = `https://api.padelmanager.cl/${foto}`;
+            }
+            this.coachFoto = foto;
         }
 
         this.route.paramMap.subscribe(params => {
@@ -71,9 +130,13 @@ export class AlumnoProgresoComponent implements OnInit {
         if (!this.alumnoId) return;
         this.mysqlService.getPerfil(this.alumnoId).subscribe({
             next: (res) => {
-                if (res) {
-                    this.alumnoNombre = res.nombre;
-                    this.alumnoFoto = res.foto_perfil || res.link_foto || null;
+                if (res && res.user) {
+                    this.alumnoNombre = res.user.nombre;
+                    let foto = res.user.foto_perfil || res.user.foto || null;
+                    if (foto && !foto.startsWith('http')) {
+                        foto = `https://api.padelmanager.cl/${foto}`;
+                    }
+                    this.alumnoFoto = foto;
                 }
             },
             error: (err) => console.error('Error al cargar perfil del alumno:', err)
@@ -89,19 +152,36 @@ export class AlumnoProgresoComponent implements OnInit {
                     // Sort by date ascending
                     const sorted = data.sort((a: any, b: any) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
-                    // Store Line Data
-                    this.storedLineLabels = sorted.map((e: any) => {
+                    // Store Line Data - UNIQUE labels for sessions
+                    this.storedLineLabels = sorted.map((e: any, idx: number) => {
                         const d = new Date(e.fecha);
-                        return `${d.getDate()}/${d.getMonth() + 1}`;
+                        return `S${idx + 1} (${d.getDate()}/${d.getMonth() + 1})`;
                     });
                     this.storedLineData = sorted.map((e: any) => Number(e.promedio_general));
 
                     // Store Radar Data
                     const latest = sorted[sorted.length - 1];
                     if (latest && latest.scores) {
-                        this.storedRadarLabels = Object.keys(latest.scores);
-                        this.storedRadarData = this.storedRadarLabels.map(key => {
-                            const s = latest.scores[key];
+                        let scores = latest.scores;
+                        if (typeof scores === 'string') {
+                            try {
+                                scores = JSON.parse(scores);
+                            } catch (e) {
+                                console.error('Error parsing scores:', e);
+                                scores = {};
+                            }
+                        }
+                        this.detailedScores = scores;
+
+                        // Standardize strokes list
+                        const golpesList = [
+                            'Derecha', 'Reves', 'Volea de Derecha', 'Volea de Reves', 'Bandeja', 'Vibora',
+                            'Rulo', 'Remate', 'Salida de Pared', 'Globo', 'Saque', 'Resto'
+                        ];
+
+                        this.storedRadarLabels = golpesList;
+                        this.storedRadarData = golpesList.map(key => {
+                            const s = scores[key];
                             if (s && typeof s === 'object') {
                                 return (Number(s.tecnica) + Number(s.control) + Number(s.direccion) + Number(s.decision)) / 4;
                             }
@@ -218,10 +298,146 @@ export class AlumnoProgresoComponent implements OnInit {
         if (!this.alumnoId) return;
         this.alumnoService.getVideos(this.alumnoId).subscribe({
             next: (vids) => {
-                this.videos = vids || [];
+                const processedVideos = (vids || []).map((v: any) => {
+                    let url = v.video_url || '';
+                    if (url && !url.startsWith('http')) {
+                        const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+                        url = `https://api.padelmanager.cl/${cleanPath}`;
+                    }
+
+                    if (v.ai_report) {
+                        try {
+                            const parsed = typeof v.ai_report === 'string' ? JSON.parse(v.ai_report) : v.ai_report;
+                            this.aiResults[v.id] = parsed;
+                        } catch (e) {
+                            console.error('Error parsing backend ai_report', e);
+                        }
+                    } else {
+                        const saved = localStorage.getItem(`ai_report_${v.id}`);
+                        if (saved) this.aiResults[v.id] = JSON.parse(saved);
+                    }
+
+                    return { ...v, video_url: url, categoria: v.categoria || 'General' };
+                });
+
+                this.videos = processedVideos;
+                this.videosCoach = processedVideos.filter((v: any) => v.entrenador_id && Number(v.entrenador_id) > 0);
+                this.videosPersonales = processedVideos.filter((v: any) => !v.entrenador_id || Number(v.entrenador_id) === 0);
+
+                // Grouping only coach videos
+                this.groupedVideos = {};
+                const catsSet = new Set<string>(['Todos']);
+
+                this.videosCoach.forEach((v: any) => {
+                    const cat = v.categoria || 'General';
+                    catsSet.add(cat);
+                    if (!this.groupedVideos[cat]) this.groupedVideos[cat] = [];
+                    this.groupedVideos[cat].push(v);
+                });
+
+                this.availableCategories = Array.from(catsSet);
+
+                // Keep active category if it still exists
+                if (!this.availableCategories.includes(this.activeCategory)) {
+                    this.activeCategory = 'Todos';
+                }
             },
             error: (err) => console.error('Error al cargar videos:', err)
         });
+    }
+
+    setCategory(cat: string) {
+        this.activeCategory = cat;
+    }
+
+    setOrigin(origin: 'todos' | 'coach' | 'personal') {
+        this.activeOrigin = origin;
+    }
+
+    get filteredVideos() {
+        return this.activeCategory === 'Todos' ? this.videosCoach : (this.groupedVideos[this.activeCategory] || []);
+    }
+
+    toggleComparisonMode() {
+        this.isComparisonMode = !this.isComparisonMode;
+        if (!this.isComparisonMode) {
+            this.selectedVideos = [];
+        }
+    }
+
+    selectVideoToCompare(vid: any) {
+        const index = this.selectedVideos.findIndex(v => v.id === vid.id);
+        if (index > -1) {
+            this.selectedVideos.splice(index, 1);
+        } else {
+            if (this.selectedVideos.length < 2) {
+                this.selectedVideos.push(vid);
+            } else {
+                this.popupService.info('Límite alcanzado', 'Solo puedes comparar 2 videos a la vez.');
+            }
+        }
+    }
+
+    openComparison() {
+        if (this.selectedVideos.length === 2) {
+            this.showComparison = true;
+        } else {
+            this.popupService.info('Selecciona 2 videos', 'Debes elegir exactamente dos videos para comparar.');
+        }
+    }
+
+    closeComparison() {
+        this.showComparison = false;
+    }
+
+    togglePlayBoth() {
+        const videos = document.querySelectorAll('.comp-vid-wrapper video') as NodeListOf<HTMLVideoElement>;
+        let anyPaused = false;
+        videos.forEach(v => { if (v.paused) anyPaused = true; });
+
+        videos.forEach(v => {
+            if (anyPaused) {
+                v.play();
+            } else {
+                v.pause();
+            }
+        });
+    }
+
+    isVideoSelected(vid: any): boolean {
+        return this.selectedVideos.some(v => v.id === vid.id);
+    }
+
+    async analizarVideo(vid: any) {
+        this.isAnalyzing[vid.id] = true;
+        this.cdr.detectChanges();
+
+        const formData = new FormData();
+        formData.append('video_id', vid.id);
+        formData.append('video_url', vid.video_url);
+
+        this.http.post<any>('https://api.padelmanager.cl/ia/gemini_analyze.php', formData)
+            .subscribe({
+                next: (res) => {
+                    this.isAnalyzing[vid.id] = false;
+                    if (res.success) {
+                        this.aiResults[vid.id] = res.analysis;
+                        localStorage.setItem(`ai_report_${vid.id}`, JSON.stringify(res.analysis));
+                        this.cdr.detectChanges();
+                    } else {
+                        alert('Error en análisis: ' + (res.error || 'Intente nuevamente'));
+                    }
+                },
+                error: (err) => {
+                    this.isAnalyzing[vid.id] = false;
+                    console.error('AI Analysis Error:', err);
+                    alert('Error de conexión con Gemini.');
+                }
+            });
+    }
+
+    verReporte(vid: any) {
+        this.aiActiveResult = this.aiResults[vid.id];
     }
 
     confirmDeleteVideo(video: any) {

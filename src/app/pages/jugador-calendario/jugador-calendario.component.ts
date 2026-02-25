@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
+import { AlumnoService } from '../../services/alumno.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
 
 @Component({
   selector: 'app-jugador-calendario',
   standalone: true,
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './jugador-calendario.component.html',
   styleUrls: ['./jugador-calendario.component.scss']
 })
@@ -30,8 +32,14 @@ export class JugadorCalendarioComponent implements OnInit {
   reservasFuturas: any[] = [];
   reservasPasadas: any[] = [];
 
+  // Modal Invitation
+  showModalInvitacion = false;
+  selectedReserva: any = null;
+  emailInvitado: string = '';
+
   constructor(
     private mysqlService: MysqlService,
+    private alumnoService: AlumnoService,
     private router: Router,
     private popupService: PopupService
   ) { }
@@ -166,6 +174,45 @@ export class JugadorCalendarioComponent implements OnInit {
             }
           });
         }
+      }
+    });
+  }
+
+  // --- Invitation Logic ---
+
+  abrirModalInvitacion(reserva: any) {
+    this.selectedReserva = reserva;
+    this.emailInvitado = '';
+    this.showModalInvitacion = true;
+  }
+
+  cerrarModal() {
+    this.showModalInvitacion = false;
+    this.selectedReserva = null;
+  }
+
+  enviarInvitacion() {
+    if (!this.emailInvitado || !this.emailInvitado.includes('@')) {
+      this.popupService.warning('Error', 'Ingresa un email válido');
+      return;
+    }
+
+    if (!this.selectedReserva || !this.selectedReserva.pack_jugador_id) {
+      this.popupService.error('Error', 'No se pudo identificar el pack para esta reserva.');
+      return;
+    }
+
+    this.popupService.info('Enviando...', 'Espera un momento mientras procesamos la invitación.');
+
+    this.alumnoService.invitarJugador(this.selectedReserva.pack_jugador_id, this.emailInvitado).subscribe({
+      next: (res: any) => {
+        this.popupService.success('¡Listo!', res.message || 'Jugador agregado al equipo.');
+        this.cerrarModal();
+        this.loadReservas();
+      },
+      error: (err: any) => {
+        console.error(err);
+        this.popupService.error('Error', err.error?.error || 'No se pudo invitar al jugador.');
       }
     });
   }

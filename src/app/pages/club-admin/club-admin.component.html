@@ -6,23 +6,6 @@
 
     <!-- Main Content Area -->
     <main class="main-content">
-        <!-- Top Header -->
-        <header class="top-header">
-            <div class="breadcrumbs">
-                <span>Administración</span>
-                <span class="separator">/</span>
-                <span class="current">Gestión de Club</span>
-            </div>
-
-            <div class="user-profile frc">
-                <div class="user-info">
-                    <span class="name">{{ userName }}</span>
-                    <span class="role">Admin Club</span>
-                </div>
-                <img class="avatar-circle" [src]="userFoto || 'assets/images/placeholder_avatar.png'"
-                    style="object-fit: cover;">
-            </div>
-        </header>
 
         <!-- Dashboard Content -->
         <div class="dashboard-container">
@@ -98,7 +81,7 @@
                                 <label>Calle / Dirección</label>
                                 <input type="text" [(ngModel)]="newClub.direccion" placeholder="Ej: Av. Principal 123">
 
-                                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-row">
                                     <div class="input-item">
                                         <label>Teléfono (Opcional)</label>
                                         <input type="text" [(ngModel)]="newClub.telefono" placeholder="+56 9 ...">

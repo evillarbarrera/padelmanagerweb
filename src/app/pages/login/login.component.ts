@@ -86,7 +86,10 @@ export class LoginComponent {
 
     // Redirige según el rol
     const userRole = (finalUser.rol || 'jugador').toLowerCase();
-    if (userRole.includes('administrador') || userRole.includes('admin')) {
+
+    if (userRole === 'administrador') {
+      this.router.navigate(['/admin-dashboard']);
+    } else if (userRole.includes('administrador') || userRole.includes('admin')) {
       this.router.navigate(['/admin-club']);
     } else if (userRole.includes('entrenador')) {
       this.router.navigate(['/entrenador-home']);

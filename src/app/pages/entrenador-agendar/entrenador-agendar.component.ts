@@ -20,10 +20,21 @@ export class EntrenadorAgendarComponent implements OnInit {
     // Data
     alumnos: any[] = [];
     alumnoSeleccionado: any = null;
+    filtroAlumnos: string = '';
+
     horariosPorDia: { [key: string]: any[] } = {};
     dias: string[] = [];
     diaSeleccionado: string = '';
     recurrencia: number = 1;
+
+    get alumnosFiltrados() {
+        if (!this.filtroAlumnos) return this.alumnos;
+        const f = this.filtroAlumnos.toLowerCase();
+        return this.alumnos.filter(a =>
+            (a.jugador_nombre || '').toLowerCase().includes(f) ||
+            (a.pack_nombre || '').toLowerCase().includes(f)
+        );
+    }
 
     constructor(
         private entrenamientoService: EntrenamientoService,

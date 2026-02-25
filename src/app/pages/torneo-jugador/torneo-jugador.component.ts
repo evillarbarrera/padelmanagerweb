@@ -138,6 +138,72 @@ export class TorneoJugadorComponent implements OnInit {
         });
     }
 
+    // Bracket Logic
+    selectedTournamentBracket: any = null;
+    bracketRounds: any = { octavos: [], cuartos: [], semi: [], final: [] };
+    showBracketModal: boolean = false;
+
+    viewTournamentBracket(t: any) {
+        this.isLoading = true;
+        this.selectedTournamentBracket = t;
+
+        // Assuming we need category ID. If 't' doesn't have it explicitly mapped for the API, 
+        // we might need to fetch categories. For now, let's assume t.categoria_id exists 
+        // or we use the first category found for this tournament if not specific.
+        // If t comes from getMyTournaments, it usually has the category the user is registered in.
+
+        const catId = t.categoria_id || t.id_categoria; // Adjust based on API response
+
+        if (catId) {
+            this.loadBracketData(catId);
+        } else {
+            // Fallback: Fetch categories first (not implemented widely here to save space)
+            // Trying to use a service that might guess it or fetch all matches
+            this.clubesService.getCategoriasTorneo(t.id).subscribe(cats => {
+                if (cats && cats.length > 0) {
+                    this.loadBracketData(cats[0].id); // Load first category by default
+                } else {
+                    this.isLoading = false;
+                    Swal.fire('Info', 'No hay categorías configuradas', 'info');
+                }
+            });
+        }
+    }
+
+    loadBracketData(catId: number) {
+        this.clubesService.getPartidosRonda(catId, '').subscribe({
+            next: (res) => {
+                this.organizeBracket(res);
+                this.isLoading = false;
+                this.showBracketModal = true;
+            },
+            error: (err) => {
+                this.isLoading = false;
+                Swal.fire('Error', 'No se pudo cargar el cuadro', 'error');
+            }
+        });
+    }
+
+    organizeBracket(matches: any[]) {
+        this.bracketRounds = { octavos: [], cuartos: [], semi: [], final: [] };
+        matches.forEach(m => {
+            const r = m.ronda.toLowerCase();
+            if (r.includes('octavos') || r.includes('16')) this.bracketRounds.octavos.push(m);
+            else if (r.includes('cuartos') || r.includes('quarter')) this.bracketRounds.cuartos.push(m);
+            else if (r.includes('semi')) this.bracketRounds.semi.push(m);
+            else if (r.includes('final')) this.bracketRounds.final.push(m);
+        });
+
+        this.bracketRounds.octavos.sort((a: any, b: any) => a.id - b.id);
+        this.bracketRounds.cuartos.sort((a: any, b: any) => a.id - b.id);
+        this.bracketRounds.semi.sort((a: any, b: any) => a.id - b.id);
+    }
+
+    closeBracket() {
+        this.showBracketModal = false;
+        this.selectedTournamentBracket = null;
+    }
+
     inscribirse(torneoId: number): void {
         this.isLoading = true;
         this.apiService.getUsers('jugador').subscribe({

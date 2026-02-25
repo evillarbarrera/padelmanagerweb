@@ -146,8 +146,18 @@ export class PerfilComponent implements OnInit {
     this.mysqlService.getPerfil(this.userId).subscribe({
       next: (res) => {
         if (res.success) {
-          this.profile = { ...this.profile, ...res.user };
-          this.userRole = res.user.rol; // Update userRole based on fetched profile
+          // Robust photo selection
+          const p1 = res.user.foto_perfil;
+          const p2 = res.user.foto;
+          let fotoRaw = p1 || p2;
+          let finalFoto = "";
+
+          if (fotoRaw && fotoRaw.length > 5 && !fotoRaw.includes('imagen_defecto')) {
+            finalFoto = fotoRaw.startsWith('http') ? fotoRaw : `https://api.padelmanager.cl/${fotoRaw.startsWith('/') ? fotoRaw.substring(1) : fotoRaw}`;
+          }
+
+          this.profile = { ...this.profile, ...res.user, foto_perfil: finalFoto };
+          this.userRole = res.user.rol;
           if (res.direccion) {
             this.direccion = { ...res.direccion };
             this.updateComunas(true);

@@ -63,70 +63,74 @@
     margin-bottom: 40px;
   }
 
-  .stat-card {
+  .stat-widget {
     background: #fff;
     border-radius: 20px;
-    padding: 30px 24px;
+    padding: 24px;
     display: flex;
     align-items: center;
     gap: 20px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    border: none;
+    border: 2px solid transparent;
 
     &:hover {
       transform: translateY(-5px);
       box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
     }
 
-    .icon-box {
-      width: 50px;
-      height: 50px;
-      border-radius: 12px;
+    &.highlight {
+      &.has-today {
+        border-color: #ccff00;
+        animation: pulse-border 2s infinite;
+      }
+    }
+
+    .widget-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 24px;
-      background: #f8f8f8;
-      color: #999;
+      flex-shrink: 0;
     }
 
-    .stat-details {
+    .widget-data {
       display: flex;
       flex-direction: column;
 
-      .value {
-        font-size: 28px;
-        font-weight: 900;
+      .widget-val {
+        font-size: 32px;
+        font-weight: 950;
         line-height: 1;
         color: #111;
         margin-bottom: 4px;
-        letter-spacing: -1px;
+        letter-spacing: -1.5px;
       }
 
-      .label {
-        font-size: 11px;
-        font-weight: 700;
+      .widget-label {
+        font-size: 10px;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #888;
+        letter-spacing: 0.8px;
+        color: #999;
       }
     }
+  }
 
-    // Semantic colors for icons
-    &.total .icon-box {
-      background: rgba(37, 99, 235, 0.1);
-      color: #2563eb;
+  @keyframes pulse-border {
+    0% {
+      border-color: rgba(204, 255, 0, 0.3);
     }
 
-    &.pagadas .icon-box {
-      background: rgba(255, 215, 0, 0.1);
-      color: #bfa100;
+    50% {
+      border-color: rgba(204, 255, 0, 1);
     }
 
-    &.disponibles .icon-box {
-      background: rgba(0, 200, 83, 0.08);
-      color: #00c853;
+    100% {
+      border-color: rgba(204, 255, 0, 0.3);
     }
   }
 

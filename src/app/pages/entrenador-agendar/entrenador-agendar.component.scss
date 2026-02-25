@@ -45,6 +45,67 @@
     }
 }
 
+// Header with search
+.section-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 15px;
+
+    .section-title {
+        margin-bottom: 0;
+    }
+}
+
+.search-box-mini {
+    background: #f4f4f4;
+    padding: 8px 16px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+
+    .search-icon {
+        font-size: 14px;
+        opacity: 0.5;
+    }
+
+    input {
+        background: transparent;
+        border: none;
+        outline: none;
+        width: 100%;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #111;
+
+        &::placeholder {
+            color: #aaa;
+            font-weight: 600;
+        }
+    }
+
+    &:focus-within {
+        background: #fff;
+        border-color: #111;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+}
+
+.empty-results-mini {
+    padding: 30px;
+    text-align: center;
+    color: #888;
+    font-weight: 700;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
 // 1. Student Selection
 .student-list {
     display: grid;
@@ -115,6 +176,13 @@
                 color: #888;
                 font-weight: 600;
                 text-transform: uppercase;
+
+                .badge.no-credits {
+                    color: #ff4d4d;
+                    background: rgba(255, 77, 77, 0.1);
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                }
             }
         }
     }

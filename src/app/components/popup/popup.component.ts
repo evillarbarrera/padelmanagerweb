@@ -27,7 +27,7 @@ export interface PopupButton {
         </div>
         
         <div class="popup-body">
-          <p>{{ message }}</p>
+          <div [innerHTML]="message"></div>
         </div>
 
         <div class="popup-footer" [ngClass]="'buttons-' + buttons.length">

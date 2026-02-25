@@ -3,13 +3,6 @@
     </app-sidebar>
 
     <main class="main-content">
-        <header class="top-header">
-            <div class="breadcrumbs">
-                <span>Mi Panel</span>
-                <span class="separator">/</span>
-                <span class="current">Mis Habilidades</span>
-            </div>
-        </header>
 
         <div class="dashboard-grid">
             <!-- Header section -->
@@ -18,63 +11,201 @@
                 <p>Analiza tu evolución técnica y repasa tus mejores jugadas.</p>
             </div>
 
-            <!-- Charts Section -->
-            <div class="trainers-tabs" *ngIf="trainers.length > 1">
-                <button *ngFor="let t of trainers" class="tab-btn" [class.active]="selectedTrainerId === t.id"
-                    (click)="selectTrainer(t.id)">
-                    {{t.nombre}}
+            <!-- Main Navigation Tabs -->
+            <div class="main-tabs">
+                <button [class.active]="selectedMainTab === 'habilidades'" (click)="selectedMainTab = 'habilidades'">
+                    📊 Habilidades & Evolución
+                </button>
+                <button [class.active]="selectedMainTab === 'videos'" (click)="selectedMainTab = 'videos'">
+                    🎬 Historial de Videos
                 </button>
             </div>
 
-            <div class="charts-row" *ngIf="!isLoading && hasData">
-                <div class="card chart-card">
-                    <div class="card-title">Distribución Técnica</div>
-                    <div class="chart-container">
-                        <canvas id="radarChart"></canvas>
+            <!-- Skills & Stats Content -->
+            <ng-container *ngIf="selectedMainTab === 'habilidades'">
+                <div class="trainers-tabs" *ngIf="trainers.length > 1">
+                    <button *ngFor="let t of trainers" class="tab-btn" [class.active]="selectedTrainerId === t.id"
+                        (click)="selectTrainer(t.id)">
+                        {{t.nombre}}
+                    </button>
+                </div>
+
+                <div class="charts-row" *ngIf="!isLoading && hasData">
+                    <div class="card chart-card">
+                        <div class="card-title">Distribución Técnica</div>
+                        <div class="chart-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card chart-card">
+                        <div class="card-title">Evolución de Promedio</div>
+                        <div class="chart-container">
+                            <canvas id="lineChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card chart-card">
-                    <div class="card-title">Evolución de Promedio</div>
-                    <div class="chart-container">
-                        <canvas id="lineChart"></canvas>
+                <!-- Detailed Analysis Table -->
+                <div class="card analysis-card" *ngIf="!isLoading && hasData">
+                    <div class="card-title">Detalle por Golpe</div>
+                    <div class="analysis-table-container">
+                        <table class="analysis-table">
+                            <thead>
+                                <tr>
+                                    <th>Golpe</th>
+                                    <th>Promedio</th>
+                                    <th>Detalle</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let label of storedRadarLabels; let i = index">
+                                    <td class="hit-name">{{ label }}</td>
+                                    <td>
+                                        <span class="score-badge" [class.high]="storedRadarData[i] >= 8"
+                                            [class.mid]="storedRadarData[i] >= 5" [class.low]="storedRadarData[i] < 5">
+                                            {{ storedRadarData[i] | number:'1.1-1' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="info-btn" (click)="verDetalleGolpe(label)">
+                                            ℹ️
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
 
-            <!-- Empty Stats -->
-            <div class="card empty-card" *ngIf="!isLoading && !hasData">
-                <div class="icon">📈</div>
-                <h3>Aún no tienes evaluaciones</h3>
-                <p>Tus gráficos aparecerán cuando tu entrenador realice tu primera evaluación técnica.</p>
-            </div>
+                <!-- Empty Stats -->
+                <div class="card empty-card" *ngIf="!isLoading && !hasData">
+                    <div class="icon">📈</div>
+                    <h3>Aún no tienes evaluaciones</h3>
+                    <p>Tus gráficos aparecerán cuando tu entrenador realice tu primera evaluación técnica.</p>
+                </div>
+            </ng-container>
 
             <!-- Videos Section -->
-            <div class="videos-section" *ngIf="!isLoading">
-                <div class="section-title">
-                    <h2>🎬 Videos de Entrenamiento</h2>
-                    <p>Revisiones enviadas por tu coach</p>
+            <div class="videos-section" *ngIf="!isLoading && selectedMainTab === 'videos'">
+                <div class="section-title-row">
+                    <div class="section-title">
+                        <h2>🎬 Biblioteca de Videos</h2>
+                        <p>Explora tus sesiones y grabaciones personales organizadas por golpe.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="compare-mode-btn" [class.active]="isComparisonMode"
+                            (click)="toggleComparisonMode()">
+                            {{ isComparisonMode ? 'Cancelar Comparación' : '⚖️ Comparar Videos' }}
+                        </button>
+                        <button class="upload-btn-nike" (click)="subirVideoPersonal()">
+                            SUBIR VIDEO
+                        </button>
+                    </div>
                 </div>
 
-                <div class="videos-grid" *ngIf="videos.length > 0; else noVideos">
-                    <div class="video-card card" *ngFor="let vid of videos">
+                <!-- Origin and Category Selectors -->
+                <div class="filters-container fade-in">
+                    <div class="origin-selector">
+                        <span class="label">Contenido de:</span>
+                        <div class="pills">
+                            <button [class.active]="activeOrigin === 'todos'" (click)="setOrigin('todos')">Todo</button>
+                            <button [class.active]="activeOrigin === 'coach'"
+                                (click)="setOrigin('coach')">Coach</button>
+                            <button [class.active]="activeOrigin === 'personal'"
+                                (click)="setOrigin('personal')">Mío</button>
+                        </div>
+                    </div>
+
+                    <div class="category-pills">
+                        <button *ngFor="let cat of availableCategories" class="pill"
+                            [class.active]="activeCategory === cat" (click)="setCategory(cat)">
+                            {{ cat }}
+                            <span class="count" *ngIf="cat !== 'Todos'">{{ groupedVideos[cat]?.length }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Comparison Selection Bar -->
+                <div class="comparison-bar shadow-lg" *ngIf="isComparisonMode && selectedVideos.length > 0">
+                    <div class="selected-vids">
+                        <div class="selected-item" *ngFor="let sv of selectedVideos">
+                            <span class="dot"></span> {{ sv.titulo }}
+                        </div>
+                        <div class="placeholder" *ngIf="selectedVideos.length < 2">Selecciona otro video...</div>
+                    </div>
+                    <button class="launch-compare-btn" [disabled]="selectedVideos.length < 2"
+                        (click)="openComparison()">
+                        VER EN PARALELO
+                    </button>
+                </div>
+
+                <div class="videos-grid" *ngIf="filteredVideos.length > 0; else noVideos">
+                    <div class="video-card" *ngFor="let vid of filteredVideos"
+                        [class.selected-for-compare]="isVideoSelected(vid)" [class.selectable]="isComparisonMode"
+                        (click)="isComparisonMode ? selectVideoToCompare(vid) : null">
+
+                        <div class="selection-overlay" *ngIf="isComparisonMode">
+                            <div class="check-circle">{{ isVideoSelected(vid) ? '✓' : '' }}</div>
+                        </div>
+
                         <div class="video-container">
-                            <video [src]="vid.video_url" controls preload="metadata" playsinline></video>
+                            <video [src]="vid.video_url" [controls]="!isComparisonMode" preload="metadata"
+                                playsinline></video>
                         </div>
                         <div class="video-info">
-                            <h4>{{ vid.titulo || 'Entrenamiento' }}</h4>
+                            <div class="vid-header">
+                                <span class="badge">{{ vid.categoria }}</span>
+                                <h4>{{ vid.titulo || 'Entrenamiento' }}</h4>
+                            </div>
                             <span class="date">{{ vid.fecha | date:'dd/MM/yyyy' }}</span>
                             <p class="comment" *ngIf="vid.comentario">{{ vid.comentario }}</p>
-                            <span class="coach-tag">Enviado por {{ vid.entrenador_nombre }}</span>
+
+                            <div class="ai-video-actions">
+                                <button class="ai-btn-analyze" *ngIf="!aiResults[vid.id]"
+                                    (click)="analizarVideo(vid); $event.stopPropagation()"
+                                    [disabled]="isAnalyzing[vid.id]">
+                                    {{ isAnalyzing[vid.id] ? 'ANALIZANDO...' : 'ANALIZAR CON IA' }}
+                                </button>
+                                <button class="ai-btn-report" *ngIf="aiResults[vid.id]"
+                                    (click)="verReporte(vid); $event.stopPropagation()">
+                                    VER REPORTE AI
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <ng-template #noVideos>
                     <div class="card empty-card mini">
-                        <p>No tienes videos guardados todavía.</p>
+                        <p>No tienes videos en esta sección todavía.</p>
                     </div>
                 </ng-template>
+            </div>
+
+            <!-- Video Comparison Overlay -->
+            <div class="comparison-overlay" *ngIf="showComparison" [class.show]="showComparison">
+                <div class="comparison-container fade-in">
+                    <header class="comp-header">
+                        <h3>⚖️ Comparativa Técnica</h3>
+                        <div class="header-actions">
+                            <button class="play-both-btn" (click)="togglePlayBoth()">▶️ Reproducir Ambos</button>
+                            <button class="close-comp-btn" (click)="closeComparison()">Cerrar</button>
+                        </div>
+                    </header>
+                    <div class="comp-vids-grid">
+                        <div class="comp-vid-item" *ngFor="let vid of selectedVideos">
+                            <div class="comp-vid-wrapper shadow-lg">
+                                <video [src]="vid.video_url" controls loop playsinline></video>
+                            </div>
+                            <div class="comp-vid-info">
+                                <span class="badge">{{ vid.categoria }}</span>
+                                <h4>{{ vid.titulo }}</h4>
+                                <p>{{ vid.fecha | date:'dd/MM/yyyy' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Loading State -->
@@ -84,4 +215,55 @@
             </div>
         </div>
     </main>
+
+    <!-- Gemini Analysis Results Modal (Web Overlay) -->
+    <div class="ai-results-overlay" *ngIf="aiActiveResult" [class.show]="aiActiveResult">
+        <div class="ai-results-card fade-in">
+            <div class="results-header">
+                <div class="header-main">
+                    <h3>GEMINI IA: {{ aiActiveResult.title }}</h3>
+                </div>
+                <button class="close-btn" (click)="aiActiveResult = null">×</button>
+            </div>
+
+            <div class="results-body">
+                <div class="ai-badge-header">POWERED BY GOOGLE AI STUDIO</div>
+
+                <div class="score-section">
+                    <div class="score-circle">
+                        <span class="score-val">{{ aiActiveResult.score }}</span>
+                        <span class="score-pct">%</span>
+                    </div>
+                    <p class="score-label">MATCH TÉCNICO</p>
+                </div>
+
+                <div class="feedback-text">
+                    <p>{{ aiActiveResult.feedback }}</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-progress" *ngFor="let m of aiActiveResult.metrics">
+                        <div class="metric-info">
+                            <span>{{ m.label }}</span>
+                            <span>{{ m.value }}/10</span>
+                        </div>
+                        <div class="progress-bg">
+                            <div class="progress-fill" [style.width]="(m.value * 10) + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tips-section">
+                    <h4>TIPS DE MEJORA</h4>
+                    <ul>
+                        <li *ngFor="let tip of aiActiveResult.tips">{{ tip }}</li>
+                    </ul>
+                </div>
+
+                <button class="understand-btn" (click)="aiActiveResult = null">
+                    ENTENDIDO
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

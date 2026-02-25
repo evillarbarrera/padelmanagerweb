@@ -19,8 +19,9 @@ export class EntrenadorHomeComponent implements OnInit {
   userId: number | null = null;
   quickStats: any = {
     totalAlumnos: 0,
-    clasesHoy: 0,
-    proximasReservas: 0
+    clasesMes: 0,
+    clasesGrupalesMes: 0,
+    clasesHoy: 0
   };
 
   constructor(
@@ -168,6 +169,17 @@ export class EntrenadorHomeComponent implements OnInit {
       error: (err) => {
         console.error('Error loading agenda:', err);
         this.isLoading = false;
+      }
+    });
+
+    this.mysqlService.getDashboardStats(this.userId).subscribe({
+      next: (res) => {
+        this.quickStats = {
+          totalAlumnos: res.total_alumnos || 0,
+          clasesMes: res.clases_mes || 0,
+          clasesGrupalesMes: res.clases_grupales_mes || 0,
+          clasesHoy: res.clases_hoy || 0
+        };
       }
     });
   }

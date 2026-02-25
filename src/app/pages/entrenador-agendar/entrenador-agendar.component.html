@@ -2,13 +2,7 @@
     <app-sidebar [userId]="entrenadorId" role="entrenador" activePage="agendar-alumno"></app-sidebar>
 
     <main class="main-content">
-        <header class="top-header">
-            <div class="breadcrumbs">
-                <span>Entrenador</span>
-                <span class="separator">/</span>
-                <span class="current">Agendar Alumno</span>
-            </div>
-        </header>
+
 
         <div class="dashboard-grid">
             <!-- Loading Overlay -->
@@ -21,12 +15,19 @@
 
                 <!-- Step 1: Select Student -->
                 <section class="section-card">
-                    <h2 class="section-title">
-                        <div class="step-num">1</div>
-                        Selecciona al Alumno
-                    </h2>
-                    <div class="student-list">
-                        <div *ngFor="let a of alumnos" class="student-item"
+                    <div class="section-header-flex">
+                        <h2 class="section-title">
+                            <div class="step-num">1</div>
+                            Selecciona al Alumno
+                        </h2>
+                        <div class="search-box-mini">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" [(ngModel)]="filtroAlumnos" placeholder="Buscar por nombre o pack...">
+                        </div>
+                    </div>
+
+                    <div class="student-list" *ngIf="alumnosFiltrados.length > 0">
+                        <div *ngFor="let a of alumnosFiltrados" class="student-item"
                             [class.selected]="alumnoSeleccionado?.pack_jugador_id === a.pack_jugador_id"
                             (click)="seleccionarAlumno(a)">
 
@@ -38,10 +39,17 @@
                                 <span class="name">{{ a.jugador_nombre }}</span>
                                 <span class="pack-info">
                                     {{ a.pack_nombre }}
-                                    <span class="badge">• {{ a.sesiones_restantes }} cred.</span>
+                                    <span class="badge" [class.no-credits]="a.sesiones_restantes <= 0">
+                                        • {{ a.sesiones_restantes }} cred.
+                                    </span>
                                 </span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- No Results inside Step 1 -->
+                    <div class="empty-results-mini" *ngIf="alumnosFiltrados.length === 0 && alumnos.length > 0">
+                        <p>No se encontraron alumnos que coincidan con la búsqueda.</p>
                     </div>
                 </section>
 

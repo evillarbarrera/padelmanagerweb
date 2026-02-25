@@ -6,24 +6,6 @@
   <!-- Main Content Area -->
   <main class="main-content">
 
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="breadcrumbs">
-        <span>Panel de Control</span>
-        <span class="separator">/</span>
-        <span class="current">Agendar Clase</span>
-      </div>
-
-      <div class="user-profile">
-        <div class="user-info">
-          <span class="name">{{ jugadorNombre }}</span>
-          <span class="role">Perfil</span>
-        </div>
-        <div class="avatar-circle" *ngIf="!jugadorFoto">{{ jugadorNombre.charAt(0) }}</div>
-        <img class="avatar-circle" *ngIf="jugadorFoto" [src]="jugadorFoto" style="object-fit: cover;">
-      </div>
-    </header>
-
     <!-- Content -->
     <div class="dashboard-grid">
 

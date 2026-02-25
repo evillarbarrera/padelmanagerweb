@@ -5,13 +5,25 @@
 
     <main class="main-content">
         <header class="top-header" *ngIf="!isTVMode">
-            <div class="header-left">
-                <h2>Agenda de Reservas</h2>
-                <div class="club-selector" *ngIf="selectedClub">
-                    <select *ngIf="clubes.length > 1" [(ngModel)]="selectedClub" (change)="selectClub(selectedClub)">
-                        <option *ngFor="let c of clubes" [ngValue]="c">{{c.nombre}}</option>
-                    </select>
-                    <span class="club-single-name" *ngIf="clubes.length === 1">{{selectedClub.nombre}}</span>
+            <div class="header-top">
+                <div class="header-left">
+                    <h2>Agenda de Reservas</h2>
+                    <div class="club-selector" *ngIf="selectedClub">
+                        <select *ngIf="clubes.length > 1" [(ngModel)]="selectedClub"
+                            (change)="selectClub(selectedClub)">
+                            <option *ngFor="let c of clubes" [ngValue]="c">{{c.nombre}}</option>
+                        </select>
+                        <span class="club-single-name" *ngIf="clubes.length === 1">{{selectedClub.nombre}}</span>
+                    </div>
+                </div>
+
+                <div class="header-actions frc gap-10">
+                    <button class="btn-tv-mode" (click)="toggleTVMode()" title="Modo Pantalla">
+                        <span>📺</span>
+                    </button>
+                    <div class="date-picker">
+                        <input type="date" [(ngModel)]="selectedFecha" (change)="onFechaChange()">
+                    </div>
                 </div>
             </div>
 
@@ -25,15 +37,6 @@
                     </div>
                 </div>
                 <button class="nav-btn" (click)="onFechaChange()">&gt;</button>
-            </div>
-
-            <div class="header-actions frc gap-10">
-                <button class="btn-tv-mode" (click)="toggleTVMode()" title="Modo Pantalla">
-                    <span>📺</span>
-                </button>
-                <div class="date-picker">
-                    <input type="date" [(ngModel)]="selectedFecha" (change)="onFechaChange()">
-                </div>
             </div>
         </header>
 
@@ -68,7 +71,7 @@
                             <ng-container *ngIf="getReservaInSlot(c.id, slot) as res">
                                 <!-- Render solo en el inicio con altura que cubre el total -->
                                 <div class="reserva-item occupied single-block" *ngIf="isStartOfReserva(res, slot)"
-                                    [ngClass]="getReservaClass(res)" [style.height]="getReservaHeight(res)"
+                                    [ngClass]="getReservaClass(res)" [ngStyle]="getReservaStyle(res)"
                                     [title]="res.estado === 'Bloqueada' ? 'Horario Bloqueado' : res.nombre_externo"
                                     draggable="true" (dragstart)="onDragStart(res)" (click)="editarReserva(res)">
                                     <span class="res-name">{{res.estado === 'Bloqueada' ? '🔒 BLOQUEADO' :

@@ -4,25 +4,7 @@
   </app-sidebar>
 
   <main class="main-content">
-    <header class="top-header">
-      <div class="breadcrumbs">
-        <span>Panel de Entrenador</span>
-        <span class="separator">/</span>
-        <span class="current">Mi Agenda</span>
-      </div>
 
-      <div class="user-profile frc">
-        <div class="user-info">
-          <span class="name">{{ coachNombre }}</span>
-          <span class="role">Entrenador</span>
-        </div>
-        <div class="avatar-circle">
-          <img *ngIf="coachFoto" [src]="coachFoto"
-            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
-        </div>
-      </div>
-    </header>
 
     <div class="dashboard-grid">
       <div class="hero-section">
@@ -44,12 +26,6 @@
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div class="loading-state" *ngIf="isLoading">
-        <div class="spinner"></div>
-        <p>Cargando agenda...</p>
-      </div>
-
       <!-- Empty State -->
       <div *ngIf="!isLoading && agendaActual.length === 0" class="empty-state animate-up">
         <div class="empty-icon">📭</div>
@@ -61,8 +37,11 @@
       <div class="agenda-list" *ngIf="!isLoading && agendaActual.length > 0">
 
         <div class="session-card animate-up" *ngFor="let item of agendaActual; let i = index"
-          [style.animation-delay]="(i * 0.05) + 's'"
-          [ngClass]="(item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template') ? 'pack-grupal' : 'reserva-individual'">
+          [style.animation-delay]="(i * 0.05) + 's'" [ngClass]="{
+            'pack-grupal': (item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template'),
+            'reserva-individual': (item.tipo !== 'grupal' && item.tipo !== 'pack_grupal' && item.tipo !== 'grupal_template'),
+            'full-capacity': item.cupos_ocupados >= item.capacidad_maxima
+          }">
 
           <div class="card-header">
             <div class="time-badge">
@@ -76,7 +55,7 @@
                 <span>{{ item.hora_inicio | slice:0:5 }} - {{ item.hora_fin | slice:0:5 }}</span>
               </ng-container>
             </div>
-            <div class="status-tag" [ngClass]="getEstadoText(item)?.toLowerCase()">
+            <div class="status-tag" [ngClass]="getEstadoText(item).toLowerCase()">
               {{ getEstadoText(item) }}
             </div>
           </div>
@@ -84,11 +63,17 @@
           <div class="card-body">
             <!-- INDIVIDUAL -->
             <div *ngIf="item.tipo !== 'grupal' && item.tipo !== 'pack_grupal' && item.tipo !== 'grupal_template'"
-              class="player-profile">
-              <div class="avatar-circle-small">👤</div>
-              <div class="player-details">
-                <h3>{{ item.jugador_nombre }}</h3>
-                <p>{{ item.jugador_email }}</p>
+              class="players-list">
+              <div *ngFor="let jugador of item.inscritos" class="player-profile">
+                <div class="avatar-circle-small">
+                  <img *ngIf="jugador.foto" [src]="jugador.foto"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                  <span *ngIf="!jugador.foto">👤</span>
+                </div>
+                <div class="player-details">
+                  <h3>{{ jugador.nombre }}</h3>
+                  <p>{{ jugador.email }}</p>
+                </div>
               </div>
             </div>
 
@@ -98,6 +83,9 @@
               <div class="grupal-header">
                 <div class="tipo-badge">👥 GRUPAL</div>
                 <span class="categoria">{{ item.categoria }}</span>
+                <button class="wa-quick-btn" (click)="openWhatsAppGroup(item)" title="Contactar grupo">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WA" width="16">
+                </button>
               </div>
               <div class="cupos-info">
                 <span class="badge-cupos" [ngClass]="item.estado_grupo">
@@ -111,7 +99,11 @@
                 <p class="inscritos-title">Inscritos:</p>
                 <div class="inscritos-container">
                   <div *ngFor="let inscrito of item.inscritos" class="inscrito-row">
-                    <div class="avatar-mini">👤</div>
+                    <div class="avatar-mini">
+                      <img *ngIf="inscrito.foto" [src]="inscrito.foto"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                      <span *ngIf="!inscrito.foto">👤</span>
+                    </div>
                     <div class="inscrito-detail">
                       <span class="full-name">{{ inscrito.nombre }}</span>
                       <span class="email-sub">{{ inscrito.email }}</span>

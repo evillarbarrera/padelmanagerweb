@@ -4,25 +4,7 @@
   </app-sidebar>
 
   <main class="main-content">
-    <header class="top-header">
-      <div class="breadcrumbs">
-        <span>Panel de Entrenador</span>
-        <span class="separator">/</span>
-        <span class="current">Disponibilidad</span>
-      </div>
 
-      <div class="user-profile frc">
-        <div class="user-info">
-          <span class="name">{{ coachNombre }}</span>
-          <span class="role">Entrenador</span>
-        </div>
-        <div class="avatar-circle">
-          <img *ngIf="coachFoto" [src]="coachFoto"
-            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
-        </div>
-      </div>
-    </header>
 
     <div class="dashboard-grid">
       <!-- Hero Section -->

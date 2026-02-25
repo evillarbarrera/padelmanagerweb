@@ -4,37 +4,40 @@
   </app-sidebar>
 
   <main class="main-content">
-    <header class="top-header">
-      <div class="breadcrumbs">
-        <span>Panel de Entrenador</span>
-        <span class="separator">/</span>
-        <span class="current">Mis Alumnos</span>
-      </div>
 
-      <div class="user-profile frc">
-        <div class="user-info">
-          <span class="name">{{ coachNombre }}</span>
-          <span class="role">Entrenador</span>
-        </div>
-        <div class="avatar-circle">
-          <img *ngIf="coachFoto" [src]="coachFoto"
-            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-          <span *ngIf="!coachFoto">{{ coachNombre.charAt(0) }}</span>
-        </div>
-      </div>
-    </header>
 
     <div class="dashboard-grid">
       <!-- Search Bar -->
       <div class="search-section">
-        <span class="search-icon">🔍</span>
-        <input type="text" [(ngModel)]="searchTerm" (input)="filtrarAlumnos()" placeholder="Buscar alumno por nombre..."
-          class="search-input" />
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" [(ngModel)]="searchTerm" (input)="filtrarAlumnos()"
+            placeholder="Buscar alumno por nombre..." class="search-input" />
+        </div>
+        <div class="sort-controls">
+          <span class="sort-label">Ordenar por:</span>
+          <button class="sort-btn" [class.active]="sortCriteria === 'nombre'" (click)="cambiarOrden('nombre')">
+            Nombre
+          </button>
+          <button class="sort-btn" [class.active]="sortCriteria === 'saldo'" (click)="cambiarOrden('saldo')">
+            Saldo Bajo
+          </button>
+        </div>
       </div>
 
-      <div *ngIf="isLoading" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ loadingMessage }}</p>
+      <div *ngIf="isLoading" class="skeleton-grid">
+        <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
+          <div class="skeleton-header">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-text">
+              <div class="skeleton-line title"></div>
+              <div class="skeleton-line sub"></div>
+            </div>
+          </div>
+          <div class="skeleton-body">
+            <div class="skeleton-rect"></div>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="!isLoading && alumnosFiltrados.length === 0" class="empty-state">
@@ -43,55 +46,73 @@
         <p>Tus alumnos aparecerán aquí cuando se inscriban</p>
       </div>
 
-      <div *ngIf="!isLoading && alumnosFiltrados.length > 0" class="alumnos-grid">
-        <div *ngFor="let alumno of alumnosFiltrados" class="alumno-card">
-          <div class="card-header">
-            <div class="avatar">
-              {{ alumno.jugador_nombre?.charAt(0) || '👤' }}
-            </div>
-            <div class="header-info">
-              <h3>{{ alumno.jugador_nombre }}</h3>
-              <p class="pack">{{ alumno.pack_nombre }}</p>
-            </div>
-          </div>
-
-          <div class="card-body">
-            <div class="session-info">
-              <div class="session-stat">
-                <span class="label">Pagadas</span>
-                <span class="value">{{ alumno.sesiones_pagadas || 0 }}</span>
+      <div *ngIf="!isLoading && pagedAlumnos.length > 0">
+        <div class="alumnos-grid">
+          <div *ngFor="let alumno of pagedAlumnos" class="alumno-card"
+            [class.critical-balance]="alumno.sesiones_restantes <= 1">
+            <div class="card-header">
+              <div class="critical-badge" *ngIf="alumno.sesiones_restantes <= 1">
+                ⚠️ RENOVACIÓN
               </div>
-              <div class="session-stat">
-                <span class="label">Reservas</span>
-                <span class="value">{{ alumno.sesiones_reservadas }}</span>
+              <div class="avatar-container">
+                <span class="initials">{{ alumno.jugador_nombre?.charAt(0) || '👤' }}</span>
+                <img *ngIf="alumno.foto" [src]="alumno.foto" class="student-img"
+                  (error)="$event.target.style.display='none'" />
               </div>
-              <div class="session-stat">
-                <span class="label">Grupales</span>
-                <span class="value" style="color: #2196f3; font-weight: 800;">{{ alumno.sesiones_grupales || 0 }}</span>
-              </div>
-              <div class="session-stat">
-                <span class="label">Restantes</span>
-                <span class="value highlight">{{ alumno.sesiones_restantes }}</span>
+              <div class="header-info">
+                <h3>{{ alumno.jugador_nombre }}</h3>
+                <p class="pack">{{ alumno.pack_nombre }}</p>
               </div>
             </div>
 
-            <!-- Removed redundant stats blocks -->
-          </div>
+            <div class="card-body">
+              <div class="session-info">
+                <div class="session-stat">
+                  <span class="label">Pagadas</span>
+                  <span class="value">{{ alumno.sesiones_pagadas || 0 }}</span>
+                </div>
+                <div class="session-stat">
+                  <span class="label">Reservas</span>
+                  <span class="value">{{ alumno.sesiones_reservadas }}</span>
+                </div>
+                <div class="session-stat">
+                  <span class="label">Grupales</span>
+                  <span class="value" style="color: #2196f3; font-weight: 800;">{{ alumno.sesiones_grupales || 0
+                    }}</span>
+                </div>
+                <div class="session-stat">
+                  <span class="label">Restantes</span>
+                  <span class="value highlight">{{ alumno.sesiones_restantes }}</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="card-footer">
-            <button class="action-btn eval-btn" (click)="irAEvaluar(alumno)"
-              style="background-color: #ccff00; color: black; font-weight: bold;">
-              ⚡ Evaluar
-            </button>
-            <button class="action-btn" (click)="verProgreso(alumno)">
-              📈 Progreso
-            </button>
-            <button class="action-btn video-btn" (click)="triggerVideoUpload(alumno)">
-              🎥 Videos
-            </button>
-            <input type="file" [id]="'videoInput-' + alumno.jugador_id" style="display: none;"
-              (change)="onVideoSelected($event, alumno)" accept="video/*">
+            <div class="card-footer">
+              <button class="action-btn eval-btn" (click)="irAEvaluar(alumno)"
+                style="background-color: #ccff00; color: black; font-weight: bold;">
+                ⚡ Evaluar
+              </button>
+              <button class="action-btn" (click)="verProgreso(alumno)">
+                📈 Progreso
+              </button>
+              <button class="action-btn video-btn" (click)="triggerVideoUpload(alumno)">
+                🎥 Videos
+              </button>
+              <input type="file" [id]="'videoInput-' + alumno.jugador_id" style="display: none;"
+                (change)="onVideoSelected($event, alumno)" accept="video/*">
+            </div>
           </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-controls" *ngIf="totalPages > 1">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            Anterior
+          </button>
+          <span class="page-indicator">Página {{ currentPage }} de {{ totalPages }}</span>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            Siguiente
+          </button>
         </div>
       </div>
     </div>

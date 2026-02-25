@@ -436,9 +436,11 @@ export class JugadorReservasComponent implements OnInit {
           checkDate.setDate(ahora.getDate() + i);
 
           let jsDay = checkDate.getDay(); // 0=Sun, 1=Mon...
-          if (jsDay === 0) jsDay = 7; // Normalize Sun to 7
+          // If the DB uses 0=Sun... 6=Sat, then jsDay is already correct.
+          // However, if the code previously had (jsDay === 0) jsDay = 7, it means it expected 1-7.
+          // Let's make it robust: try both if needed, but normally checkDate.getDay() is 0-6.
 
-          if (jsDay === packDay) {
+          if (jsDay === packDay || (jsDay === 0 && packDay === 7)) {
             const start = new Date(checkDate.getTime());
             start.setHours(Number(h), Number(m), 0, 0);
 
@@ -457,6 +459,8 @@ export class JugadorReservasComponent implements OnInit {
                   hora_inicio: start,
                   hora_fin: end,
                   ocupado: Number(p.cupos_ocupados) >= Number(p.capacidad_maxima),
+                  inscritos: Number(p.cupos_ocupados || 0),
+                  capacidad: Number(p.capacidad_maxima || 8),
                   cantidad_personas: Number(p.capacidad_maxima || 8),
                   tipo: 'grupal',
                   nombre: p.nombre,
@@ -471,8 +475,27 @@ export class JugadorReservasComponent implements OnInit {
       }
     });
 
-    // Reconstruct grouped object
-    slotsMap.forEach(slot => {
+    // Reconstruct grouped object and clean up overlaps
+    const sortedSlots = Array.from(slotsMap.values()).sort((a, b) => a.hora_inicio.getTime() - b.hora_inicio.getTime());
+    const finalSlotsMap = new Map<string, any>();
+
+    sortedSlots.forEach(slot => {
+      const timeKey = `${slot.fecha}_${slot.hora_inicio.toTimeString().slice(0, 5)}`;
+
+      // If this time is already covered by a previous class's duration, skip it
+      let isCovered = false;
+      finalSlotsMap.forEach(existing => {
+        if (existing.fecha === slot.fecha && slot.hora_inicio >= existing.hora_inicio && slot.hora_inicio < existing.hora_fin) {
+          isCovered = true;
+        }
+      });
+
+      if (!isCovered) {
+        finalSlotsMap.set(timeKey, slot);
+      }
+    });
+
+    finalSlotsMap.forEach(slot => {
       if (!this.horariosPorDia[slot.fecha]) this.horariosPorDia[slot.fecha] = [];
       this.horariosPorDia[slot.fecha].push(slot);
     });

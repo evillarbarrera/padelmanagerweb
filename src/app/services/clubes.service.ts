@@ -240,6 +240,24 @@ export class ClubesService {
         });
     }
 
+    updateTorneo(id: number, data: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/update_torneo.php`, { id, ...data }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    saveTorneoAvailability(torneoId: number, grid: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/update_torneo_availability.php`, { torneo_id: torneoId, grid }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getTorneoAvailability(torneoId: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/torneos/get_torneo_availability.php?torneo_id=${torneoId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
     getTorneosAdminV2(adminId: number): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/torneos/get_torneos_admin_v2.php?admin_id=${adminId}`, {
             headers: this.getHeaders()
@@ -266,6 +284,12 @@ export class ClubesService {
 
     getInscripciones(categoriaId: number): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/torneos/get_inscripciones.php?categoria_id=${categoriaId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    eliminarPareja(inscripcionId: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/delete_inscripcion.php`, { inscripcion_id: inscripcionId }, {
             headers: this.getHeaders()
         });
     }
@@ -305,6 +329,12 @@ export class ClubesService {
 
     updateMatchResultV2(matchData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/torneos/update_match_result.php`, matchData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    saveSchedule(programacion: any[]): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/torneos/save_schedule.php`, { programacion }, {
             headers: this.getHeaders()
         });
     }

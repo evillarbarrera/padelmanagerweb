@@ -7,24 +7,6 @@
   <!-- Main Content Area -->
   <main class="main-content">
 
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="breadcrumbs">
-        <span>Panel de Control</span>
-        <span class="separator">/</span>
-        <span class="current">{{ vistaActual === 'activas' ? 'Mis Clases' : 'Historial' }}</span>
-      </div>
-
-      <div class="user-profile">
-        <div class="user-info">
-          <span class="name">{{ jugadorNombre }}</span>
-          <span class="role">Perfil</span>
-        </div>
-        <div class="avatar-circle" *ngIf="!jugadorFoto">{{ jugadorNombre.charAt(0) }}</div>
-        <img class="avatar-circle" *ngIf="jugadorFoto" [src]="jugadorFoto" style="object-fit: cover;">
-      </div>
-    </header>
-
     <!-- Content -->
     <div class="dashboard-grid">
 
@@ -72,42 +54,99 @@
               <tr *ngFor="let reserva of paginatedReservas">
                 <td>
                   <div class="user-cell">
-                    <img class="avatar-small" [src]="reserva.entrenador_foto || 'assets/images/placeholder_avatar.png'"
-                      style="object-fit: cover;">
-                    <span class="font-medium">{{ reserva.entrenador_nombre }}</span>
+                    <div class="avatar-wrapper">
+                      <img class="avatar-small"
+                        [src]="reserva.entrenador_foto || 'assets/images/placeholder_avatar.png'"
+                        style="object-fit: cover;">
+                      <div class="online-indicator"></div>
+                    </div>
+                    <div class="user-info">
+                      <span class="user-name">{{ reserva.entrenador_nombre }}</span>
+                    </div>
                   </div>
                 </td>
-                <td>{{ reserva.fecha | date: 'dd MMM yyyy' }}</td>
-                <td>{{ (reserva.hora_inicio || reserva.hora || '') | slice:0:5 }} - {{ (reserva.hora_fin || '') |
-                  slice:0:5 }}</td>
                 <td>
-                  <span class="badge-modalidad" [class.grupal]="reserva.tipo === 'grupal'"
-                    [class.individual]="reserva.tipo !== 'grupal'">
-                    <ng-container *ngIf="reserva.tipo === 'grupal'">
-                      👥 Grupal ({{ reserva.cupos_ocupados }}/{{ reserva.capacidad_maxima }})
-                    </ng-container>
-                    <ng-container *ngIf="reserva.tipo !== 'grupal'">
-                      👤 Individual
-                    </ng-container>
-                  </span>
+                  <div class="date-cell">
+                    <span class="main-date">{{ reserva.fecha | date: 'dd MMM yyyy' }}</span>
+                    <span class="relative-date">{{ reserva.fecha | date: 'EEEE' | titlecase }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="time-cell">
+                    <span class="time-range">{{ (reserva.hora_inicio || reserva.hora || '') | slice:0:5 }} - {{
+                      (reserva.hora_fin || '') | slice:0:5 }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="modalidad-cell">
+                    <span class="badge-modalidad" [class.grupal]="reserva.tipo === 'grupal'"
+                      [class.multi]="reserva.cantidad_personas > 1 && reserva.tipo !== 'grupal'"
+                      [class.individual]="reserva.tipo !== 'grupal' && reserva.cantidad_personas <= 1">
+
+                      <i class="icon">{{ (reserva.tipo === 'grupal' || reserva.cantidad_personas > 1) ? '👥' : '👤'
+                        }}</i>
+
+                      <ng-container *ngIf="reserva.tipo === 'grupal'">
+                        GRUPAL ({{ reserva.cupos_ocupados }}/{{ reserva.capacidad_maxima }})
+                      </ng-container>
+                      <ng-container *ngIf="reserva.tipo !== 'grupal'">
+                        {{ reserva.cantidad_personas > 1 ? 'MULTIJUGADOR' : 'INDIVIDUAL' }}
+                      </ng-container>
+                    </span>
+                  </div>
                 </td>
                 <td>
                   <ng-container *ngIf="reserva.tipo === 'grupal'">
-                    <span class="status-badge" [class]="reserva.estado_grupo?.toLowerCase()">
-                      {{ reserva.estado_grupo === 'activo' ? '🔥 Activada' : '⏳ Pendiente' }}
-                    </span>
+                    <div class="status-container">
+                      <span class="status-badge" [class]="reserva.estado_grupo?.toLowerCase()">
+                        <i class="status-icon">{{ reserva.estado_grupo === 'activo' ? '🔥' : '⏳' }}</i>
+                        {{ reserva.estado_grupo === 'activo' ? 'ACTIVADA' : 'PENDIENTE' }}
+                      </span>
+                      <div class="info-wrapper" *ngIf="reserva.estado_grupo !== 'activo'">
+                        <div class="info-icon">i</div>
+                        <div class="info-tooltip">
+                          Esta clase se activará cuando se alcance el mínimo de
+                          <b>{{ reserva.capacidad_minima || 4 }} jugadores</b>.
+                        </div>
+                      </div>
+                    </div>
                   </ng-container>
                   <ng-container *ngIf="reserva.tipo !== 'grupal'">
                     <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
-                      {{ reserva.estado }}
+                      <i class="status-icon">✅</i>
+                      {{ reserva.estado | uppercase }}
                     </span>
                   </ng-container>
                 </td>
                 <td>
-                  <button class="btn-cancel-action" (click)="cancelarReserva(reserva)"
-                    [disabled]="reserva.estado !== 'reservado' && reserva.estado !== 'activo' && reserva.estado !== 'pendiente'">
-                    Cancelar reserva
-                  </button>
+                  <div class="actions-column">
+                    <div class="actions-buttons">
+                      <button class="btn-action cancel" (click)="cancelarReserva(reserva)"
+                        [disabled]="reserva.estado !== 'reservado' && reserva.estado !== 'activo' && reserva.estado !== 'pendiente'"
+                        title="Cancelar Reserva">
+                        CANCELAR RESERVA
+                      </button>
+                    </div>
+
+                    <!-- Equipo integration -->
+                    <div class="team-footer" *ngIf="reserva.cantidad_personas > 1">
+                      <div class="team-chips">
+                        <div class="chip-item owner" title="Tú (Titular)">
+                          <span class="letter">{{ jugadorNombre.charAt(0) }}</span>
+                        </div>
+                        <div class="chip-item guest" *ngFor="let inv of reserva.invitados"
+                          [title]="inv.nombre + (inv.estado === 'pendiente' ? ' (Pendiente)' : '')"
+                          [class.pending]="inv.estado === 'pendiente'">
+                          <span class="letter">{{ inv.nombre.charAt(0) }}</span>
+                          <span class="status-dot" *ngIf="inv.estado === 'pendiente'"></span>
+                        </div>
+                        <button class="btn-add-team" *ngIf="(reserva.invitados?.length + 1) < reserva.cantidad_personas"
+                          (click)="abrirModalInvitacion(reserva)" title="Invitar Compañero">
+                          <span class="plus">+</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -117,19 +156,31 @@
             <div *ngFor="let reserva of paginatedReservas" class="reserva-card-mobile">
               <div class="card-header-mobile">
                 <span class="date">{{ reserva.fecha | date: 'dd MMM' }}</span>
-                <span class="badge-modalidad-mobile" [class.grupal]="reserva.tipo === 'grupal'">
-                  {{ (reserva.tipo === 'grupal') ? '👥 Grupal (' + reserva.cupos_ocupados + '/' +
-                  reserva.capacidad_maxima + ')' : '👤 Individual' }}
+                <span class="badge-modalidad-mobile" [class.grupal]="reserva.tipo === 'grupal'"
+                  [class.multi]="reserva.cantidad_personas > 1 && reserva.tipo !== 'grupal'">
+                  {{ (reserva.tipo === 'grupal') ? ('👥 Grupal (' + reserva.cupos_ocupados + '/' +
+                  reserva.capacidad_maxima + ')') : (reserva.cantidad_personas > 1 ? '👥 MULTIJUGADOR' : '👤
+                  Individual') }}
                 </span>
               </div>
               <div class="card-body-mobile">
                 <h3>{{ reserva.nombre_entrenador || reserva.entrenador_nombre }}</h3>
-                <p>{{ reserva.hora_inicio | slice:0:5 }} - {{ reserva.hora_fin | slice:0:5 }}</p>
+                <p>{{ (reserva.hora_inicio || reserva.hora) | slice:0:5 }} - {{ reserva.hora_fin | slice:0:5 }}</p>
                 <div class="status-mobile" style="margin-top: 8px;">
                   <ng-container *ngIf="reserva.tipo === 'grupal'">
-                    <span class="status-badge" [class]="reserva.estado_grupo?.toLowerCase()">
-                      {{ reserva.estado_grupo === 'activo' ? '🔥 Activada' : '⏳ Pendiente' }}
-                    </span>
+                    <div class="status-container" style="display: flex; align-items: center; gap: 8px;">
+                      <span class="status-badge" [class]="reserva.estado_grupo?.toLowerCase()">
+                        {{ reserva.estado_grupo === 'activo' ? '🔥 Activada' : '⏳ Pendiente' }}
+                      </span>
+                      <div class="info-wrapper" *ngIf="reserva.estado_grupo !== 'activo'">
+                        <div class="info-icon"
+                          style="width: 16px; height: 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; font-style: italic;">
+                          i</div>
+                      </div>
+                    </div>
+                    <p *ngIf="reserva.estado_grupo !== 'activo'" style="font-size: 11px; color: #666; margin-top: 4px;">
+                      Se activa con {{ reserva.capacidad_minima || 4 }} jugadores.
+                    </p>
                   </ng-container>
                   <ng-container *ngIf="reserva.tipo !== 'grupal'">
                     <span class="status-badge" [class]="reserva.estado?.toLowerCase()">
@@ -137,10 +188,27 @@
                     </span>
                   </ng-container>
                 </div>
+
+                <!-- Mi Equipo Mobile -->
+                <div class="team-section-mobile" *ngIf="reserva.cantidad_personas > 1">
+                  <p class="section-label">Mi Equipo:</p>
+                  <div class="team-members-mobile">
+                    <span class="member-dot me" title="Tú"></span>
+                    <span class="member-dot guest" *ngFor="let inv of reserva.invitados"
+                      [class.pending]="inv.estado === 'pendiente'" [title]="inv.nombre"></span>
+                    <button class="add-dot" *ngIf="(reserva.invitados?.length + 1) < reserva.cantidad_personas"
+                      (click)="abrirModalInvitacion(reserva)">+</button>
+                  </div>
+                </div>
               </div>
               <div class="card-actions-mobile">
                 <button class="btn-cancel-action full-width" (click)="cancelarReserva(reserva)">Cancelar
                   reserva</button>
+                <button class="btn-invite-action full-width" style="margin-top: 8px;"
+                  *ngIf="reserva.pack_jugador_id && reserva.cantidad_personas > 1 && (reserva.invitados?.length + 1) < reserva.cantidad_personas"
+                  (click)="abrirModalInvitacion(reserva)">
+                  + Invitar Compañero
+                </button>
               </div>
             </div>
           </div>
@@ -222,4 +290,28 @@
 
     </div>
   </main>
+
+  <!-- Modal Invitación -->
+  <div class="modal-invitacion-overlay" *ngIf="showModalInvitacion">
+    <div class="modal-invitacion-content animate-pop">
+      <div class="modal-header">
+        <h3>Agregar Compañero</h3>
+        <button class="close-btn" (click)="cerrarModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Invita a un amigo para compartir este pack. Debe estar registrado en la App.</p>
+
+        <div class="form-group">
+          <label>Email del Jugador</label>
+          <input [(ngModel)]="emailInvitado" type="email" placeholder="ejemplo@correo.com" class="form-input" />
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+          <button class="btn-confirm" (click)="enviarInvitacion()">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>

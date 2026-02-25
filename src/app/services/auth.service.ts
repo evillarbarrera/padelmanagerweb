@@ -126,15 +126,20 @@ export class AuthService {
       tap((res: any) => {
         if (res.success && res.user) {
           const freshUser = res.user;
-          const currentSession = this.currentUserSubject.value || {};
 
-          if (freshUser.perfiles && freshUser.perfiles.length > 0) {
+          // Update available profiles
+          if (freshUser.perfiles) {
             localStorage.setItem('availableProfiles', JSON.stringify(freshUser.perfiles));
-
-            const updatedUser = { ...currentSession, perfiles: freshUser.perfiles };
-            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-            this.currentUserSubject.next(updatedUser);
           }
+
+          // Update local user data merge
+          const currentSession = this.currentUserSubject.value || {};
+          const updatedUser = { ...currentSession, ...freshUser };
+
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+          localStorage.setItem('userId', updatedUser.id);
+          localStorage.setItem('userRole', updatedUser.rol || 'jugador');
+          this.currentUserSubject.next(updatedUser);
         }
       })
     );

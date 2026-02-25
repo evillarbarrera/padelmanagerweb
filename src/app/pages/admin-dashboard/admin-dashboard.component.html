@@ -1,0 +1,114 @@
+<div class="admin-layout">
+    <!-- Use a standalone sidebar or specific header/sidebar for admin -->
+    <!-- Using sidebar with generic fields for now -->
+    <main class="main-content">
+
+        <div class="dashboard-grid fade-in">
+            <div class="page-intro">
+                <h1>Resumen del Sistema ⚙️</h1>
+                <p>Métricas y uso global de la plataforma PadelManager.</p>
+            </div>
+
+            <div *ngIf="isLoading" class="loading-state">
+                <div class="spinner"></div>
+                <p>Cargando estadísticas...</p>
+            </div>
+
+            <div class="stats-cards-grid" *ngIf="!isLoading && stats">
+                <div class="stat-card sum-card" style="background: #111; color: white;">
+                    <div class="icon" style="background: rgba(255,255,255,0.1);">💰</div>
+                    <div class="stat-info">
+                        <span class="label" style="color: #aaa;">Total Ingresos Packs</span>
+                        <span class="value" style="color: #ccff00;">${{ stats.ingresos_packs | number:'1.0-0' }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card sum-card" style="background: #ccff00; color: #111;">
+                    <div class="icon" style="background: rgba(0,0,0,0.1);">💸</div>
+                    <div class="stat-info">
+                        <span class="label" style="color: #444;">Comisión Estimada (3.5%)</span>
+                        <span class="value" style="color: #111;">${{ stats.ganancia_estimada | number:'1.0-0' }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="icon">📦</div>
+                    <div class="stat-info">
+                        <span class="label">Total Packs Vendidos</span>
+                        <span class="value">{{ stats.total_packs_vendidos }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="icon">👥</div>
+                    <div class="stat-info">
+                        <span class="label">Usuarios Totales</span>
+                        <span class="value">{{ stats.total_usuarios }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="icon">🎾</div>
+                    <div class="stat-info">
+                        <span class="label">Jugadores / Alumnos</span>
+                        <span class="value">{{ stats.total_jugadores }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="icon">💪</div>
+                    <div class="stat-info">
+                        <span class="label">Entrenadores</span>
+                        <span class="value">{{ stats.total_entrenadores }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="icon">🏟️</div>
+                    <div class="stat-info">
+                        <span class="label">Clubes Registrados</span>
+                        <span class="value">{{ stats.total_clubes }}</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="icon">🏆</div>
+                    <div class="stat-info">
+                        <span class="label">Torneos Creados</span>
+                        <span class="value">{{ stats.total_torneos || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section fade-in" *ngIf="!isLoading">
+                <div class="chart-header">
+                    <h2>Rendimiento Mensual</h2>
+                    <div class="filters">
+                        <select [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select">
+                            <option *ngFor="let m of months" [value]="m.value">{{ m.label }}</option>
+                        </select>
+                        <select [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select">
+                            <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-container card">
+                        <h3>Ingresos por Packs</h3>
+                        <div class="canvas-wrapper">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-container card">
+                        <h3>Usuarios Registrados & Packs Vendidos</h3>
+                        <div class="canvas-wrapper">
+                            <canvas id="usersPacksChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

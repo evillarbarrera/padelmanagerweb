@@ -217,6 +217,7 @@
       .grupal-header {
         display: flex;
         gap: 8px;
+        align-items: center;
 
         .tipo-badge {
           background: #eff6ff;
@@ -234,6 +235,27 @@
           border-radius: 6px;
           font-size: 11px;
           font-weight: 600;
+        }
+
+        .wa-quick-btn {
+          margin-left: auto;
+          background: #e7f8ef;
+          border: none;
+          padding: 6px;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          transition: all 0.2s;
+
+          &:hover {
+            background: #25d366;
+            transform: scale(1.1);
+
+            img {
+              filter: brightness(0) invert(1);
+            }
+          }
         }
       }
 
@@ -359,6 +381,16 @@
     .card-header {
       background: #eff6ff;
       border-bottom-color: rgba(37, 99, 235, 0.1);
+    }
+  }
+
+  &.full-capacity {
+    background: #f3fcf4;
+    border-left: 5px solid #22c55e;
+
+    .badge-cupos {
+      background: #22c55e !important;
+      color: #fff !important;
     }
   }
 }

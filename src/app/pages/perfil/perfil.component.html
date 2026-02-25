@@ -7,23 +7,7 @@
 
   <!-- Main Content Area -->
   <main class="main-content">
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="breadcrumbs">
-        <span>Panel de Control</span>
-        <span class="separator">/</span>
-        <span class="current">{{ activeTab === 'profile' ? 'Mi Perfil' : 'Torneos Disponibles' }}</span>
-      </div>
 
-      <div class="user-profile">
-        <div class="user-info">
-          <span class="name">{{ profile.nombre }}</span>
-          <span class="role">Perfil</span>
-        </div>
-        <img class="avatar-circle" [src]="profile.foto_perfil || 'assets/images/placeholder_avatar.png'"
-          style="object-fit: cover;">
-      </div>
-    </header>
 
     <!-- Content -->
     <div class="dashboard-grid">

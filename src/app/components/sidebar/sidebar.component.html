@@ -13,7 +13,7 @@
 <aside class="sidebar" [class.open]="isOpen">
     <div class="sidebar-header">
         <div class="logo-icon">🎾</div>
-        <h2>Padel Academy</h2>
+        <h2>PadelManager</h2>
         <!-- Close button mobile -->
         <button class="close-btn" (click)="closeSidebar()">✕</button>
     </div>
@@ -74,11 +74,6 @@
                 <a class="nav-item" [class.active]="activePage === 'reservas'" (click)="navigate('/jugador-reservas')">
                     <span class="icon">📋</span>
                     <span>Reservar Clase</span>
-                </a>
-                <a class="nav-item" [class.active]="activePage === 'mis-packs-activos'"
-                    (click)="navigate('/mis-packs-activos')">
-                    <span class="icon">🎟️</span>
-                    <span>Mis Packs</span>
                 </a>
                 <a class="nav-item" [class.active]="activePage === 'habilidades'"
                     (click)="navigate('/mis-habilidades')">

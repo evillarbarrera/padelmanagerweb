@@ -26,6 +26,12 @@ export class AlumnosComponent implements OnInit {
   coachFoto: string | null = null;
   loadingMessage = 'Cargando alumnos...';
 
+  // Paginación y Ordenamiento
+  currentPage = 1;
+  itemsPerPage = 6;
+  pagedAlumnos: any[] = [];
+  sortCriteria: 'nombre' | 'saldo' = 'nombre';
+
   constructor(
     private alumnoService: AlumnoService,
     private mysqlService: MysqlService,
@@ -62,18 +68,44 @@ export class AlumnosComponent implements OnInit {
     this.isLoading = true;
     this.alumnoService.getAlumnos(this.userId).subscribe({
       next: (res) => {
-        this.alumnos = res || [];
-        // Map API fields to UI-friendly names (now fully aggregated by backend)
-        this.alumnos = this.alumnos.map(a => ({
-          ...a,
-          sesiones_pagadas: Number(a.sesiones_pagadas),
-          sesiones_reservadas: a.sesiones_reservadas,
-          sesiones_grupales: a.sesiones_grupales,
-          sesiones_restantes: a.sesiones_pendientes,
-          // If we want to show current active pack names
-          pack_nombre: a.pack_nombres
-        }));
-        this.alumnosFiltrados = this.alumnos; // Initialize filtered list
+        this.alumnos = (res || []).map(a => {
+          // Debugging
+          console.log(`Checking photo for ${a.jugador_nombre}:`, {
+            foto_perfil: a.foto_perfil,
+            foto: a.foto
+          });
+
+          // Construct photo URL
+          const p1 = a.foto_perfil && String(a.foto_perfil).length > 5 ? a.foto_perfil : null;
+          const p2 = a.foto && String(a.foto).length > 5 ? a.foto : null;
+          let fotoRaw = p1 || p2;
+          let fotoUrl = "";
+
+          if (fotoRaw && !fotoRaw.includes('imagen_defecto')) {
+            if (!fotoRaw.startsWith('http')) {
+              const cleanPath = fotoRaw.startsWith('/') ? fotoRaw.substring(1) : fotoRaw;
+              fotoUrl = `https://api.padelmanager.cl/${cleanPath}`;
+            } else {
+              fotoUrl = fotoRaw;
+            }
+          } else {
+            fotoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(a.jugador_nombre)}&background=ccff00&color=000`;
+          }
+
+          console.log(`Final URL for ${a.jugador_nombre}:`, fotoUrl);
+
+          return {
+            ...a,
+            sesiones_pagadas: Number(a.sesiones_pagadas),
+            sesiones_reservadas: a.sesiones_reservadas,
+            sesiones_grupales: a.sesiones_grupales,
+            sesiones_restantes: a.sesiones_pendientes,
+            pack_nombre: a.pack_nombres,
+            foto: fotoUrl
+          };
+        });
+        this.alumnosFiltrados = this.alumnos;
+        this.updatePagedAlumnos();
         this.isLoading = false;
       },
       error: (err) => {
@@ -84,13 +116,54 @@ export class AlumnosComponent implements OnInit {
   }
 
   filtrarAlumnos(): void {
-    if (!this.searchTerm) {
-      this.alumnosFiltrados = this.alumnos;
-    } else {
-      this.alumnosFiltrados = this.alumnos.filter(a =>
+    let filtered = this.alumnos;
+    if (this.searchTerm) {
+      filtered = this.alumnos.filter(a =>
         a.jugador_nombre.toLowerCase().includes(this.searchTerm.toLowerCase())
       );
     }
+    this.alumnosFiltrados = this.aplicarOrdenamiento(filtered);
+    this.currentPage = 1;
+    this.updatePagedAlumnos();
+  }
+
+  cambiarOrden(criteria: 'nombre' | 'saldo'): void {
+    this.sortCriteria = criteria;
+    this.alumnosFiltrados = this.aplicarOrdenamiento(this.alumnosFiltrados);
+    this.currentPage = 1;
+    this.updatePagedAlumnos();
+  }
+
+  aplicarOrdenamiento(list: any[]): any[] {
+    if (this.sortCriteria === 'nombre') {
+      return [...list].sort((a, b) => a.jugador_nombre.localeCompare(b.jugador_nombre));
+    } else {
+      return [...list].sort((a, b) => (Number(a.sesiones_restantes) || 0) - (Number(b.sesiones_restantes) || 0));
+    }
+  }
+
+  updatePagedAlumnos(): void {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.pagedAlumnos = this.alumnosFiltrados.slice(startIndex, endIndex);
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePagedAlumnos();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePagedAlumnos();
+    }
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.alumnosFiltrados.length / this.itemsPerPage);
   }
 
   volver(): void {
@@ -152,6 +225,24 @@ export class AlumnosComponent implements OnInit {
       title: 'Detalles del Video',
       html: `
         <div style="text-align: left;">
+          <label style="display: block; margin-bottom: 8px; font-weight: bold; font-family: 'Inter', sans-serif;">Categoría / Golpe</label>
+          <select id="swal-category" class="swal2-select" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box; display: block;">
+            <option value="General">General</option>
+            <option value="Derecha">Derecha</option>
+            <option value="Revés">Revés</option>
+            <option value="Volea de Derecha">Volea de Derecha</option>
+            <option value="Volea de Revés">Volea de Revés</option>
+            <option value="Bandeja">Bandeja</option>
+            <option value="Víbora">Víbora</option>
+            <option value="Rulo">Rulo</option>
+            <option value="Remate">Remate</option>
+            <option value="Globo">Globo</option>
+            <option value="Saque">Saque</option>
+            <option value="Pared">Salida de Pared</option>
+            <option value="Físico">Físico</option>
+            <option value="Partido">Partido</option>
+          </select>
+
           <label style="display: block; margin-bottom: 8px; font-weight: bold; font-family: 'Inter', sans-serif;">Título del video</label>
           <input id="swal-title" class="swal2-input" placeholder="Ej: Técnica de Drive" style="margin: 0; width: 100%; box-sizing: border-box;">
           
@@ -166,18 +257,20 @@ export class AlumnosComponent implements OnInit {
       cancelButtonColor: '#888',
       preConfirm: () => {
         return {
+          category: (document.getElementById('swal-category') as HTMLSelectElement).value,
           title: (document.getElementById('swal-title') as HTMLInputElement).value,
           comment: (document.getElementById('swal-comment') as HTMLTextAreaElement).value
         };
       }
     }).then((result: any) => {
       if (result.isConfirmed) {
-        const { title, comment } = result.value;
+        const { category, title, comment } = result.value;
 
         const formData = new FormData();
         formData.append('video', file);
         formData.append('jugador_id', alumno.jugador_id.toString());
         formData.append('entrenador_id', this.userId?.toString() || '');
+        formData.append('categoria', category);
         formData.append('titulo', title || ('Entrenamiento ' + new Date().toLocaleDateString()));
         formData.append('comentario', comment || '');
 

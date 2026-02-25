@@ -43,6 +43,12 @@ export class MysqlService {
     });
   }
 
+  getDashboardStats(entrenadorId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/entrenador/get_dashboard_stats.php?entrenador_id=${entrenadorId}`, {
+      headers: this.headers
+    });
+  }
+
   getEstadisticasEntrenador(entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/entrenador/get_packs_grupales.php?entrenador_id=${entrenadorId}`, {
       headers: this.headers

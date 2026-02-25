@@ -1,4 +1,4 @@
-# Training Padel Academy - Web Version
+# PadelManager Training - Web Version
 
 Versión web (responsive) del sistema de gestión de clases para la academia de pádel. Diseño moderno tipo Nike Fitness.
 
@@ -38,23 +38,23 @@ La aplicación se ejecutará en `http://localhost:4200`
 ```
 src/
 ├── app/
-│   ├── services/
-│   │   ├── auth.service.ts          # Autenticación
-│   │   ├── mysql.service.ts         # Datos de usuario y perfil
-│   │   ├── entrenamientos.service.ts # Disponibilidad y reservas
-│   │   ├── packs.service.ts         # Packs de clases
-│   │   └── alumno.service.ts        # Datos de alumnos (entrenador)
-│   ├── pages/
-│   │   ├── login/                   # Página de inicio de sesión
-│   │   ├── jugador-home/            # Dashboard estudiante
-│   │   ├── jugador-reservas/        # Mis reservas (estudiante)
-│   │   ├── jugador-calendario/      # Agendar clases
-│   │   ├── entrenador-home/         # Dashboard entrenador
-│   │   ├── alumnos/                 # Lista de alumnos
-│   │   └── perfil/                  # Perfil de usuario
-│   ├── app.component.ts
-│   ├── app.routes.ts                # Rutas de la aplicación
-│   └── ...
+├── services/
+│   ├── auth.service.ts          # Autenticación
+│   ├── mysql.service.ts         # Datos de usuario y perfil
+│   ├── entrenamientos.service.ts # Disponibilidad y reservas
+│   ├── packs.service.ts         # Packs de clases
+│   └── alumno.service.ts        # Datos de alumnos (entrenador)
+├── pages/
+│   ├── login/                   # Página de inicio de sesión
+│   ├── jugador-home/            # Dashboard estudiante
+│   ├── jugador-reservas/        # Mis reservas (estudiante)
+│   ├── jugador-calendario/      # Agendar clases
+│   ├── entrenador-home/         # Dashboard entrenador
+│   ├── alumnos/                 # Lista de alumnos
+│   └── perfil/                  # Perfil de usuario
+├── app.component.ts
+├── app.routes.ts                # Rutas de la aplicación
+└── ...
 ├── assets/
 ├── index.html
 ├── main.ts
@@ -135,6 +135,6 @@ Content-Type: application/json
 
 ## 📝 Licencia
 
-Privado - Training Padel Academy 2026
+Privado - PadelManager 2026
 
 # PadelManagerWeb

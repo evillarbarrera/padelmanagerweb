@@ -6,23 +6,6 @@
 
   <!-- Main Content Area -->
   <main class="main-content">
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="breadcrumbs">
-        <span>Panel de Control</span>
-        <span class="separator">/</span>
-        <span class="current">Inicio</span>
-      </div>
-
-      <div class="user-profile frc">
-        <div class="user-info">
-          <span class="name">{{ jugadorNombre }}</span>
-          <span class="role">Jugador</span>
-        </div>
-        <img class="avatar-circle" [src]="jugadorFoto || 'assets/images/placeholder_avatar.png'"
-          style="object-fit: cover;">
-      </div>
-    </header>
 
     <!-- Dashboard Content -->
     <div class="dashboard-grid" *ngIf="!isLoading">

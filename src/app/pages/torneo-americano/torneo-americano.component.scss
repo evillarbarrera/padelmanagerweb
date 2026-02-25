@@ -10,6 +10,10 @@
     flex: 1;
     padding: 32px 40px;
     overflow-y: auto;
+
+    @media (max-width: 768px) {
+        padding: 20px 16px;
+    }
 }
 
 .top-header {
@@ -19,6 +23,19 @@
     justify-content: space-between;
     margin-bottom: 32px;
     padding-bottom: 16px;
+
+    @media (max-width: 1024px) {
+        padding-left: 60px;
+    }
+
+    @media (max-width: 768px) {
+        margin-bottom: 20px;
+
+        .breadcrumbs {
+            display: none;
+        }
+    }
+
     border-bottom: 1px solid var(--card-border, #e5e7eb);
 
     .breadcrumbs {
@@ -95,6 +112,11 @@
     padding: 30px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--card-border, #e5e7eb);
+
+    @media(max-width: 600px) {
+        padding: 20px 16px;
+        border-radius: 16px;
+    }
 
     .card-header {
         display: flex;
@@ -354,6 +376,20 @@
         gap: 12px;
         margin-bottom: 16px;
 
+        @media(max-width: 600px) {
+            flex-direction: column;
+            align-items: stretch;
+
+            .pair-slot {
+                width: 100%;
+            }
+
+            .vs-mini {
+                text-align: center;
+                padding: 4px 0;
+            }
+        }
+
         .pair-slot {
             flex: 1;
             background: #fff;
@@ -547,9 +583,14 @@
 
 .match-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
     padding: 10px 0;
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
 }
 
 .match-card.premium-card {
@@ -1146,6 +1187,17 @@
     display: flex;
     gap: 16px;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+
+    @media (max-width: 600px) {
+        flex-direction: column;
+        gap: 12px;
+
+        .tab-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 
     .tab-btn {
         padding: 14px 28px;
@@ -1268,8 +1320,12 @@
     &.points-grid {
         grid-template-columns: 1fr 1fr 1fr 1fr;
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             grid-template-columns: 1fr 1fr;
+        }
+
+        @media (max-width: 500px) {
+            grid-template-columns: 1fr;
         }
     }
 }

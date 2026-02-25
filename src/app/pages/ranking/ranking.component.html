@@ -4,20 +4,6 @@
     </app-sidebar>
 
     <main class="main-content">
-        <header class="top-header">
-            <div class="header-content">
-                <div class="title-section">
-                    <h1>Ranking del Club</h1>
-                    <p class="subtitle">Clasificación general basada en puntos de torneos</p>
-                </div>
-                <div class="category-tabs">
-                    <button *ngFor="let cat of categorias" class="cat-tab" [class.active]="selectedCategoria === cat"
-                        (click)="setCategoria(cat)">
-                        {{ cat }}
-                    </button>
-                </div>
-            </div>
-        </header>
 
         <div class="content-body">
             <!-- PODIUM (Top 3) -->

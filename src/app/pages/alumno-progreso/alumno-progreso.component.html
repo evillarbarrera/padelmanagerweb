@@ -1,23 +1,9 @@
 <div class="admin-layout">
-    <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [role]="'entrenador'" activePage="alumnos">
+    <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+        activePage="alumnos">
     </app-sidebar>
 
     <main class="main-content">
-        <header class="top-header">
-            <div class="breadcrumbs">
-                <span>Panel de Entrenador</span>
-                <span class="separator">/</span>
-                <span class="clickable" (click)="volver()">Mis Alumnos</span>
-                <span class="separator">/</span>
-                <span class="current">Progreso de {{ alumnoNombre }}</span>
-            </div>
-
-            <div class="actions">
-                <button class="back-btn" (click)="volver()">
-                    ← Volver
-                </button>
-            </div>
-        </header>
 
         <div class="dashboard-grid fade-in">
 
@@ -61,6 +47,38 @@
 
             </div>
 
+            <!-- Detailed Analysis Table -->
+            <div class="card analysis-card" *ngIf="!isLoading && hasData">
+                <div class="card-title">Detalle por Golpe</div>
+                <div class="analysis-table-container">
+                    <table class="analysis-table">
+                        <thead>
+                            <tr>
+                                <th>Golpe</th>
+                                <th>Promedio</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let label of storedRadarLabels; let i = index">
+                                <td class="hit-name">{{ label }}</td>
+                                <td>
+                                    <span class="score-badge" [class.high]="storedRadarData[i] >= 8"
+                                        [class.mid]="storedRadarData[i] >= 5" [class.low]="storedRadarData[i] < 5">
+                                        {{ storedRadarData[i] | number:'1.1-1' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="info-btn" (click)="verDetalleGolpe(label)">
+                                        ℹ️
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Loading State -->
             <div *ngIf="isLoading" class="loading-state">
                 <div class="spinner"></div>
@@ -78,35 +96,181 @@
             <!-- Training Videos Section -->
             <div class="videos-section" *ngIf="!isLoading">
                 <div class="section-header">
-                    <h2>🎥 Videos de Entrenamiento</h2>
-                    <p>Revisiones técnicas y jugadas destacadas</p>
+                    <div class="header-left">
+                        <h2>🎥 Librería de Videos</h2>
+                        <p>Organizados por golpe y evolución</p>
+                    </div>
+
+                    <div class="header-actions">
+                        <button class="compare-mode-btn" [class.active]="isComparisonMode"
+                            (click)="toggleComparisonMode()">
+                            {{ isComparisonMode ? 'Cancelar Comparación' : '⚖️ Comparar Videos' }}
+                        </button>
+                    </div>
                 </div>
 
-                <div class="videos-grid" *ngIf="videos.length > 0; else noVideos">
-                    <div class="video-card" *ngFor="let vid of videos">
+                <!-- Category Filter Pills -->
+                <div class="category-pills">
+                    <button *ngFor="let cat of availableCategories" class="pill" [class.active]="activeCategory === cat"
+                        (click)="setCategory(cat)">
+                        {{ cat }}
+                        <span class="count" *ngIf="cat !== 'Todos'">{{ groupedVideos[cat]?.length }}</span>
+                        <span class="count" *ngIf="cat === 'Todos'">{{ videosCoach.length }}</span>
+                    </button>
+                </div>
+
+                <!-- Comparison Selection Bar -->
+                <div class="comparison-bar shadow-lg" *ngIf="isComparisonMode && selectedVideos.length > 0">
+                    <div class="selected-vids">
+                        <div class="selected-item" *ngFor="let sv of selectedVideos">
+                            <span class="dot"></span>
+                            {{ sv.titulo }}
+                        </div>
+                        <div class="placeholder" *ngIf="selectedVideos.length < 2">
+                            Selecciona otro video para comparar...
+                        </div>
+                    </div>
+                    <button class="launch-compare-btn" [disabled]="selectedVideos.length < 2"
+                        (click)="openComparison()">
+                        Ver En Paralelo
+                    </button>
+                </div>
+
+                <!-- Videos Grid -->
+                <div class="videos-grid" *ngIf="filteredVideos.length > 0; else noVideos">
+                    <div class="video-card" *ngFor="let vid of filteredVideos"
+                        [class.selected-for-compare]="isVideoSelected(vid)" [class.selectable]="isComparisonMode"
+                        (click)="isComparisonMode ? selectVideoToCompare(vid) : null">
+
+                        <div class="selection-overlay" *ngIf="isComparisonMode">
+                            <div class="check-circle">
+                                <span *ngIf="isVideoSelected(vid)">✓</span>
+                            </div>
+                        </div>
+
                         <div class="video-wrapper">
-                            <video [src]="vid.video_url" controls preload="metadata" playsinline></video>
+                            <video [src]="vid.video_url" [controls]="!isComparisonMode" preload="metadata"
+                                playsinline></video>
                         </div>
                         <div class="video-info">
                             <div class="vid-header-row">
-                                <h4>{{ vid.titulo || 'Sin título' }}</h4>
-                                <button class="delete-vid-btn" (click)="confirmDeleteVideo(vid)">
+                                <div class="title-group">
+                                    <span class="cat-tag">{{ vid.categoria }}</span>
+                                    <h4>{{ vid.titulo || 'Sin título' }}</h4>
+                                </div>
+                                <button class="delete-vid-btn"
+                                    (click)="confirmDeleteVideo(vid); $event.stopPropagation()">
                                     🗑️
                                 </button>
                             </div>
                             <p class="date">{{ vid.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
                             <p class="comment" *ngIf="vid.comentario">{{ vid.comentario }}</p>
+
+                            <div class="ai-video-actions">
+                                <button class="ai-btn-analyze" *ngIf="!aiResults[vid.id]"
+                                    (click)="analizarVideo(vid); $event.stopPropagation()"
+                                    [disabled]="isAnalyzing[vid.id]">
+                                    {{ isAnalyzing[vid.id] ? 'ANALIZANDO...' : 'ANALIZAR CON IA' }}
+                                </button>
+                                <button class="ai-btn-report" *ngIf="aiResults[vid.id]"
+                                    (click)="verReporte(vid); $event.stopPropagation()">
+                                    VER REPORTE AI
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <ng-template #noVideos>
                     <div class="empty-videos">
-                        <p>No se han subido videos de entrenamiento para este alumno.</p>
+                        <div class="empty-icon">📂</div>
+                        <h3>No hay videos en esta categoría</h3>
+                        <p>Sube videos desde el panel de alumnos para ver el progreso aquí.</p>
                     </div>
                 </ng-template>
             </div>
 
         </div>
     </main>
+
+    <!-- Gemini Analysis Results Modal (Web Overlay) -->
+    <div class="ai-results-overlay" *ngIf="aiActiveResult" [class.show]="aiActiveResult">
+        <div class="ai-results-card fade-in">
+            <div class="results-header">
+                <div class="header-main">
+                    <h3>GEMINI IA: {{ aiActiveResult.title }}</h3>
+                </div>
+                <button class="close-btn" (click)="aiActiveResult = null">×</button>
+            </div>
+
+            <div class="results-body">
+                <div class="ai-badge-header">POWERED BY GOOGLE AI STUDIO</div>
+
+                <div class="score-section">
+                    <div class="score-circle">
+                        <span class="score-val">{{ aiActiveResult.score }}</span>
+                        <span class="score-pct">%</span>
+                    </div>
+                    <p class="score-label">MATCH TÉCNICO</p>
+                </div>
+
+                <div class="feedback-text">
+                    <p>{{ aiActiveResult.feedback }}</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-progress" *ngFor="let m of aiActiveResult.metrics">
+                        <div class="metric-info">
+                            <span>{{ m.label }}</span>
+                            <span>{{ m.value }}/10</span>
+                        </div>
+                        <div class="progress-bg">
+                            <div class="progress-fill" [style.width]="(m.value * 10) + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tips-section">
+                    <h4>TIPS DE MEJORA</h4>
+                    <ul>
+                        <li *ngFor="let tip of aiActiveResult.tips">{{ tip }}</li>
+                    </ul>
+                </div>
+
+                <button class="understand-btn" (click)="aiActiveResult = null">
+                    ENTENDIDO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Comparison Overlay -->
+    <div class="comparison-overlay" *ngIf="showComparison" [class.show]="showComparison">
+        <div class="comparison-container fade-in">
+            <header class="comp-header">
+                <h3>⚖️ Comparativa de Técnica</h3>
+                <div class="header-actions">
+                    <button class="play-both-btn" (click)="togglePlayBoth()">▶️ Reproducir Ambos</button>
+                    <button class="close-comp-btn" (click)="closeComparison()">Cerrar</button>
+                </div>
+            </header>
+
+            <div class="comp-vids-grid">
+                <div class="comp-vid-item" *ngFor="let vid of selectedVideos">
+                    <div class="comp-vid-wrapper shadow-lg">
+                        <video [src]="vid.video_url" controls loop playsinline></video>
+                    </div>
+                    <div class="comp-vid-info">
+                        <span class="badge">{{ vid.categoria }}</span>
+                        <h4>{{ vid.titulo }}</h4>
+                        <p>{{ vid.fecha | date:'dd/MM/yyyy' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="comp-footer">
+                <p>💡 Tip: Reproduce ambos videos para comparar el gesto técnico en diferentes momentos.</p>
+            </footer>
+        </div>
+    </div>
 </div>

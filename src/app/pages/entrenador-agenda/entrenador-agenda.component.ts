@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MysqlService } from '../../services/mysql.service'; // Changed from EntrenamientoService to match source pattern if available, or keep using existing service but properly
+import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
 
@@ -26,12 +26,11 @@ export class EntrenadorAgendaComponent implements OnInit {
   isLoading = true;
   userId: number | null = null;
 
-  // Logic ported from source
   dias: DiaAgenda[] = [];
   diaSeleccionado: string = '';
 
   constructor(
-    private mysqlService: MysqlService, // Using mysqlService as in source
+    private mysqlService: MysqlService,
     private router: Router,
     private popupService: PopupService
   ) { }
@@ -43,7 +42,6 @@ export class EntrenadorAgendaComponent implements OnInit {
       return;
     }
 
-    // Load coach profile for sidebar/header
     this.mysqlService.getPerfil(this.userId).subscribe(res => {
       if (res.success) {
         this.coachNombre = res.user.nombre;
@@ -59,7 +57,7 @@ export class EntrenadorAgendaComponent implements OnInit {
     const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const hoy = new Date();
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
       const fecha = new Date();
       fecha.setDate(hoy.getDate() + i);
       const fechaStr = this.getLocalISODate(fecha);
@@ -86,58 +84,75 @@ export class EntrenadorAgendaComponent implements OnInit {
     if (!this.userId) return;
     this.isLoading = true;
 
-    // Assuming getEntrenadorAgenda exists in MysqlService as per source code analysis.
-    // If not, we might need to use the existing service or add the method.
-    // Given the source code used mysqlService.getEntrenadorAgenda, I'll attempt to use that.
-    // If it fails compile, I will check mysqlService.ts. 
     this.mysqlService.getEntrenadorStats(this.userId).subscribe({
       next: (res: any) => {
         const todasReservas: any[] = [];
 
-        // Add traditional and aggregated group reservations
         if (res.reservas_tradicionales && Array.isArray(res.reservas_tradicionales)) {
           const mappedReservas = res.reservas_tradicionales.map((r: any) => {
-            const names = r.jugador_nombre ? r.jugador_nombre.split(', ') : [];
+            const isGrupal = r.tipo === 'grupal' || r.tipo === 'pack_grupal' || r.tipo === 'grupal_template';
             const dur = this.calculateDuration(r.hora_inicio, r.hora_fin);
+
+            const processedInscritos = (r.inscritos || []).map((ins: any) => {
+              let foto = ins.foto;
+              if (foto && foto.length > 5 && !foto.includes('imagen_defecto')) {
+                if (!foto.startsWith('http')) {
+                  const cleanPath = foto.startsWith('/') ? foto.substring(1) : foto;
+                  foto = `https://api.padelmanager.cl/${cleanPath}`;
+                }
+              } else {
+                foto = `https://ui-avatars.com/api/?name=${encodeURIComponent(ins.nombre)}&background=ccff00&color=000`;
+              }
+              return { ...ins, foto };
+            });
+
             return {
               ...r,
-              inscritos: r.tipo === 'pack_grupal' ? names.map((n: string) => ({ nombre: n })) : [],
-              cupos_ocupados: r.tipo === 'pack_grupal' ? names.length : (r.inscritos || 1),
-              capacidad_maxima: r.capacidad || 1,
-              duracion_calculada: dur
+              inscritos: processedInscritos,
+              cupos_ocupados: r.cupos_ocupados !== undefined ? r.cupos_ocupados : (isGrupal ? processedInscritos.length : 1),
+              capacidad_maxima: r.capacidad_maxima || r.capacidad || 4,
+              duracion_calculada: r.duracion_calculada || dur || r.duracion_original || 60
             };
           });
           todasReservas.push(...mappedReservas);
         }
 
-        // Add recurring profile packs only if there's no specific reservation for that slot
         if (res.packs_grupales && Array.isArray(res.packs_grupales)) {
           const packsGrupalesMapeados = res.packs_grupales.map((pack: any) => {
             const dur = this.calculateDuration(pack.hora_inicio, pack.hora_fin);
+            const processedInscritos = (pack.inscritos || []).map((ins: any) => {
+              let foto = ins.foto;
+              if (foto && foto.length > 5 && !foto.includes('imagen_defecto')) {
+                if (!foto.startsWith('http')) {
+                  const cleanPath = foto.startsWith('/') ? foto.substring(1) : foto;
+                  foto = `https://api.padelmanager.cl/${cleanPath}`;
+                }
+              } else {
+                foto = `https://ui-avatars.com/api/?name=${encodeURIComponent(ins.nombre)}&background=ccff00&color=000`;
+              }
+              return { ...ins, foto };
+            });
+
             return {
               ...pack,
               reserva_id: pack.id || pack.pack_id,
-              fecha: null, // Recurring template
+              fecha: null,
               tipo: 'grupal_template',
               estado: pack.estado_grupo,
               estado_grupo: pack.estado_grupo,
+              inscritos: processedInscritos,
               cupos_ocupados: pack.cupos_ocupados,
               capacidad_maxima: pack.capacidad_maxima,
-              duracion_calculada: dur
+              duracion_calculada: dur || pack.duracion_calculada || pack.duracion_dinamica || 60
             };
           });
           todasReservas.push(...packsGrupalesMapeados);
         }
 
-        // Distribute into days
         this.dias.forEach(dia => {
           let diaBDFormato = dia.diaNumero;
-          if (diaBDFormato === 0) diaBDFormato = 7;
 
-          // Filter reservations specifically for this day
           const directReservations = todasReservas.filter(r => r.fecha === dia.fecha);
-
-          // Get templates that don't have a direct reservation for that time
           const templatesForDay = todasReservas.filter(r =>
             r.tipo === 'grupal_template' &&
             Number(r.dia_semana) === diaBDFormato &&
@@ -145,7 +160,6 @@ export class EntrenadorAgendaComponent implements OnInit {
           );
 
           dia.data = [...directReservations, ...templatesForDay];
-          // Sort by time
           dia.data.sort((a, b) => (a.hora_inicio || '').localeCompare(b.hora_inicio || ''));
         });
 
@@ -190,8 +204,6 @@ export class EntrenadorAgendaComponent implements OnInit {
       ]
     }).then((action) => {
       if (action) {
-        // En ambos casos de cancelación (notify o silent) ejecutamos la lógica.
-        // En una fase futura se podría pasar el parámetro action al backend.
         this.ejecutarCancelacion(item);
       }
     });
@@ -218,5 +230,24 @@ export class EntrenadorAgendaComponent implements OnInit {
       return item.estado_grupo || 'activo';
     }
     return item.status || item.estado || 'activo';
+  }
+
+  openWhatsAppGroup(item: any) {
+    if (!item.inscritos || item.inscritos.length === 0) return;
+
+    const phones = item.inscritos
+      .map((ins: any) => ins.telefono)
+      .filter((tel: string) => tel && tel.length > 5);
+
+    if (phones.length === 0) {
+      this.popupService.info('Sin teléfonos', 'No hay números de teléfono registrados para este grupo.');
+      return;
+    }
+
+    // Since official WhatsApp group links require being an admin and creating a link,
+    // we use a workaround to open a chat with multiple numbers or just inform.
+    // For now, we'll open a chat with the first one or prompt about the group.
+    const message = encodeURIComponent(`Hola alumnos de la clase de las ${item.hora_inicio.slice(0, 5)}...`);
+    window.open(`https://wa.me/${phones[0]}?text=${message}`, '_blank');
   }
 }

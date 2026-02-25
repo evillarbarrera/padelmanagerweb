@@ -15,9 +15,20 @@ import Swal from 'sweetalert2';
 export class SidebarComponent implements OnInit {
     @Input() userId: number | null = null;
     @Input() jugadorNombre: string = 'Usuario';
-    @Input() jugadorFoto: string | null = null;
     @Input() activePage: string = '';
     @Input() role: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
+
+    private _jugadorFoto: string | null = null;
+    @Input() set jugadorFoto(val: string | null) {
+        if (val) {
+            this._jugadorFoto = this.formatPhotoUrl(val);
+        } else {
+            this.applyFallbackFoto();
+        }
+    }
+    get jugadorFoto(): string | null {
+        return this._jugadorFoto;
+    }
 
     isOpen = false; // Mobile menu state
     showSwitchMenu = false; // Profile switcher state
@@ -46,12 +57,45 @@ export class SidebarComponent implements OnInit {
         // Initial load from local storage
         this.availableProfiles = this.authService.getProfiles();
 
+        // Subscribe to user changes for real-time updates (photo, name, etc)
+        this.authService.currentUser$.subscribe(currentUser => {
+            if (currentUser) {
+                if (!this.userId) this.userId = currentUser.id;
+
+                // Only update if not explicitly provided by parent or is default
+                if (!this.jugadorNombre || this.jugadorNombre === 'Usuario') {
+                    this.jugadorNombre = currentUser.nombre || 'Usuario';
+                }
+
+                // Always try to refresh photo from user object if it changes
+                this.applyFallbackFoto(currentUser);
+            }
+        });
+
         // Force refresh from server to ensure we have the latest roles (Global, etc.)
-        const currentUserId = this.userId || this.authService.getCurrentUser()?.id;
+        const currentUser = this.authService.getCurrentUser();
+        const currentUserId = this.userId || currentUser?.id;
         if (currentUserId) {
             this.authService.refreshSession(currentUserId).subscribe(() => {
                 this.availableProfiles = this.authService.getProfiles();
             });
+        }
+    }
+
+    private formatPhotoUrl(foto: string): string {
+        if (!foto) return '';
+        if (foto.startsWith('http')) return foto;
+        const cleanPath = foto.startsWith('/') ? foto.substring(1) : foto;
+        return `https://api.padelmanager.cl/${cleanPath}`;
+    }
+
+    private applyFallbackFoto(user?: any) {
+        const currentUser = user || this.authService.getCurrentUser();
+        if (currentUser) {
+            const fotoRaw = currentUser.foto_perfil || currentUser.link_foto || currentUser.foto;
+            if (fotoRaw) {
+                this._jugadorFoto = this.formatPhotoUrl(fotoRaw);
+            }
         }
     }
 
