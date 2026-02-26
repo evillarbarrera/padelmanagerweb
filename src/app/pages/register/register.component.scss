@@ -57,23 +57,29 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 1.5rem;
             background: rgba(255, 255, 255, 0.1);
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 1.2rem;
             border-radius: 50px;
             border: 1px solid rgba(255, 255, 255, 0.1);
 
-            .logo-icon {
-                font-size: 1.8rem;
+            .logo-img {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                object-fit: cover;
             }
 
             .logo-text {
                 font-size: 1rem;
                 font-weight: 700;
-                letter-spacing: 1px;
+                letter-spacing: 0.5px;
                 color: #ffffff;
-                text-transform: uppercase;
+
+                .accent {
+                    color: #7cb342;
+                }
             }
         }
 
