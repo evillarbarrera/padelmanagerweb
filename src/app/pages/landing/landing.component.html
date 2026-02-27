@@ -17,7 +17,8 @@
         </div>
         <div class="menu">
           <a href="#features">Características</a>
-          <a href="#testimonials">Testimonios</a>
+          <a href="#trainers">Entrenadores</a>
+          <a href="#technology">Tecnología IA</a>
           <a href="#pricing">Precios</a>
         </div>
         <div class="auth-buttons">
@@ -147,6 +148,86 @@
       </div>
     </section>
 
+    <!-- TRAINERS SECTION -->
+    <section id="trainers" class="nike-trainers">
+      <div class="container">
+        <div class="section-header">
+          <span class="overline">NUESTROS EXPERTOS</span>
+          <h2>ENTRENA CON <span class="text-gradient">LOS MEJORES</span></h2>
+          <p class="subtitle">Descubre el curriculum y la experiencia de nuestro staff técnico.</p>
+        </div>
+
+        <div class="trainers-grid">
+          <div class="trainer-card" *ngFor="let trainer of trainers">
+            <div class="trainer-image">
+              <img [src]="trainer.foto" [alt]="trainer.nombre">
+              <div class="trainer-overlay">
+                <button class="btn-view-profile">Ver Perfil</button>
+              </div>
+            </div>
+            <div class="trainer-info">
+              <h3>{{trainer.nombre}}</h3>
+              <span class="specialty">{{trainer.especialidad}}</span>
+              <p class="curriculum">{{trainer.curriculum}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TECH & AI SECTION -->
+    <section id="technology" class="nike-tech">
+      <div class="container">
+        <div class="tech-layout">
+          <div class="tech-text">
+            <span class="badge-ai">IA POWERED</span>
+            <h2>ANÁLISIS DE VIDEO <br><span class="highlight-alt">CON INTELIGENCIA ARTIFICIAL</span></h2>
+            <p>Nuestra IA analiza tus golpes, postura y táctica en tiempo real. Compara tus grabaciones con patrones
+              profesionales.</p>
+
+            <ul class="tech-features">
+              <li><span class="check">✓</span> Seguimiento de biomecánica</li>
+              <li><span class="check">✓</span> Comparativa de video 1:1</li>
+              <li><span class="check">✓</span> Reportes automáticos de mejora</li>
+            </ul>
+
+            <div class="chart-mini-container">
+              <div class="chart-card">
+                <h4>Evolución Técnica</h4>
+                <div class="canvas-wrapper">
+                  <canvas id="landingLineChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tech-visual">
+            <div class="radar-card">
+              <h3>Tus Habilidades</h3>
+              <div class="radar-wrapper">
+                <canvas id="landingRadarChart"></canvas>
+              </div>
+              <div class="radar-legend">
+                <span>Técnica</span>
+                <span>Control</span>
+                <span>Potencia</span>
+              </div>
+            </div>
+
+            <div class="video-mockup">
+              <div class="video-badge">ANALIZANDO...</div>
+              <div class="video-play">▶</div>
+              <div class="ai-overlay">
+                <div class="body-point p1"></div>
+                <div class="body-point p2"></div>
+                <div class="body-line l1"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- TESTIMONIALS SECTION -->
     <section id="testimonials" class="nike-testimonials">
       <div class="container">
@@ -214,8 +295,8 @@
             </div>
             <div class="divider"></div>
             <div class="price-item highlight">
-              <span class="label">Tu Comisión</span>
-              <span class="amount">%</span>
+              <span class="label">Servicio Padel Manager</span>
+              <span class="amount">3.5%</span>
               <span class="desc">por Pack Vendido</span>
             </div>
             <div class="divider"></div>
@@ -224,7 +305,7 @@
               <span class="amount">$0</span>
             </div>
           </div>
-          <p class="disclaimer">Gestiona tus alumnos, canchas y pagos sin riesgos.</p>
+          <p class="disclaimer">Gestiona tus alumnos, canchas y pagos con la mejor tecnología.</p>
         </div>
       </div>
     </section>

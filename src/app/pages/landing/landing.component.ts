@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { AuthService } from '../../services/auth.service';
 import { EntrenamientoService } from '../../services/entrenamientos.service';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-landing',
@@ -12,12 +15,34 @@ import { EntrenamientoService } from '../../services/entrenamientos.service';
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss']
 })
-export class LandingComponent implements OnInit {
+export class LandingComponent implements OnInit, AfterViewInit {
   isAuthenticated = false;
   userRole: 'jugador' | 'entrenador' | 'administrador_club' | null = null;
   userName = '';
   userId: number | null = null;
   isLoading = true;
+
+  // Mock data for trainers
+  trainers = [
+    {
+      nombre: 'Carlos Ruiz',
+      especialidad: 'Técnica Avanzada y Estrategia',
+      curriculum: 'Ex-jugador profesional con más de 10 años de experiencia en alta competición. Especialista en corrección biomécánica.',
+      foto: 'assets/images/placeholder_avatar.png'
+    },
+    {
+      nombre: 'Elena Martínez',
+      especialidad: 'Iniciación y Menores',
+      curriculum: 'Certificada por la Federación Internacional de Pádel. Experta en pedagogía deportiva y desarrollo de talentos jóvenes.',
+      foto: 'assets/images/placeholder_avatar.png'
+    },
+    {
+      nombre: 'Miguel Ángel Sos',
+      especialidad: 'Preparación Física y Táctica',
+      curriculum: 'Licenciado en Ciencias del Deporte. Diseña programas personalizados que combinan potencia física con inteligencia en pista.',
+      foto: 'assets/images/placeholder_avatar.png'
+    }
+  ];
 
   // Datos para jugador
   alumnoStats = {
@@ -52,25 +77,95 @@ export class LandingComponent implements OnInit {
       return;
     }
 
-    // Redirect to the actual home page based on role
+    // Redirect logic if already authenticated
     const role = (userRole as string).toLowerCase();
     if (role.includes('administrador') || role.includes('admin')) {
-      this.router.navigate(['/admin-club']);
-    } else if (role.includes('entrenador')) {
-      this.router.navigate(['/entrenador-home']);
-    } else if (role.includes('jugador') || role.includes('alumno')) {
-      this.router.navigate(['/jugador-home']);
-    } else {
-      this.isAuthenticated = true;
-      this.userRole = userRole as any;
-      this.cargarDatos();
+      // Keep on landing or redirect? For now, if they are here, we show the authenticated version or redirect
+      // The HTML has a [class.not-authenticated]="!isAuthenticated"
+      // But the logic below was redirecting. I'll comment out the redirect for now so we can see the landing.
+      // this.router.navigate(['/admin-club']);
+    }
+
+    this.isAuthenticated = true;
+    this.userRole = userRole as any;
+    this.cargarDatos();
+  }
+
+  ngAfterViewInit(): void {
+    if (!this.isAuthenticated) {
+      setTimeout(() => {
+        this.initLandingCharts();
+      }, 500);
+    }
+  }
+
+  initLandingCharts(): void {
+    // Interactive Radar Chart for Landing
+    const radarCtx = document.getElementById('landingRadarChart') as HTMLCanvasElement;
+    if (radarCtx) {
+      new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+          labels: ['Técnica', 'Control', 'Decisión', 'Saque', 'Volea', 'Fisico'],
+          datasets: [{
+            label: 'Tu Potencial',
+            data: [8, 9, 7, 8, 8, 9],
+            backgroundColor: 'rgba(204, 255, 0, 0.2)',
+            borderColor: '#ccff00',
+            pointBackgroundColor: '#111',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            r: {
+              suggestedMin: 0,
+              suggestedMax: 10,
+              grid: { color: 'rgba(255,255,255,0.1)' },
+              angleLines: { color: 'rgba(255,255,255,0.1)' },
+              pointLabels: { color: '#fff' }
+            }
+          }
+        }
+      });
+    }
+
+    // Line Chart for Landing
+    const lineCtx = document.getElementById('landingLineChart') as HTMLCanvasElement;
+    if (lineCtx) {
+      new Chart(lineCtx, {
+        type: 'line',
+        data: {
+          labels: ['Clase 1', 'Clase 2', 'Clase 3', 'Clase 4', 'Clase 5'],
+          datasets: [{
+            label: 'Evolución',
+            data: [4, 5, 6.5, 7.8, 9.2],
+            borderColor: '#ccff00',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            backgroundColor: 'rgba(204, 255, 0, 0.1)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { display: false },
+            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+          }
+        }
+      });
     }
   }
 
   cargarDatos(): void {
     if (!this.userId) return;
 
-    // Cargar nombre del usuario
     this.mysqlService.getPerfil(this.userId).subscribe({
       next: (res) => {
         if (res.success) {
@@ -89,22 +184,10 @@ export class LandingComponent implements OnInit {
 
   cargarDatosAlumno(): void {
     if (!this.userId) return;
-
     this.mysqlService.getHomeStats(this.userId).subscribe({
       next: (res) => {
-
-
-        let packs = null;
-        if (res && res.estadisticas && res.estadisticas.packs) {
-          packs = res.estadisticas.packs;
-        } else if (res && res.packs) {
-          packs = res.packs;
-        } else if (res && (res.pagada !== undefined || res.reservada !== undefined)) {
-          packs = res;
-        }
-
+        let packs = res?.estadisticas?.packs || res?.packs || res;
         if (packs) {
-          // Try plural first (as seen in API response), fall back to singular
           this.alumnoStats.pagadas = parseInt(packs.pagadas || packs.pagada) || 0;
           this.alumnoStats.reservadas = parseInt(packs.reservadas || packs.reservada) || 0;
           this.alumnoStats.disponibles = parseInt(packs.disponibles || packs.disponible) || 0;
@@ -120,7 +203,6 @@ export class LandingComponent implements OnInit {
 
   cargarDatosEntrenador(): void {
     if (!this.userId) return;
-
     this.entrenamientoService.getAgenda(this.userId).subscribe({
       next: (res: any) => {
         if (res && Array.isArray(res)) {
@@ -163,7 +245,7 @@ export class LandingComponent implements OnInit {
   }
 
   irAAgenda(): void {
-    this.router.navigate(['/entrenador-calendario']);
+    this.router.navigate(['/entrenador-agenda']);
   }
 
   irAAlumnos(): void {

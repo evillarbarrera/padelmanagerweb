@@ -963,6 +963,392 @@ $desktop: 1024px;
   }
 }
 
+// ===== NIKE TRAINERS SECTION =====
+.nike-trainers {
+  padding: 8rem 2rem;
+  background: lighten($nike-dark-navy, 2%);
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 5rem;
+
+    .overline {
+      color: $prof-blue;
+      letter-spacing: 4px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    h2 {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: $white;
+
+      .text-gradient {
+        background: linear-gradient(135deg, $white 0%, $prof-blue 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: rgba($white, 0.6);
+      margin-top: 1.5rem;
+    }
+  }
+
+  .trainers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .trainer-card {
+      background: rgba($white, 0.03);
+      border-radius: 32px;
+      overflow: hidden;
+      border: 1px solid rgba($white, 0.1);
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+      &:hover {
+        transform: translateY(-15px);
+        background: rgba($white, 0.07);
+        border-color: rgba($prof-blue, 0.4);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+
+        .trainer-image img {
+          transform: scale(1.1);
+        }
+
+        .trainer-overlay {
+          opacity: 1;
+        }
+      }
+
+      .trainer-image {
+        height: 350px;
+        position: relative;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.6s ease;
+        }
+
+        .trainer-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba($nike-dark-navy, 0.9), transparent);
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          padding-bottom: 2rem;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+
+          .btn-view-profile {
+            background: $white;
+            color: $nike-dark-navy;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: $prof-blue;
+              color: $white;
+            }
+          }
+        }
+      }
+
+      .trainer-info {
+        padding: 2.5rem;
+
+        h3 {
+          font-size: 1.8rem;
+          font-weight: 800;
+          margin-bottom: 0.5rem;
+          color: $white;
+        }
+
+        .specialty {
+          display: block;
+          color: $prof-blue;
+          font-weight: 700;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 1.5rem;
+        }
+
+        .curriculum {
+          color: rgba($white, 0.6);
+          line-height: 1.6;
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}
+
+// ===== NIKE TECHNOLOGY SECTION =====
+.nike-tech {
+  padding: 10rem 2rem;
+  background: radial-gradient(circle at 70% 50%, rgba($prof-blue, 0.1) 0%, $nike-dark-navy 100%);
+  overflow: hidden;
+
+  .tech-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+
+  .tech-text {
+    .badge-ai {
+      background: linear-gradient(90deg, #ff00cc, #3333ff);
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+      display: inline-block;
+      box-shadow: 0 0 20px rgba(51, 51, 255, 0.4);
+    }
+
+    h2 {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+
+      .highlight-alt {
+        color: transparent;
+        background: linear-gradient(90deg, $prof-blue, #00f2fe);
+        -webkit-background-clip: text;
+        background-clip: text;
+      }
+    }
+
+    p {
+      font-size: 1.2rem;
+      color: rgba($white, 0.7);
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .tech-features {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 4rem;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+        color: $white;
+
+        .check {
+          color: $prof-blue;
+          font-weight: 900;
+          font-size: 1.4rem;
+        }
+      }
+    }
+
+    .chart-mini-container {
+      .chart-card {
+        background: rgba($white, 0.05);
+        border: 1px solid rgba($white, 0.1);
+        padding: 2rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+
+        h4 {
+          font-size: 0.9rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          margin-bottom: 1.5rem;
+          color: rgba($white, 0.5);
+        }
+
+        .canvas-wrapper {
+          height: 150px;
+          position: relative;
+        }
+      }
+    }
+  }
+
+  .tech-visual {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+
+    .radar-card {
+      background: rgba($black, 0.6);
+      border: 1px solid rgba($white, 0.1);
+      padding: 3rem;
+      border-radius: 30px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+      position: relative;
+      z-index: 2;
+
+      h3 {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+      }
+
+      .radar-wrapper {
+        height: 300px;
+        width: 100%;
+      }
+
+      .radar-legend {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 2rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: rgba($white, 0.4);
+        text-transform: uppercase;
+      }
+    }
+
+    .video-mockup {
+      width: 100%;
+      height: 250px;
+      background: url('/assets/images/hero-bg-2.png') center/cover;
+      border-radius: 30px;
+      position: relative;
+      border: 2px solid rgba($prof-blue, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba($nike-dark-navy, 0.4);
+      }
+
+      .video-badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 900;
+        z-index: 5;
+        animation: pulse 2s infinite;
+      }
+
+      .video-play {
+        width: 60px;
+        height: 60px;
+        background: $white;
+        color: $nike-dark-navy;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        z-index: 5;
+        cursor: pointer;
+        transition: transform 0.3s;
+
+        &:hover {
+          transform: scale(1.1);
+          background: $prof-blue;
+          color: $white;
+        }
+      }
+
+      .ai-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+
+        .body-point {
+          position: absolute;
+          width: 8px;
+          height: 8px;
+          background: #00ff00;
+          border-radius: 50%;
+          box-shadow: 0 0 10px #00ff00;
+
+          &.p1 {
+            top: 40%;
+            left: 45%;
+          }
+
+          &.p2 {
+            top: 60%;
+            left: 50%;
+          }
+        }
+
+        .body-line {
+          position: absolute;
+          height: 2px;
+          background: rgba(0, 255, 0, 0.5);
+          box-shadow: 0 0 5px #00ff00;
+          transform-origin: left center;
+
+          &.l1 {
+            width: 100px;
+            top: 40%;
+            left: 45%;
+            transform: rotate(45deg);
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}
+
 @media (max-width: $tablet) {
   .nike-hero {
     padding: 11rem 2rem 4rem; // Increased top padding to clear stacked navbar
