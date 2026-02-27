@@ -1,67 +1,73 @@
 <!-- Dashboard Principal -->
 <div class="dashboard-container" [class.not-authenticated]="!isAuthenticated">
   <!-- Si no está autenticado: Mostrar landing -->
-  <ng-container *ngIf="!isAuthenticated">
-    <!-- HERO SECTION -->
-    <header class="nike-hero">
-      <div class="hero-background">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="overlay"></div>
-      </div>
+  <!-- HERO SECTION -->
+  <header class="nike-hero">
+    <div class="hero-background">
+      <img src="assets/images/padel-bg.png" class="bg-image" alt="Padel Court">
+      <div class="overlay-gradient"></div>
+    </div>
 
-      <nav class="nike-navbar">
+    <nav class="nike-navbar">
+      <div class="container navbar-inner">
         <div class="logo">
-          <span class="icon">🎾</span>
-          <span class="text">PADEL MANAGER</span>
+          <div class="logo-wrapper">
+            <img src="assets/images/logo-transparent.png" class="logo-img" alt="PadelManager">
+          </div>
+          <span class="text">PADEL<span>MANAGER</span></span>
         </div>
         <div class="menu">
-          <a href="#features">Características</a>
-          <a href="#trainers">Entrenadores</a>
-          <a href="#technology">Tecnología IA</a>
-          <a href="#pricing">Precios</a>
+          <a href="#features" class="nav-link">Características</a>
+          <a href="#trainers" class="nav-link">Entrenadores</a>
+          <a href="#technology" class="nav-link">Tecnología IA</a>
+          <a href="#pricing" class="nav-link">Precios</a>
         </div>
         <div class="auth-buttons">
-          <button class="btn-login" (click)="irALogin()">Iniciar Sesión</button>
-          <button class="btn-register" (click)="irALogin()">Empezar Ahora</button>
+          <button class="btn-login" (click)="irALogin()">Entrar</button>
+          <button class="btn-register" (click)="irALogin()">Empezar</button>
         </div>
-      </nav>
+      </div>
+    </nav>
 
+    <div class="container hero-container">
       <div class="hero-content">
         <!-- Visual (Phone) - Now on Left -->
-        <div class="hero-visual">
-          <div class="phone-mockup">
-            <div class="phone-bezel">
-              <div class="phone-notch"></div>
+        <div class="hero-visual reveal slide-left">
+          <div class="phone-mockup iphone-17">
+            <div class="phone-frame">
+              <div class="dynamic-island"></div>
               <div class="phone-screen">
                 <div class="screen-header">
                   <span class="time">9:41</span>
                   <div class="status-icons">
-                    <span>📶</span>
-                    <span>🔋</span>
+                    <span class="icon-wifi">📶</span>
+                    <span class="icon-battery">🔋</span>
                   </div>
                 </div>
                 <!-- App Content (Image) -->
-                <img src="assets/images/app-screenshot.png" alt="App Screenshot" class="app-screen-img">
+                <img src="assets/images/app-screenshot-v2.png" alt="App Screenshot" class="app-screen-img">
               </div>
+            </div>
+            <div class="phone-buttons">
+              <div class="btn-action"></div>
+              <div class="btn-volume-up"></div>
+              <div class="btn-volume-down"></div>
+              <div class="btn-power"></div>
             </div>
           </div>
         </div>
 
         <!-- Text Content - Now on Right -->
-        <div class="hero-text-content">
-          <span class="badge-new">NUEVO SISTEMA 2.0</span>
-          <h1>LLEVA TU PADEL <br><span class="highlight">AL SIGUIENTE NIVEL</span></h1>
-          <p>La plataforma definitiva para gestionar tu evolución. Entrena como un profesional, analiza tus estadísticas
-            y supera tus límites.</p>
+        <div class="hero-text-content reveal slide-right">
+          <span class="badge-new">SISTEMA PRO 2.0</span>
+          <h1>DOMINA LA PISTA <br><span class="highlight">CON INTELIGENCIA</span></h1>
+          <p>La primera plataforma que une la gestión de academia con análisis biomécánico avanzado por IA.</p>
 
           <div class="cta-group">
             <button class="btn-primary-large" (click)="irALogin()">
-              <span class="btn-text">COMENZAR GRATIS</span>
-              <span class="btn-icon">→</span>
+              <span class="btn-text">EXPLORAR AHORA</span>
             </button>
             <button class="btn-secondary-large">
-              <span class="btn-icon">▶</span>
               <span class="btn-text">VER DEMO</span>
             </button>
           </div>
@@ -70,288 +76,270 @@
             <button class="btn-store btn-apple">
               <span class="icon"></span>
               <div class="text">
-                <span class="small">Download on the</span>
+                <span class="small">Descárgalo en</span>
                 <span class="large">App Store</span>
               </div>
             </button>
             <button class="btn-store btn-google">
               <span class="icon">▶</span>
               <div class="text">
-                <span class="small">GET IT ON</span>
+                <span class="small">Consíguelo en</span>
                 <span class="large">Google Play</span>
               </div>
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  </header>
 
-          <div class="hero-stats">
-            <div class="stat-item">
-              <span class="val">5k+</span>
-              <span class="lbl">Jugadores</span>
+  <!-- FEATURES SECTION -->
+  <section id="features" class="nike-features reveal fade-in">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="overline">TECNOLOGÍA PUNTA</span>
+        <h2>ELEVANDO EL ESTÁNDAR <span class="text-gradient">DEL PADEL</span></h2>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal slide-up" style="--d: 0.1s">
+          <div class="icon-wrapper glass-gold">
+            <span>👨‍🏫</span>
+          </div>
+          <h3>Coaches Certificados</h3>
+          <p>Acceso directo a la élite del entrenamiento. Visualiza sus perfiles y reserva en segundos.</p>
+        </div>
+
+        <div class="feature-card reveal slide-up" style="--d: 0.2s">
+          <div class="icon-wrapper glass-red">
+            <span>📊</span>
+          </div>
+          <h3>Métricas Reales</h3>
+          <p>Gráficos de radar y evolución lineal que muestran tu crecimiento técnico real.</p>
+        </div>
+
+        <div class="feature-card reveal slide-up" style="--d: 0.3s">
+          <div class="icon-wrapper glass-green">
+            <span>⚡</span>
+          </div>
+          <h3>Gestión Total</h3>
+          <p>Controla tus packs, reservas y pagos desde una interfaz fluida y moderna.</p>
+        </div>
+
+        <div class="feature-card reveal slide-up" style="--d: 0.4s">
+          <div class="icon-wrapper glass-blue">
+            <span>🤖</span>
+          </div>
+          <h3>Análisis por IA</h3>
+          <p>Nuestra visión artificial revisa clips de tus golpes y sugiere correcciones técnicas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAINERS SECTION -->
+  <section id="trainers" class="nike-trainers reveal fade-in">
+    <div class="container">
+      <div class="section-header">
+        <span class="overline">EQUIPO DE ÉLITE</span>
+        <h2>STAFF <span class="text-gradient">TÉCNICO</span></h2>
+        <p class="subtitle">Entrenadores internacionales listos para corregir cada detalle de tu juego.</p>
+      </div>
+
+      <div class="trainers-grid">
+        <div class="trainer-card reveal slide-up" *ngFor="let trainer of trainers; let i = index"
+          [style.--d]="(i * 0.15) + 's'">
+          <div class="trainer-image">
+            <img [src]="trainer.foto" [alt]="trainer.nombre">
+          </div>
+          <div class="trainer-info">
+            <h3>{{trainer.nombre}}</h3>
+            <span class="specialty">{{trainer.especialidad}}</span>
+            <p class="curriculum">{{trainer.curriculum}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH & AI SECTION -->
+  <section id="technology" class="nike-tech reveal fade-in">
+    <div class="container">
+      <div class="tech-layout">
+        <div class="tech-text">
+          <span class="badge-ai">GEMINI INTEGRATION</span>
+          <h2>ANÁLISIS BIOMECÁNICO <br><span class="highlight-alt">POWERED BY IA</span></h2>
+          <p>La IA revisa videos cortos de tus golpes para entregarte feedback instantáneo sobre tu técnica y
+            recomendaciones específicas para subir de nivel.</p>
+
+          <ul class="tech-features">
+            <li class="reveal slide-left" style="--d: 0.1s"><span class="check">✓</span> Análisis de clips por golpe
+              individual</li>
+            <li class="reveal slide-left" style="--d: 0.2s"><span class="check">✓</span> Detección de errores
+              posturales</li>
+            <li class="reveal slide-left" style="--d: 0.3s"><span class="check">✓</span> Feedback basado en patrones
+              pro</li>
+          </ul>
+
+          <div class="chart-mini-container reveal scale-in">
+            <div class="chart-card">
+              <h4>Evolución del Servicio</h4>
+              <div class="canvas-wrapper">
+                <canvas id="landingLineChart"></canvas>
+              </div>
             </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="val">250+</span>
-              <span class="lbl">Entrenadores</span>
+          </div>
+        </div>
+
+        <div class="tech-visual reveal scale-in">
+          <div class="radar-card">
+            <h3>Resumen de Habilidades</h3>
+            <div class="radar-wrapper">
+              <canvas id="landingRadarChart"></canvas>
             </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="val">4.9</span>
-              <span class="lbl">Calificación</span>
+          </div>
+
+          <div class="video-mockup reveal slide-up">
+            <div class="video-badge">PROCESANDO...</div>
+            <div class="video-play">▶</div>
+            <div class="ai-overlay">
+              <div class="body-point p1"></div>
+              <div class="body-point p2"></div>
+              <div class="body-line l1"></div>
             </div>
           </div>
         </div>
       </div>
-    </header>
+    </div>
+  </section>
 
-    <!-- FEATURES SECTION -->
-    <section id="features" class="nike-features">
-      <div class="container">
-        <div class="section-header text-center">
-          <span class="overline">POR QUÉ ELEGIRNOS</span>
-          <h2>TODO LO QUE NECESITAS PARA <span class="text-gradient">DOMINAR LA PISTA</span></h2>
-        </div>
-
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="icon-wrapper glass-gold">
-              <span>👨‍🏫</span>
-            </div>
-            <h3>Profesores Certificados</h3>
-            <p>Aprende de los mejores. Nuestro equipo de entrenadores está altamente calificado para llevar tu juego al
-              máximo.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="icon-wrapper glass-red">
-              <span>📊</span>
-            </div>
-            <h3>Visibilidad de Progreso</h3>
-            <p>Métricas detalladas de tu evolución. Visualiza tus mejoras entrenamiento a entrenamiento.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="icon-wrapper glass-green">
-              <span>⚡</span>
-            </div>
-            <h3>Reserva Rápida y Fácil</h3>
-            <p>Olvídate de las esperas. Reserva tu entrenamiento en segundos desde cualquier dispositivo.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="icon-wrapper glass-blue">
-              <span>📦</span>
-            </div>
-            <h3>Compra de Packs</h3>
-            <p>Adquiere tus paquetes de clases de la manera más sencilla y administra tus créditos fácilmente.</p>
-          </div>
-        </div>
+  <!-- TESTIMONIALS SECTION -->
+  <section id="testimonials" class="nike-testimonials reveal fade-in">
+    <div class="container">
+      <div class="section-header">
+        <span class="overline">COMUNIDAD</span>
+        <h2>LO QUE DICEN NUESTROS <span class="text-gradient">PARTNERS</span></h2>
       </div>
-    </section>
 
-    <!-- TRAINERS SECTION -->
-    <section id="trainers" class="nike-trainers">
-      <div class="container">
-        <div class="section-header">
-          <span class="overline">NUESTROS EXPERTOS</span>
-          <h2>ENTRENA CON <span class="text-gradient">LOS MEJORES</span></h2>
-          <p class="subtitle">Descubre el curriculum y la experiencia de nuestro staff técnico.</p>
+      <div class="testimonials-scroller">
+        <div class="testimonial-card reveal slide-up" style="--d: 0.1s">
+          <div class="quote-icon">❝</div>
+          <p class="quote">"Esta plataforma cambió totalmente mi forma de entrenar. Ahora puedo ver exactamente dónde
+            necesito mejorar."</p>
+          <div class="author">
+            <div class="avatar">JC</div>
+            <div class="info">
+              <h5>Juan Carlos</h5>
+              <span>Jugador Amateur</span>
+            </div>
+          </div>
         </div>
 
-        <div class="trainers-grid">
-          <div class="trainer-card" *ngFor="let trainer of trainers">
-            <div class="trainer-image">
-              <img [src]="trainer.foto" [alt]="trainer.nombre">
-              <div class="trainer-overlay">
-                <button class="btn-view-profile">Ver Perfil</button>
-              </div>
+        <div class="testimonial-card highlight reveal slide-up" style="--d: 0.2s">
+          <div class="quote-icon">❝</div>
+          <p class="quote">"Imprescindible para cualquier entrenador. Gestiono a mis 50 alumnos sin perder tiempo
+            administrativo."</p>
+          <div class="author">
+            <div class="avatar">ML</div>
+            <div class="info">
+              <h5>Martina López</h5>
+              <span>Entrenadora Pro</span>
             </div>
-            <div class="trainer-info">
-              <h3>{{trainer.nombre}}</h3>
-              <span class="specialty">{{trainer.especialidad}}</span>
-              <p class="curriculum">{{trainer.curriculum}}</p>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal slide-up" style="--d: 0.3s">
+          <div class="quote-icon">❝</div>
+          <p class="quote">"La facilidad para encontrar clases e integrarse a grupos es excelente. He subido mi nivel
+            compitiendo más."</p>
+          <div class="author">
+            <div class="avatar">DG</div>
+            <div class="info">
+              <h5>Diego García</h5>
+              <span>Competidor</span>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- TECH & AI SECTION -->
-    <section id="technology" class="nike-tech">
-      <div class="container">
-        <div class="tech-layout">
-          <div class="tech-text">
-            <span class="badge-ai">IA POWERED</span>
-            <h2>ANÁLISIS DE VIDEO <br><span class="highlight-alt">CON INTELIGENCIA ARTIFICIAL</span></h2>
-            <p>Nuestra IA analiza tus golpes, postura y táctica en tiempo real. Compara tus grabaciones con patrones
-              profesionales.</p>
-
-            <ul class="tech-features">
-              <li><span class="check">✓</span> Seguimiento de biomecánica</li>
-              <li><span class="check">✓</span> Comparativa de video 1:1</li>
-              <li><span class="check">✓</span> Reportes automáticos de mejora</li>
-            </ul>
-
-            <div class="chart-mini-container">
-              <div class="chart-card">
-                <h4>Evolución Técnica</h4>
-                <div class="canvas-wrapper">
-                  <canvas id="landingLineChart"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="tech-visual">
-            <div class="radar-card">
-              <h3>Tus Habilidades</h3>
-              <div class="radar-wrapper">
-                <canvas id="landingRadarChart"></canvas>
-              </div>
-              <div class="radar-legend">
-                <span>Técnica</span>
-                <span>Control</span>
-                <span>Potencia</span>
-              </div>
-            </div>
-
-            <div class="video-mockup">
-              <div class="video-badge">ANALIZANDO...</div>
-              <div class="video-play">▶</div>
-              <div class="ai-overlay">
-                <div class="body-point p1"></div>
-                <div class="body-point p2"></div>
-                <div class="body-line l1"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- PRICING SECTION -->
+  <section id="pricing" class="nike-pricing reveal fade-in">
+    <div class="container">
+      <div class="section-header">
+        <span class="overline">EL MODELO JUSTO</span>
+        <h2>COMIENZA A <span class="text-gradient">ESCALAR</span></h2>
+        <p class="subtitle">Sin cuotas mensuales obligatorias. Sin riesgos.</p>
       </div>
-    </section>
 
-    <!-- TESTIMONIALS SECTION -->
-    <section id="testimonials" class="nike-testimonials">
-      <div class="container">
-        <div class="section-header">
-          <h2>LO QUE DICEN NUESTROS <span class="text-gradient">PARTNERS</span></h2>
-        </div>
-
-        <div class="testimonials-scroller">
-          <div class="testimonial-card">
-            <div class="quote-icon">❝</div>
-            <p class="quote">"Esta plataforma cambió totalmente mi forma de entrenar. Ahora puedo ver exactamente dónde
-              necesito mejorar."</p>
-            <div class="author">
-              <div class="avatar">JC</div>
-              <div class="info">
-                <h5>Juan Carlos</h5>
-                <span>Jugador Amateur</span>
-              </div>
-            </div>
+      <div class="pricing-card reveal scale-in">
+        <div class="pricing-content">
+          <div class="price-item">
+            <span class="label">Licencia App</span>
+            <span class="amount">$0</span>
           </div>
-
-          <div class="testimonial-card highlight">
-            <div class="quote-icon">❝</div>
-            <p class="quote">"Imprescindible para cualquier entrenador. Gestiono a mis 50 alumnos sin perder tiempo
-              administrativo."</p>
-            <div class="author">
-              <div class="avatar">ML</div>
-              <div class="info">
-                <h5>Martina López</h5>
-                <span>Entrenadora Pro</span>
-              </div>
-            </div>
+          <div class="divider"></div>
+          <div class="price-item highlight">
+            <span class="label">Fee de Servicio</span>
+            <span class="amount">3.5%</span>
+            <span class="desc">por Pack Vendido</span>
           </div>
-
-          <div class="testimonial-card">
-            <div class="quote-icon">❝</div>
-            <p class="quote">"La facilidad para encontrar clases y torneos es increíble. He subido mi nivel compitiendo
-              más seguido."</p>
-            <div class="author">
-              <div class="avatar">DG</div>
-              <div class="info">
-                <h5>Diego García</h5>
-                <span>Competidor</span>
-              </div>
-            </div>
+          <div class="divider"></div>
+          <div class="price-item">
+            <span class="label">IA Analysis</span>
+            <span class="amount">FREE</span>
           </div>
         </div>
+        <p class="disclaimer">Nos enfocamos en tu crecimiento. Solo cobramos cuando generas ingresos.</p>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- PRICING SECTION -->
-    <section id="pricing" class="nike-pricing">
-      <div class="container">
-        <div class="section-header">
-          <span class="overline">PARA ENTRENADORES</span>
-          <h2>CRECE CON <span class="text-gradient">NOSOTROS</span></h2>
-          <p class="subtitle">Sin costos fijos. Solo ganamos cuando tú ganas.</p>
-        </div>
+  <!-- CALL TO ACTION -->
+  <section class="nike-cta reveal slide-up">
+    <div class="cta-content">
+      <h2>¿LISTO PARA <span class="text-white">EMPEZAR?</span></h2>
+      <p>Únete hoy a la comunidad de pádel más influyente y comienza tu transformación.</p>
+      <button class="btn-primary-large" (click)="irALogin()">
+        CREAR CUENTA AHORA
+      </button>
+    </div>
+  </section>
 
-        <div class="pricing-card">
-          <div class="pricing-content">
-            <div class="price-item">
-              <span class="label">Costo Fijo</span>
-              <span class="amount">$0</span>
-            </div>
-            <div class="divider"></div>
-            <div class="price-item highlight">
-              <span class="label">Servicio Padel Manager</span>
-              <span class="amount">3.5%</span>
-              <span class="desc">por Pack Vendido</span>
-            </div>
-            <div class="divider"></div>
-            <div class="price-item">
-              <span class="label">Mantenimiento</span>
-              <span class="amount">$0</span>
-            </div>
-          </div>
-          <p class="disclaimer">Gestiona tus alumnos, canchas y pagos con la mejor tecnología.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- CALL TO ACTION -->
-    <section class="nike-cta">
-      <div class="cta-content">
-        <h2>¿LISTO PARA <span class="text-white">EMPEZAR?</span></h2>
-        <p>Únete hoy a la comunidad de pádel más grande y comienza tu transformación.</p>
-        <button class="btn-primary-large" (click)="irALogin()">
-          CREAR CUENTA GRATIS
-        </button>
-      </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="nike-footer">
-      <div class="container">
-        <div class="footer-content">
-          <div class="brand-col">
+  <!-- FOOTER -->
+  <footer class="nike-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="brand-col">
+          <div class="footer-logo">
+            <img src="assets/images/logo-transparent.png" class="logo-img" alt="PadelManager">
             <h3>PADEL MANAGER</h3>
-            <p>Innovando en el entrenamiento de pádel.</p>
-            <div class="socials">
-              <a href="#">IG</a>
-              <a href="#">TW</a>
-              <a href="#">FB</a>
-            </div>
           </div>
-          <div class="links-col">
-            <h4>Plataforma</h4>
-            <a href="#">Para Jugadores</a>
-            <a href="#">Para Entrenadores</a>
-            <a href="#">Precios</a>
-          </div>
-          <div class="links-col">
-            <h4>Soporte</h4>
-            <a href="#">Centro de Ayuda</a>
-            <a href="#">Contacto</a>
-            <a href="#">Términos</a>
+          <p>Elevando el rendimiento con tecnología de vanguardia.</p>
+          <div class="socials">
+            <a href="#" class="social-link">Instagram</a>
+            <a href="#" class="social-link">Twitter</a>
+            <a href="#" class="social-link">LinkedIn</a>
           </div>
         </div>
-        <div class="footer-bottom">
-          <p>&copy; 2026 Padel Manager. Todos los derechos reservados.</p>
+        <div class="links-col">
+          <h4>Plataforma</h4>
+          <a href="#">Jugadores</a>
+          <a href="#">Entrenadores</a>
+          <a href="#pricing">Membresías</a>
+        </div>
+        <div class="links-col">
+          <h4>Legal</h4>
+          <a href="#">Privacidad</a>
+          <a href="#">Términos de Uso</a>
+          <a href="#">Cookies</a>
         </div>
       </div>
-    </footer>
-  </ng-container>
+      <div class="footer-bottom">
+        <p>&copy; 2026 PadelManager AI Academy. Desarrollado con ❤️ para padeleros.</p>
+      </div>
+    </div>
+  </footer>
 
 </div>

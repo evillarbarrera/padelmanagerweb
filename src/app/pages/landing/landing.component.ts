@@ -28,19 +28,19 @@ export class LandingComponent implements OnInit, AfterViewInit {
       nombre: 'Carlos Ruiz',
       especialidad: 'Técnica Avanzada y Estrategia',
       curriculum: 'Ex-jugador profesional con más de 10 años de experiencia en alta competición. Especialista en corrección biomécánica.',
-      foto: 'assets/images/placeholder_avatar.png'
+      foto: 'assets/images/trainer-carlos.png'
     },
     {
       nombre: 'Elena Martínez',
       especialidad: 'Iniciación y Menores',
       curriculum: 'Certificada por la Federación Internacional de Pádel. Experta en pedagogía deportiva y desarrollo de talentos jóvenes.',
-      foto: 'assets/images/placeholder_avatar.png'
+      foto: 'assets/images/trainer-elena.png'
     },
     {
       nombre: 'Miguel Ángel Sos',
       especialidad: 'Preparación Física y Táctica',
       curriculum: 'Licenciado en Ciencias del Deporte. Diseña programas personalizados que combinan potencia física con inteligencia en pista.',
-      foto: 'assets/images/placeholder_avatar.png'
+      foto: 'assets/images/trainer-miguel.png'
     }
   ];
 
@@ -92,11 +92,27 @@ export class LandingComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (!this.isAuthenticated) {
-      setTimeout(() => {
-        this.initLandingCharts();
-      }, 500);
-    }
+    setTimeout(() => {
+      this.initLandingCharts();
+      this.initScrollAnimations();
+    }, 500);
+  }
+
+  initScrollAnimations(): void {
+    const observerOptions = {
+      threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        }
+      });
+    }, observerOptions);
+
+    const revealElements = document.querySelectorAll('.reveal');
+    revealElements.forEach(el => observer.observe(el));
   }
 
   initLandingCharts(): void {
@@ -120,13 +136,22 @@ export class LandingComponent implements OnInit, AfterViewInit {
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
+          layout: {
+            padding: window.innerWidth < 768 ? 25 : 10
+          },
           scales: {
             r: {
               suggestedMin: 0,
               suggestedMax: 10,
               grid: { color: 'rgba(255,255,255,0.1)' },
               angleLines: { color: 'rgba(255,255,255,0.1)' },
-              pointLabels: { color: '#fff' }
+              pointLabels: {
+                color: '#fff',
+                font: {
+                  size: window.innerWidth < 768 ? 10 : 12,
+                  weight: 'bold'
+                }
+              }
             }
           }
         }
@@ -154,9 +179,23 @@ export class LandingComponent implements OnInit, AfterViewInit {
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
+          layout: {
+            padding: {
+              left: 10,
+              right: 15,
+              top: 0,
+              bottom: 0
+            }
+          },
           scales: {
             y: { display: false },
-            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+            x: {
+              grid: { display: false },
+              ticks: {
+                color: 'rgba(255,255,255,0.5)',
+                font: { size: window.innerWidth < 768 ? 9 : 11 }
+              }
+            }
           }
         }
       });
