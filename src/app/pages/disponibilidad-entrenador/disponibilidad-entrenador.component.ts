@@ -12,7 +12,9 @@ interface BloqueHorario {
   hora_inicio: string;
   hora_fin: string;
   seleccionado: boolean;
-  ocupado: boolean;
+  ocupado: boolean; // Reserved by student
+  lockedByOtherClub?: boolean;
+  club_id?: number | null;
 }
 
 interface DiaSemana {
@@ -37,13 +39,15 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   coachFoto: string | null = null;
   isLoading = true;
 
-  club_id = 1;
+  clubes: any[] = [];
+  selectedClubId: number = 1;
   dias: DiaSemana[] = [];
   diaSeleccionado: string = '';
   bloquesPorDia: { [fecha: string]: BloqueHorario[] } = {};
 
-  // Cache of existing availability keys "YYYY-MM-DD HH:MM:00-YYYY-MM-DD HH:MM:00"
-  disponibilidadExistente: Set<string> = new Set();
+  // Cache of existing availability keys "YYYY-MM-DD HH:MM:00-YYYY-MM-DD HH:MM:00" -> club_id
+  disponibilidadExistente: Map<string, number> = new Map();
+  hasSlotsWithoutClub = false;
 
   // Default Week Config
   showDefaultModal = false;
@@ -74,6 +78,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
     }
 
     this.loadProfile();
+    this.cargarClubes();
 
     this.crearSemanaDesdeHoy();
     this.generarBloquesSemana();
@@ -150,13 +155,18 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
       if (finBloque > fin) break;
 
       const key = `${fecha} ${this.formatTime(inicio)}-${fecha} ${this.formatTime(finBloque)}`;
+      const savedClubId = this.disponibilidadExistente.get(key);
+      const isThisClub = savedClubId === Number(this.selectedClubId);
+      const isOtherClub = savedClubId && savedClubId !== Number(this.selectedClubId);
 
       bloques.push({
         fecha,
         hora_inicio: this.formatTime(inicio).slice(0, 5), // "HH:MM"
         hora_fin: this.formatTime(finBloque).slice(0, 5),
-        seleccionado: this.disponibilidadExistente.has(key),
-        ocupado: false
+        seleccionado: isThisClub || false,
+        ocupado: false,
+        lockedByOtherClub: isOtherClub || false,
+        club_id: savedClubId
       });
 
       inicio = finBloque;
@@ -168,16 +178,36 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
      DATA LOADING
   ============================== */
 
+  cargarClubes(): void {
+    this.entrenamientoService.getClubes().subscribe({
+      next: (res) => {
+        this.clubes = res;
+        if (res.length > 0 && !this.selectedClubId) {
+          this.selectedClubId = res[0].id;
+        }
+      }
+    });
+  }
+
+  onClubChange(): void {
+    this.cargarDisponibilidadExistente();
+  }
+
   cargarDisponibilidadExistente() {
     this.isLoading = true;
     if (!this.userId) return;
+    this.hasSlotsWithoutClub = false;
+    this.disponibilidadExistente.clear();
 
-    this.entrenamientoService.getDisponibilidad(this.userId, this.club_id).subscribe({
+    this.entrenamientoService.getDisponibilidad(this.userId).subscribe({
       next: (data: any[]) => {
         data.forEach(d => {
-          // Format expected by generated keys: "YYYY-MM-DD HH:MM:00-YYYY-MM-DD HH:MM:00"
           const key = `${d.fecha_inicio}-${d.fecha_fin}`;
-          this.disponibilidadExistente.add(key);
+          this.disponibilidadExistente.set(key, Number(d.club_id));
+
+          if (!d.club_id || d.club_id === 0) {
+            this.hasSlotsWithoutClub = true;
+          }
         });
 
         // Re-generate to apply selection state
@@ -239,26 +269,32 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   ============================== */
 
   toggleBloque(b: BloqueHorario) {
-    if (b.ocupado) return;
+    if (b.ocupado || b.lockedByOtherClub) return;
     b.seleccionado = !b.seleccionado;
   }
 
   seleccionarTodos() {
-    this.bloquesPorDia[this.diaSeleccionado].forEach(b => {
-      if (!b.ocupado) b.seleccionado = true;
-    });
+    const bloques = this.bloquesPorDia[this.diaSeleccionado];
+    if (bloques) {
+      bloques.forEach(b => {
+        if (!b.ocupado && !b.lockedByOtherClub) b.seleccionado = true;
+      });
+    }
   }
 
   deseleccionarTodos() {
-    this.bloquesPorDia[this.diaSeleccionado].forEach(b => {
-      if (!b.ocupado) b.seleccionado = false;
-    });
+    const bloques = this.bloquesPorDia[this.diaSeleccionado];
+    if (bloques) {
+      bloques.forEach(b => {
+        if (!b.ocupado && !b.lockedByOtherClub) b.seleccionado = false;
+      });
+    }
   }
 
   get todosSeleccionados(): boolean {
     const bloques = this.bloquesPorDia[this.diaSeleccionado];
     if (!bloques) return false;
-    return bloques.every(b => b.seleccionado || b.ocupado);
+    return bloques.every(b => b.seleccionado || b.ocupado || b.lockedByOtherClub);
   }
 
   seleccionarDia(fecha: string) {
@@ -281,14 +317,15 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
     Object.values(this.bloquesPorDia).forEach(bloques => {
       bloques.forEach(b => {
         const key = `${b.fecha} ${b.hora_inicio}:00-${b.fecha} ${b.hora_fin}:00`;
-        const existia = this.disponibilidadExistente.has(key);
+        const existiaId = this.disponibilidadExistente.get(key);
+        const existia = existiaId === Number(this.selectedClubId);
 
         if (b.seleccionado && !existia) {
           crear.push({
             profesor_id: this.userId,
             fecha_inicio: `${b.fecha} ${b.hora_inicio}:00`,
             fecha_fin: `${b.fecha} ${b.hora_fin}:00`,
-            club_id: this.club_id
+            club_id: this.selectedClubId
           });
         }
 
@@ -297,7 +334,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
             profesor_id: this.userId,
             fecha_inicio: `${b.fecha} ${b.hora_inicio}:00`,
             fecha_fin: `${b.fecha} ${b.hora_fin}:00`,
-            club_id: this.club_id
+            club_id: this.selectedClubId
           });
         }
       });
@@ -314,6 +351,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
         this.popupService.success('Guardado', 'Horario actualizado correctamente');
 
         // Refresh local state
+        this.hasSlotsWithoutClub = false;
         this.disponibilidadExistente.clear();
         this.dias = []; // Reset days to regenerate everything cleanly
         this.crearSemanaDesdeHoy();
@@ -325,6 +363,25 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  migrateSlots() {
+    this.popupService.confirm('Vincular Horarios', 'Tienes horarios guardados que no están asociados a ningún club. ¿Deseas vincularlos todos al club seleccionado actualmente?')
+      .then(conf => {
+        if (conf) {
+          this.isLoading = true;
+          this.entrenamientoService.migrateAvailability(this.userId!, this.selectedClubId).subscribe({
+            next: (res: any) => {
+              this.popupService.success('Éxito', res.message || 'Horarios vinculados correctamente');
+              this.cargarDisponibilidadExistente();
+            },
+            error: () => {
+              this.isLoading = false;
+              this.popupService.error('Error', 'No se pudieron vincular los horarios');
+            }
+          });
+        }
+      });
   }
 
   /* =============================

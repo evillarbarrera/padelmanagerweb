@@ -36,6 +36,12 @@ export class JugadorReservasComponent implements OnInit {
   recurrencia: number = 1;
   showCoachPicker: boolean = false;
 
+  // Multiclub & Contact
+  clubesDisponibles: any[] = [];
+  selectedClubId: number | null = null;
+  entrenadorTelefono: string = '';
+  selectedCoachName: string = '';
+
   // Discovery & Location
   isLoadingDiscovery = false;
   useLocation = false; // Changed to false by default as we use region/comuna now
@@ -251,7 +257,8 @@ export class JugadorReservasComponent implements OnInit {
               foto: p.entrenador_foto,
               descripcion: p.entrenador_descripcion,
               distancia: p.distancia,
-              comuna: p.trainer_comuna
+              comuna: p.trainer_comuna,
+              telefono: p.entrenador_telefono
             });
           }
         });
@@ -304,6 +311,26 @@ export class JugadorReservasComponent implements OnInit {
     // 1. Load availability (flexible slots)
     this.entrenamientoService.getDisponibilidadEntrenador(this.selectedEntrenador!).subscribe({
       next: (availabilityRes: any) => {
+        // Extraer clubes únicos
+        const clubMap = new Map();
+        availabilityRes.forEach((slot: any) => {
+          if (slot.club_id && !clubMap.has(slot.club_id)) {
+            clubMap.set(slot.club_id, {
+              id: slot.club_id,
+              nombre: slot.club_nombre,
+              direccion: slot.club_direccion,
+              maps: slot.club_maps
+            });
+          }
+        });
+        this.clubesDisponibles = Array.from(clubMap.values());
+
+        // Set trainer contact
+        if (availabilityRes.length > 0) {
+          this.entrenadorTelefono = availabilityRes[0].entrenador_telefono;
+          this.selectedCoachName = availabilityRes[0].entrenador_nombre || this.getCoachName(this.selectedEntrenador);
+        }
+
         // 2. Load all packs to extract recurring group sessions
         this.mysqlService.getAllPacks(this.selectedEntrenador!).subscribe({
           next: (packsRes: any) => {
@@ -332,17 +359,29 @@ export class JugadorReservasComponent implements OnInit {
   }
 
   get filteredDias(): string[] {
-    if (this.tipoEntrenamiento === 'todos' || this.dias.length === 0) return this.dias;
+    let result = this.dias;
 
-    return this.dias.filter(dia => {
-      const slots = this.horariosPorDia[dia] || [];
-      return slots.some(slot => {
-        const isGrupal = slot.tipo === 'grupal';
-        if (this.tipoEntrenamiento === 'grupal') return isGrupal;
-        // individual and multiplayer share same slots (not group)
-        return !isGrupal;
+    // 1. Filtrar días que tengan slots para el club seleccionado (si hay uno)
+    if (this.selectedClubId) {
+      result = result.filter(dia => {
+        const slots = this.horariosPorDia[dia] || [];
+        return slots.some(slot => Number(slot.club_id) === Number(this.selectedClubId));
       });
-    });
+    }
+
+    // 2. Filtrar días por tipo de entrenamiento (grupal vs resto)
+    if (this.tipoEntrenamiento !== 'todos') {
+      result = result.filter(dia => {
+        const slots = this.horariosPorDia[dia] || [];
+        return slots.some(slot => {
+          const isGrupal = slot.tipo === 'grupal';
+          if (this.tipoEntrenamiento === 'grupal') return isGrupal;
+          return !isGrupal;
+        });
+      });
+    }
+
+    return result;
   }
 
   setFilter(tipo: any): void {
@@ -370,6 +409,9 @@ export class JugadorReservasComponent implements OnInit {
       const isGrupal = d.tipo === 'grupal';
 
       if (isGrupal) {
+        // Filter by club if selected
+        if (this.selectedClubId && Number(d.club_id) !== Number(this.selectedClubId)) return;
+
         const bloqueInicio = new Date(d.fecha_inicio);
         const bloqueFin = new Date(d.fecha_fin);
         if (bloqueInicio >= ahora && bloqueFin <= limite) {
@@ -386,11 +428,17 @@ export class JugadorReservasComponent implements OnInit {
             capacidad: Number(d.cantidad_personas || 6),
             tipo: 'grupal',
             pack_id: d.pack_id,
+            club_id: d.club_id,
+            club_nombre: d.club_nombre,
+            club_maps: d.club_maps,
             nombre: d.nombre_pack || 'Clase Grupal'
           });
           if (!nuevasFechas.includes(fechaStr)) nuevasFechas.push(fechaStr);
         }
       } else {
+        // Filter by club if selected
+        if (this.selectedClubId && Number(d.club_id) !== Number(this.selectedClubId)) return;
+
         let inicio = new Date(d.fecha_inicio);
         const fin = new Date(d.fecha_fin);
         while (inicio < fin) {
@@ -412,6 +460,9 @@ export class JugadorReservasComponent implements OnInit {
                 hora_fin: bloqueFin,
                 ocupado: existing ? (existing.ocupado || isBlockOcupado) : isBlockOcupado,
                 cantidad_personas: Number(d.cantidad_personas || 1),
+                club_id: d.club_id,
+                club_nombre: d.club_nombre,
+                club_maps: d.club_maps,
                 tipo: 'individual'
               });
             }
@@ -529,7 +580,13 @@ export class JugadorReservasComponent implements OnInit {
       error: (err: any) => console.error('Error loading availability after pack change:', err)
     });
   }
+  onClubFilterChange(): void {
+    this.onEntrenadorChange();
+  }
 
+  getSelectedClub() {
+    return this.clubesDisponibles.find(c => Number(c.id) === Number(this.selectedClubId));
+  }
 
 
   reservarHorario(horario: any): void {

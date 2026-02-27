@@ -17,11 +17,10 @@ export class EntrenamientoService {
 
   constructor(private http: HttpClient) { }
 
-  getDisponibilidad(entrenadorId: number, clubId: number): Observable<any[]> {
-    return this.http.get<any[]>(
-      `${this.apiUrl}/disponibilidad/get.php?entrenador_id=${entrenadorId}&club_id=${clubId}`,
-      { headers: this.headers }
-    );
+  getDisponibilidad(entrenadorId: number, clubId?: number): Observable<any[]> {
+    let url = `${this.apiUrl}/disponibilidad/get.php?entrenador_id=${entrenadorId}`;
+    if (clubId) url += `&club_id=${clubId}`;
+    return this.http.get<any[]>(url, { headers: this.headers });
   }
 
   addDisponibilidad(data: any): Observable<any> {
@@ -103,5 +102,14 @@ export class EntrenamientoService {
     return this.http.post(`${this.apiUrl}/disponibilidad/apply_config.php`, payload, {
       headers: this.headers
     });
+  }
+
+  getClubes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/clubes/get_clubes.php`, { headers: this.headers });
+  }
+
+  migrateAvailability(entrenadorId: number, clubId: number): Observable<any> {
+    const payload = { entrenador_id: entrenadorId, club_id: clubId };
+    return this.http.post<any>(`${this.apiUrl}/disponibilidad/migrate_to_club.php`, payload, { headers: this.headers });
   }
 }

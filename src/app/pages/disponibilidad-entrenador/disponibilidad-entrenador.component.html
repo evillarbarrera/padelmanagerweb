@@ -11,20 +11,38 @@
       <div class="hero-section">
         <div class="hero-text">
           <h2>Configurar Disponibilidad</h2>
-          <p>Selecciona los bloques horarios en los que deseas dar clases</p>
+          <p>Gestiona tus horarios y recintos de entrenamiento</p>
         </div>
 
         <div class="hero-actions">
+          <div class="club-selector-web">
+            <span class="selector-label">RECINTO:</span>
+            <select [(ngModel)]="selectedClubId" (change)="onClubChange()" class="club-select-modern">
+              <option *ngFor="let club of clubes" [value]="club.id">{{ club.nombre }}</option>
+            </select>
+          </div>
           <button class="btn-secondary" (click)="openDefaultModal()">
-            ⚙️ Configurar Semana Defecto
+            ⚙️ Semana Base
           </button>
           <button class="btn-secondary" (click)="applyDefaultConfig()">
-            🪄 Aplicar Plantilla (30 días)
+            🪄 Aplicar Plantilla
           </button>
           <button class="save-btn-desktop" (click)="guardarDisponibilidad()">
             💾 Guardar Cambios
           </button>
         </div>
+      </div>
+
+      <!-- Migration Alert -->
+      <div class="migration-banner-web animate-fade-in" *ngIf="hasSlotsWithoutClub">
+        <div class="banner-content">
+          <span class="icon">⚠️</span>
+          <div class="text">
+            <h4>Horarios sin club asignado</h4>
+            <p>Hemos detectado bloques sin ubicación. Vincúlalos al club actual para que sean visibles.</p>
+          </div>
+        </div>
+        <button class="btn-migrate" (click)="migrateSlots()">VINCULAR AHORA</button>
       </div>
 
       <!-- Configuración Semana Defecto Modal -->
@@ -108,18 +126,21 @@
         <!-- Blocks Grid -->
         <div class="blocks-grid animate-up">
           <div *ngFor="let bloque of bloquesActuales" class="block-card" [class.selected]="bloque.seleccionado"
-            [class.occupied]="bloque.ocupado" (click)="toggleBloque(bloque)">
+            [class.occupied]="bloque.ocupado" [class.locked-other]="bloque.lockedByOtherClub"
+            (click)="toggleBloque(bloque)">
 
             <span class="time">{{ bloque.hora_inicio }}</span>
 
-            <div class="status-icon" *ngIf="bloque.ocupado; else checkIcon">
-              🔒
+            <div class="status-icon" *ngIf="bloque.ocupado || bloque.lockedByOtherClub; else checkIcon">
+              <span *ngIf="bloque.ocupado">🔒</span>
+              <span *ngIf="bloque.lockedByOtherClub">🏢</span>
             </div>
             <ng-template #checkIcon>
               <div class="check-circle"></div>
             </ng-template>
 
-            <div class="occupied-label" *ngIf="bloque.ocupado">Ocupado</div>
+            <div class="occupied-label" *ngIf="bloque.ocupado">Reservado</div>
+            <div class="other-club-label" *ngIf="bloque.lockedByOtherClub">Otro Club</div>
           </div>
         </div>
 

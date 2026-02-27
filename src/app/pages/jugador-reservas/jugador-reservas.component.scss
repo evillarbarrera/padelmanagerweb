@@ -3,6 +3,144 @@
 // Admin Layout styles are now global (see styles.scss)
 
 // ===== BOOKING FLOW STYLES (FULL SCREEN) =====
+// ===== BOOKING CONTEXT BAR =====
+.booking-context-box {
+  margin-bottom: 25px;
+
+  .context-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 20px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .card-flat {
+    background: #fff;
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    .label-premium {
+      font-size: 10px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+  }
+
+  .coach-summary {
+    .summary-details {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+
+      .mini-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #3b82f6;
+      }
+
+      .text-group {
+        h4 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 900;
+          color: #1e293b;
+        }
+
+        .contact-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #e0f2fe;
+          color: #0369a1;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 700;
+          margin-top: 5px;
+        }
+      }
+    }
+  }
+
+  .club-summary {
+    .premium-select-web {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #1e293b;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 18px;
+
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+    }
+
+    .location-extra {
+      background: #fdfdfd;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .address-mini {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.4;
+      }
+
+      .maps-btn-web {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #3b82f6;
+        font-size: 11px;
+        font-weight: 900;
+        text-decoration: none;
+        letter-spacing: 0.5px;
+
+        &:hover {
+          text-decoration: underline;
+        }
+
+        &::before {
+          content: "📍";
+        }
+      }
+
+      .no-dir-msg {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+  }
+}
+
 .agendar-container {
   width: 100%;
 }

@@ -80,6 +80,46 @@
           </div>
         </div>
 
+        <div class="booking-context-box animate-fade-in" *ngIf="!isLoading">
+          <div class="context-grid">
+            <div class="coach-summary card-flat">
+              <span class="label-premium">COACH SELECCIONADO</span>
+              <div class="summary-details">
+                <img [src]="currentCoachPhoto || 'assets/images/placeholder_coach.png'" class="mini-avatar">
+                <div class="text-group">
+                  <h4>{{ selectedCoachName }}</h4>
+                  <div class="contact-pill" *ngIf="entrenadorTelefono">
+                    <span class="icon">📞</span>
+                    <span>{{ entrenadorTelefono }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="club-summary card-flat" *ngIf="clubesDisponibles.length > 0">
+              <span class="label-premium">¿DÓNDE ENTRENAMOS?</span>
+              <div class="selector-container">
+                <select [(ngModel)]="selectedClubId" (change)="onClubFilterChange()" class="premium-select-web">
+                  <option [value]="null">TODOS LOS CLUBES</option>
+                  <option *ngFor="let club of clubesDisponibles" [value]="club.id">{{ club.nombre }}</option>
+                </select>
+              </div>
+              <div class="location-extra animate-up" *ngIf="selectedClubId">
+                <div *ngIf="getSelectedClub()?.direccion; else noDir">
+                  <p class="address-mini">{{ getSelectedClub()?.direccion }}</p>
+                  <a [href]="getSelectedClub()?.maps" target="_blank" class="maps-btn-web"
+                    *ngIf="getSelectedClub()?.maps">
+                    VER EN MAPA
+                  </a>
+                </div>
+                <ng-template #noDir>
+                  <p class="no-dir-msg">⚠️ Dirección no registrada por el coach.</p>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="filters-bar animate-fade-in" *ngIf="!isLoading && dias.length > 0">
           <div class="filter-group">
             <span class="filter-label">TIPO DE SESIÓN:</span>
