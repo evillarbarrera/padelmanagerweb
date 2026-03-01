@@ -104,32 +104,31 @@ export class ClubAdminComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        const user = this.apiService.getCurrentUser();
         const storedRole = localStorage.getItem('userRole') || '';
+        const storedUserId = localStorage.getItem('userId');
+        const storedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
-        if (!user || (!storedRole.toLowerCase().includes('admin') && !storedRole.toLowerCase().includes('administrador'))) {
+        if (!storedUserId || (!storedRole.toLowerCase().includes('admin') && !storedRole.toLowerCase().includes('administrador'))) {
             this.router.navigate(['/login']);
             return;
         }
 
-        if (user) {
-            this.userId = user.id;
-            this.userName = user.nombre;
-            this.userFoto = user.foto_perfil; // Initial load from LS
-            this.userRole = user.rol;
-            this.newClub.admin_id = user.id;
-            this.loadClubes();
+        this.userId = Number(storedUserId);
+        this.userName = storedUser?.nombre || '';
+        this.userFoto = storedUser?.foto_perfil || null;
+        this.userRole = storedUser?.rol || storedRole;
+        this.newClub.admin_id = this.userId;
+        this.loadClubes();
 
-            // Fetch fresh profile data to ensure photo is correct
-            this.apiService.getPerfil(this.userId!).subscribe({
-                next: (res) => {
-                    if (res.success && res.user) {
-                        this.userFoto = res.user.foto_perfil || this.userFoto;
-                        this.userName = res.user.nombre || this.userName;
-                    }
+        // Fetch fresh profile data to ensure photo is correct
+        this.apiService.getPerfil(this.userId!).subscribe({
+            next: (res) => {
+                if (res.success && res.user) {
+                    this.userFoto = res.user.foto_perfil || this.userFoto;
+                    this.userName = res.user.nombre || this.userName;
                 }
-            });
-        }
+            }
+        });
     }
 
     loadClubes() {

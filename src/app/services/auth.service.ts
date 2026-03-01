@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -13,7 +14,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private router: Router) {
     this.loadUser();
   }
 
@@ -71,24 +72,44 @@ export class AuthService {
   }
 
   switchProfile(perfil: any): void {
-    const currentUser = this.currentUserSubject.value;
-    if (!currentUser) return;
+    // Fallback: if BehaviorSubject is null, try loading from localStorage
+    let currentUser = this.currentUserSubject.value;
+    if (!currentUser) {
+      const stored = localStorage.getItem('currentUser');
+      if (stored) {
+        currentUser = JSON.parse(stored);
+      }
+    }
 
     const updatedUser = {
-      ...currentUser,
+      ...(currentUser || {}),
+      id: currentUser?.id || localStorage.getItem('userId'),
       rol: perfil.rol,
       club_id: perfil.club_id,
       club_nombre: perfil.club_nombre,
-      // Keep perfiles array intact
       perfiles: this.getProfiles()
     };
 
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser)); // Update stored session
+    // Update ALL localStorage keys so both AuthService and ApiService pick them up
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    localStorage.setItem('userId', String(updatedUser.id));
     localStorage.setItem('userRole', updatedUser.rol);
     this.currentUserSubject.next(updatedUser);
 
-    // Force reload/navigation to apply new role permissions
-    window.location.href = '/';
+    // Navigate to the correct home page based on the new role
+    const role = (updatedUser.rol || '').toLowerCase();
+    let targetRoute = '/jugador-home';
+    if (role.includes('admin')) {
+      targetRoute = '/admin-club';
+    } else if (role.includes('entrenador')) {
+      targetRoute = '/entrenador-home';
+    }
+
+    // Use Angular Router first, then force a full reload so ALL services
+    // (AuthService, ApiService, etc.) re-initialize from the same localStorage state
+    this.router.navigateByUrl(targetRoute, { replaceUrl: true }).then(() => {
+      window.location.reload();
+    });
   }
 
   getCurrentUser(): any {
@@ -134,11 +155,23 @@ export class AuthService {
 
           // Update local user data merge
           const currentSession = this.currentUserSubject.value || {};
-          const updatedUser = { ...currentSession, ...freshUser };
+
+          // PREVENT OVERRIDING SELECTED ROLE
+          const currentRole = localStorage.getItem('userRole') || currentSession.rol;
+          const currentClubId = currentSession.club_id;
+          const currentClubNombre = currentSession.club_nombre;
+
+          const updatedUser = {
+            ...freshUser,
+            ...currentSession, // Keep current session properties on top
+            rol: currentRole || freshUser.rol || 'jugador',
+            club_id: currentClubId || freshUser.club_id,
+            club_nombre: currentClubNombre || freshUser.club_nombre
+          };
 
           localStorage.setItem('currentUser', JSON.stringify(updatedUser));
           localStorage.setItem('userId', updatedUser.id);
-          localStorage.setItem('userRole', updatedUser.rol || 'jugador');
+          localStorage.setItem('userRole', updatedUser.rol);
           this.currentUserSubject.next(updatedUser);
         }
       })

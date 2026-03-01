@@ -989,6 +989,45 @@ export class TorneoGestionComponent implements OnInit {
         });
     }
 
+    anadirParejaManual() {
+        Swal.fire({
+            title: 'Añadir Pareja Manual',
+            html: `
+                <div style="text-align: left;">
+                    <label style="font-size: 12px; font-weight: bold; color: #64748b;">Jugador 1</label>
+                    <input id="swal-input1" class="swal2-input" placeholder="Nombre Jugador 1" style="font-size: 14px; margin-top: 5px;">
+                    
+                    <label style="font-size: 12px; font-weight: bold; color: #64748b; margin-top: 15px; display: block;">Jugador 2</label>
+                    <input id="swal-input2" class="swal2-input" placeholder="Nombre Jugador 2" style="font-size: 14px; margin-top: 5px;">
+                </div>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Guardar Inscripción',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const j1 = (document.getElementById('swal-input1') as HTMLInputElement).value;
+                const j2 = (document.getElementById('swal-input2') as HTMLInputElement).value;
+                if (!j1 || !j2) {
+                    Swal.showValidationMessage('Ambos nombres son requeridos');
+                    return false;
+                }
+                return { j1, j2 };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.manualInscripcion = {
+                    jugador1_id: 0,
+                    jugador1_nombre: result.value.j1,
+                    jugador2_id: 0,
+                    jugador2_nombre: result.value.j2,
+                    nombre_pareja: `${result.value.j1} / ${result.value.j2}`
+                };
+                this.inscribirParejaManual();
+            }
+        });
+    }
+
     generarGrupos() {
         if (!this.selectedCategoria) return;
 
