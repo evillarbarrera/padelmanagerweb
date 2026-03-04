@@ -31,8 +31,10 @@ export class PerfilComponent implements OnInit {
     banco_rut: '',
     banco_nombre: '',
     banco_tipo_cuenta: '',
-    banco_numero_cuenta: ''
+    banco_numero_cuenta: '',
+    mp_collector_id: ''
   };
+
 
   userRole: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
 
@@ -142,7 +144,26 @@ export class PerfilComponent implements OnInit {
       return;
     }
     this.loadProfile();
+
+    // Check for MP status from callback
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mp_status') === 'success') {
+      this.popupService.success('¡Vinculado!', 'Tu cuenta de Mercado Pago ha sido vinculada correctamente.');
+      // Remove query param without reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('mp_status') === 'error') {
+      this.popupService.error('Error', 'No se pudo vincular la cuenta de Mercado Pago.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }
+
+  vincularMP(): void {
+    const clientId = '1989199016593068';
+    const redirectUri = encodeURIComponent('https://api.padelmanager.cl/pagos/mp_callback.php');
+    const authUrl = `https://auth.mercadopago.cl/authorization?client_id=${clientId}&response_type=code&platform_id=mp&redirect_uri=${redirectUri}&state=${this.userId}`;
+    window.location.href = authUrl;
+  }
+
 
   loadProfile(): void {
     if (!this.userId) return;
@@ -259,13 +280,11 @@ export class PerfilComponent implements OnInit {
       foto_perfil: this.profile.foto_perfil, // Include the photo URL
       categoria: this.profile.categoria,
       descripcion: this.profile.descripcion,
-      banco_titular: this.profile.banco_titular || '',
-      banco_rut: this.profile.banco_rut || '',
-      banco_nombre: this.profile.banco_nombre || '',
-      banco_tipo_cuenta: this.profile.banco_tipo_cuenta || '',
       banco_numero_cuenta: this.profile.banco_numero_cuenta || '',
+      mp_collector_id: this.profile.mp_collector_id || '',
       ...this.direccion
     };
+
 
     this.mysqlService.updatePerfil(this.userId, payload).subscribe({
       next: (res) => {

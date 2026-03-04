@@ -23,6 +23,8 @@ export class EntrenadorHomeComponent implements OnInit {
     clasesGrupalesMes: 0,
     clasesHoy: 0
   };
+  showMPReminder = false;
+
 
   constructor(
     private mysqlService: MysqlService,
@@ -84,7 +86,16 @@ export class EntrenadorHomeComponent implements OnInit {
               this.router.navigate(['/perfil']);
             });
           }
+
+          // Check for Mercado Pago Collector ID
+          const hideReminder = localStorage.getItem('hideMPReminder');
+          if (!res.user.mp_collector_id && hideReminder !== 'true') {
+            this.showMPReminder = true;
+          } else {
+            this.showMPReminder = false;
+          }
         }
+
       },
       error: (err) => console.error(err)
     });
@@ -209,4 +220,10 @@ export class EntrenadorHomeComponent implements OnInit {
     localStorage.removeItem('userId');
     this.router.navigate(['/login']);
   }
+
+  dismissMPReminder() {
+    this.showMPReminder = false;
+    localStorage.setItem('hideMPReminder', 'true');
+  }
 }
+

@@ -192,49 +192,76 @@
           </div>
         </div>
 
-        <!-- 4. Datos Bancarios -->
-        <div class="section-card address-card" *ngIf="userRole === 'administrador_club' || userRole === 'entrenador'">
+      </div> <!-- End of profile-container grid -->
+
+      <!-- 4. Pagos Mercado Pago (Moved out of grid to take full width) -->
+      <div class="mp-section-container" *ngIf="userRole === 'administrador_club' || userRole === 'entrenador'"
+        style="margin-top: 30px;">
+        <div class="section-card mp-card animate-up" style="max-width: 100%;">
           <h3 class="section-title">
-            <span class="icon">💳</span> Mis Datos de Cobro (Contabilidad)
+            <span class="icon">💳</span> Vinculación Mercado Pago (Cobros)
           </h3>
-          <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; margin-top: -10px;">Ingresa tu cuenta para
-            recibir las transferencias de pagos/comisiones.</p>
-          <div class="nike-input-group">
+          <p style="font-size: 14px; color: #64748b; margin-bottom: 25px; margin-top: -10px;">
+            Para recibir tus pagos de forma automática, vincula tu cuenta de Mercado Pago.
+          </p>
 
-            <div class="nike-item">
-              <label>Titular de la Cuenta</label>
-              <input type="text" [(ngModel)]="profile.banco_titular" placeholder="Nombre completo">
+          <div class="mp-connect-full-width"
+            style="background: #f8fafc; border: 1px solid #009ee3; padding: 30px; border-radius: 16px; margin-bottom: 30px; border-left: 8px solid #009ee3; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px;">
+
+            <div style="display: flex; gap: 25px; align-items: center;">
+              <div
+                style="background: #009ee3; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0, 158, 227, 0.3);">
+                <span style="font-size: 30px; color: white;">⚡</span>
+              </div>
+              <div style="flex: 1;">
+                <h4
+                  style="margin: 0; font-size: 18px; color: #1e293b; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">
+                  CONEXIÓN AUTOMÁTICA DE CUENTA</h4>
+                <p style="margin: 8px 0 0 0; font-size: 15px; color: #475569; line-height: 1.6; font-weight: 500;">
+                  Autoriza nuestra aplicación para que el split de pagos y tus comisiones se procesen de forma inmediata
+                  y segura directamente a tu cuenta de Mercado Pago.
+                </p>
+              </div>
             </div>
 
-            <div class="nike-item">
-              <label>RUT</label>
-              <input type="text" [(ngModel)]="profile.banco_rut" placeholder="Ej: 11.222.333-4">
-            </div>
+            <button (click)="vincularMP()"
+              style="background: #009ee3; color: white; border: none; padding: 18px; border-radius: 14px; font-weight: 950; cursor: pointer; display: flex; align-items: center; gap: 15px; width: 100%; justify-content: center; transition: all 0.3s; font-size: 16px; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 8px 20px rgba(0, 158, 227, 0.25);">
+              <svg viewBox="0 0 48 48" style="height: 28px; fill: white;">
+                <path
+                  d="M34.5 15.5h-21c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h21c1.1 0 2-.9 2-2v-13c0-1.1-.9-2-2-2zm-21 2h21v2.5h-21v-2.5zm21 13h-21V23h21v7.5z" />
+              </svg>
+              VINCULAR MI CUENTA AHORA
+            </button>
 
-            <div class="nike-item">
-              <label>Banco</label>
-              <input type="text" [(ngModel)]="profile.banco_nombre" placeholder="Ej: Banco Santander">
+            <div
+              style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <span style="color: #10b981; font-size: 18px;">🛡️</span>
+              <span
+                style="font-size: 12px; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;">✓
+                SISTEMA DE PAGO SEGURO POR MERCADO PAGO SDK</span>
             </div>
+          </div>
 
+          <div style="text-align: center; margin: 40px 0 30px; position: relative;">
+            <span
+              style="background: #fff; padding: 0 20px; color: #94a3b8; font-size: 13px; font-weight: 800; position: relative; z-index: 1; text-transform: uppercase; letter-spacing: 2px;">o
+              configuración manual</span>
+            <div style="border-top: 1px dashed #cbd5e1; position: absolute; top: 12px; width: 100%; z-index: 0;"></div>
+          </div>
+
+          <div class="nike-input-group" style="max-width: 500px; margin: 0 auto;">
             <div class="nike-item">
-              <label>Tipo de Cuenta</label>
-              <select [(ngModel)]="profile.banco_tipo_cuenta">
-                <option value="" disabled selected>Selecciona tipo</option>
-                <option value="Cuenta Corriente">Cuenta Corriente</option>
-                <option value="Cuenta Vista">Cuenta Vista</option>
-                <option value="Cuenta RUT">Cuenta RUT</option>
-                <option value="Cuenta de Ahorro">Cuenta de Ahorro</option>
-              </select>
+              <label>Mercado Pago Collector ID</label>
+              <input type="text" [(ngModel)]="profile.mp_collector_id" placeholder="Ej: 123456789"
+                style="text-align: center; font-size: 1.2rem; letter-spacing: 2px;">
             </div>
-
-            <div class="nike-item">
-              <label>Número de Cuenta</label>
-              <input type="text" [(ngModel)]="profile.banco_numero_cuenta" placeholder="Número de cuenta">
-            </div>
-
+            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 15px;">
+              * El ID es necesario para identificar tu cuenta en el proceso de split.
+            </p>
           </div>
         </div>
       </div>
+
       <!-- TOURNAMENTS VIEW -->
       <div class="tournaments-container animate-up" *ngIf="activeTab === 'tournaments'">
         <!-- Filters -->

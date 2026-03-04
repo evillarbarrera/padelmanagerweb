@@ -227,18 +227,54 @@ export class JugadorPacksComponent implements OnInit {
         this.filtrarPacks();
     }
 
-    comprarPack(pack: any): void {
+    async comprarPack(pack: any) {
+        // Si es pack grupal, usar inscripción grupal (Si existiera la lógica aquí)
+
         this.popupService.confirm(
             '¿Confirmar compra?',
             `Vas a adquirir el pack "${pack.nombre}" por $${pack.precio}.`
         ).then((confirmed) => {
             if (confirmed) {
-                this.procesarCompra(pack);
+                if (pack.transbank_activo == 1 || pack.transbank_activo == '1') {
+                    this.iniciarPagoTransbank(pack);
+                } else {
+                    this.procesarCompraManual(pack);
+                }
             }
         });
     }
 
-    procesarCompra(pack: any): void {
+    async iniciarPagoTransbank(pack: any) {
+        this.isLoadingLocation = true; // Use the existing loading flag or add one
+        const packId = Number(pack.id || pack.pack_id || pack.id_pack);
+
+        const paymentPayload = {
+            pack_id: packId,
+            jugador_id: Number(this.userId),
+            amount: pack.precio,
+            origin: window.location.origin + window.location.pathname
+        };
+
+        this.alumnoService.initTransaction(paymentPayload).subscribe({
+            next: (payRes: any) => {
+                this.isLoadingLocation = false;
+                if (payRes.token && payRes.url) {
+                    const separator = payRes.url.includes('?') ? '&' : '?';
+                    window.location.href = `${payRes.url}${separator}token_ws=${payRes.token}`;
+                } else {
+
+                    this.popupService.error('Error', 'No se pudo generar el enlace de pago.');
+                }
+            },
+            error: (err) => {
+                this.isLoadingLocation = false;
+                console.error('Error init transaction:', err);
+                this.popupService.error('Error', 'Error al conectar con la pasarela de pagos.');
+            }
+        });
+    }
+
+    procesarCompraManual(pack: any): void {
         if (!this.userId) return;
 
         this.popupService.info('Procesando...', 'Estamos activando tu pack.');

@@ -256,6 +256,13 @@
   }
 }
 
+// Mercado Pago Full Width Section in Grid
+.mp-section-container {
+  grid-column: 1 / span 3;
+  width: 100%;
+  margin-top: 10px;
+}
+
 // Response
 @media (max-width: 960px) {
   .profile-container {
@@ -264,6 +271,10 @@
     margin-top: -30px;
     gap: 20px;
     padding-bottom: 40px;
+  }
+
+  .mp-section-container {
+    grid-column: 1;
   }
 
   .avatar-section,

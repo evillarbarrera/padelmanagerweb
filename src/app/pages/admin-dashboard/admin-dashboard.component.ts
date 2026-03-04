@@ -197,9 +197,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     }
 
     toggleTransbank(e: any) {
-        e.transbank_active = e.transbank_active == 1 ? 0 : 1;
+        e.transbank_activo = e.transbank_activo == 1 ? 0 : 1;
         this.updateEntrenadorConfig(e);
     }
+
 
     toggleComision(e: any) {
         e.comision_activa = e.comision_activa == 1 ? 0 : 1;
@@ -213,10 +214,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     updateEntrenadorConfig(e: any) {
         this.http.post<any>(`${this.apiUrl}/admin/update_entrenador_config.php`, {
             entrenador_id: e.id,
-            transbank_active: e.transbank_active,
+            transbank_activo: e.transbank_activo,
             comision_activa: e.comision_activa,
-            comision_porcentaje: e.comision_porcentaje
+            comision_porcentaje: e.comision_porcentaje,
+            mp_collector_id: e.mp_collector_id
         }, { headers: this.headers }).subscribe({
+
             next: () => { },
             error: (err) => console.error('Error updating config', err)
         });
@@ -224,65 +227,33 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     verDatosBancarios(e: any) {
         Swal.fire({
-            title: `Datos Bancarios - ${e.nombre}`,
+            title: `Configuración de Pagos - ${e.nombre}`,
             html: `
                 <div style="text-align: left; font-size: 14px; line-height: 2;">
-                    <label style="font-weight: 700;">Titular</label>
-                    <input id="swal-titular" class="swal2-input" value="${e.banco_titular || ''}" placeholder="Nombre titular" style="width:100%; margin: 4px 0 10px 0;">
-                    <label style="font-weight: 700;">RUT</label>
-                    <input id="swal-rut" class="swal2-input" value="${e.banco_rut || ''}" placeholder="11.222.333-4" style="width:100%; margin: 4px 0 10px 0;">
-                    <label style="font-weight: 700;">Banco</label>
-                    <input id="swal-banco" class="swal2-input" value="${e.banco_nombre || ''}" placeholder="Banco Santander" style="width:100%; margin: 4px 0 10px 0;">
-                    <label style="font-weight: 700;">Tipo de Cuenta</label>
-                    <select id="swal-tipo" class="swal2-input" style="width:100%; margin: 4px 0 10px 0;">
-                        <option value="">Selecciona</option>
-                        <option value="Cuenta Corriente" ${e.banco_tipo_cuenta === 'Cuenta Corriente' ? 'selected' : ''}>Cuenta Corriente</option>
-                        <option value="Cuenta Vista" ${e.banco_tipo_cuenta === 'Cuenta Vista' ? 'selected' : ''}>Cuenta Vista</option>
-                        <option value="Cuenta RUT" ${e.banco_tipo_cuenta === 'Cuenta RUT' ? 'selected' : ''}>Cuenta RUT</option>
-                    </select>
-                    <label style="font-weight: 700;">Número de Cuenta</label>
-                    <input id="swal-numero" class="swal2-input" value="${e.banco_numero_cuenta || ''}" placeholder="Número" style="width:100%; margin: 4px 0 10px 0;">
+                    <p style="color: #64748b; margin-bottom: 15px;">Vincular cuenta de Mercado Pago para split automático.</p>
+                    <label style="font-weight: 700;">Mercado Pago Collector ID</label>
+                    <input id="swal-mp-id" class="swal2-input" value="${e.mp_collector_id || ''}" placeholder="Ej: 12345678" style="width:100%; margin: 4px 0 10px 0;">
                 </div>
             `,
+
             confirmButtonText: 'Guardar',
             showCancelButton: true,
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#111',
             preConfirm: () => {
-                return {
-                    banco_titular: (document.getElementById('swal-titular') as HTMLInputElement).value,
-                    banco_rut: (document.getElementById('swal-rut') as HTMLInputElement).value,
-                    banco_nombre: (document.getElementById('swal-banco') as HTMLInputElement).value,
-                    banco_tipo_cuenta: (document.getElementById('swal-tipo') as HTMLSelectElement).value,
-                    banco_numero_cuenta: (document.getElementById('swal-numero') as HTMLInputElement).value
-                };
+                const mpId = (document.getElementById('swal-mp-id') as HTMLInputElement).value;
+                return { mp_collector_id: mpId };
             }
         }).then((result) => {
             if (result.isConfirmed && result.value) {
                 const data = result.value;
-                // Update local state
-                e.banco_titular = data.banco_titular;
-                e.banco_rut = data.banco_rut;
-                e.banco_nombre = data.banco_nombre;
-                e.banco_tipo_cuenta = data.banco_tipo_cuenta;
-                e.banco_numero_cuenta = data.banco_numero_cuenta;
-
-                // Save to backend
-                this.http.post<any>(`${this.apiUrl}/admin/update_entrenador_bank.php`, {
-                    entrenador_id: e.id,
-                    ...data
-                }, { headers: this.headers }).subscribe({
-                    next: () => {
-                        Swal.fire({ icon: 'success', title: 'Guardado', text: 'Datos bancarios actualizados.', timer: 1500 });
-                    },
-                    error: (err) => {
-                        console.error(err);
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron guardar los datos.' });
-                    }
-                });
+                e.mp_collector_id = data.mp_collector_id;
+                this.updateEntrenadorConfig(e);
+                Swal.fire({ icon: 'success', title: 'Guardado', text: 'Configuración de pagos actualizada.', timer: 1500 });
             }
         });
     }
+
 
     logout() {
         localStorage.clear();

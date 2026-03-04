@@ -701,22 +701,82 @@ export class JugadorReservasComponent implements OnInit {
     });
   }
 
-  comprarPackYReservar(pack: any): void {
-    console.log('ComprarPackYReservar - Pack seleccionado:', pack);
-    console.log('ComprarPackYReservar - Horario pendiente:', this.pendingHorario);
+  async comprarPackYReservar(pack: any) {
+    if (pack.transbank_activo == 1 || pack.transbank_activo == '1') {
+      this.iniciarPagoPackTransbank(pack);
+    } else {
+      this.comprarPackYReservarManual(pack);
+    }
+  }
 
-    this.showPackModal = false;
+  async iniciarPagoPackTransbank(pack: any) {
+    this.isLoading = true;
+    const packId = Number(pack.id || pack.pack_id || pack.id_pack);
 
-    // Search for ID in all possible fields (id, pack_id, id_pack)
-    const rawId = pack.id || pack.pack_id || pack.id_pack;
-    const packId = Number(rawId);
-
-    if (isNaN(packId) || packId <= 0) {
-      this.popupService.error('Error de Datos', 'El pack seleccionado no tiene un ID válido. Por favor, intenta de nuevo.');
-      return;
+    // 1. Crear reserva temporal en estado 'bloqueado'
+    let finalTipo = 'individual';
+    const packTypeStr = (pack.tipo || '').toLowerCase();
+    if (packTypeStr.includes('grupal') || packTypeStr.includes('multi')) {
+      finalTipo = 'grupal';
     }
 
+    const payloadReserva = {
+      entrenador_id: Number(this.selectedEntrenador),
+      fecha: this.pendingHorario.fecha,
+      hora_inicio: this.pendingHorario.hora_inicio.toTimeString().slice(0, 5),
+      hora_fin: this.pendingHorario.hora_fin.toTimeString().slice(0, 5),
+      jugador_id: Number(this.userId),
+      pack_id: packId,
+      estado: 'bloqueado',
+      tipo: finalTipo,
+      cantidad_personas: 1
+    };
+
+    this.entrenamientoService.crearReserva(payloadReserva).subscribe({
+      next: (res: any) => {
+        const reservaId = res.reserva_ids ? res.reserva_ids[0] : null;
+
+        // 2. Iniciar Transacción
+        const paymentPayload = {
+          pack_id: packId,
+          jugador_id: Number(this.userId),
+          amount: pack.precio,
+          reserva_id: reservaId,
+          origin: window.location.origin + window.location.pathname
+        };
+
+        this.alumnoService.initTransaction(paymentPayload).subscribe({
+          next: (payRes: any) => {
+            this.isLoading = false;
+            if (payRes.token && payRes.url) {
+              const separator = payRes.url.includes('?') ? '&' : '?';
+              window.location.href = `${payRes.url}${separator}token_ws=${payRes.token}`;
+            } else {
+
+              this.popupService.error('Error', 'No se pudo generar el enlace de pago.');
+            }
+          },
+          error: (err) => {
+            this.isLoading = false;
+            console.error('Error init transaction:', err);
+            this.popupService.error('Error', 'Error al conectar con la pasarela de pagos.');
+          }
+        });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Error creating temporal reservation:', err);
+        this.popupService.error('Error', 'No se pudo preparar la reserva.');
+      }
+    });
+  }
+
+  comprarPackYReservarManual(pack: any): void {
+    console.log('ComprarPackYReservarManual - Pack:', pack);
+    this.showPackModal = false;
     this.isLoading = true;
+
+    const packId = Number(pack.id || pack.pack_id || pack.id_pack);
 
     // 1. Primero registramos la "compra" del pack
     const packPayload = {
@@ -724,12 +784,9 @@ export class JugadorReservasComponent implements OnInit {
       jugador_id: Number(this.userId)
     };
 
-    console.log('Registrando compra del pack...', packPayload);
-
     this.alumnoService.insertPack(packPayload).subscribe({
       next: (packRes: any) => {
         const newPackJugadorId = packRes.pack_jugador_id;
-        console.log('Pack registrado con ID:', newPackJugadorId);
 
         // Detectar tipo real del pack para la reserva
         let finalTipo = 'individual';
@@ -752,8 +809,6 @@ export class JugadorReservasComponent implements OnInit {
           recurrencia: 1
         };
 
-        console.log('Enviando reserva vinculada al nuevo pack:', payload);
-
         this.entrenamientoService.crearReserva(payload).subscribe({
           next: () => {
             this.isLoading = false;
@@ -764,14 +819,14 @@ export class JugadorReservasComponent implements OnInit {
           error: (err) => {
             console.error('Error al agendar reserva:', err);
             this.isLoading = false;
-            this.popupService.error('Error en Agenda', 'El pack se activó pero no pudimos agendar la clase. Por favor, intenta agendarla manualmente desde el calendario.');
+            this.popupService.error('Error en Agenda', 'El pack se activó pero no pudimos agendar la clase.');
           }
         });
       },
       error: (err) => {
         console.error('Error al registrar pack:', err);
         this.isLoading = false;
-        this.popupService.error('Error', 'No se pudo procesar la compra del pack. Por favor, intenta de nuevo.');
+        this.popupService.error('Error', 'No se pudo procesar la compra del pack.');
       }
     });
   }

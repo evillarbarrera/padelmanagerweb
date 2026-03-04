@@ -177,14 +177,15 @@
                         </div>
 
                         <div class="entrenador-controls">
-                            <!-- Transbank Switch -->
+                            <!-- Pagos Switch (Mercado Pago) -->
                             <div class="control-row">
-                                <label>💳 Transbank</label>
-                                <div class="toggle-switch" [class.active]="e.transbank_active == 1"
+                                <label>💳 Pagos Automáticos (MP)</label>
+                                <div class="toggle-switch" [class.active]="e.transbank_activo == 1"
                                     (click)="toggleTransbank(e)">
                                     <div class="toggle-thumb"></div>
                                 </div>
                             </div>
+
 
                             <!-- Comisión Switch -->
                             <div class="control-row">
@@ -198,16 +199,17 @@
                                 <span class="percent-label">%</span>
                             </div>
 
-                            <!-- Estado Cuenta Bancaria -->
+                            <!-- Estado Cuenta MP -->
                             <div class="control-row">
-                                <label>🏦 Cuenta Bancaria</label>
-                                <span class="bank-status" [class.registered]="e.banco_titular">
-                                    {{ e.banco_titular ? '✅ Registrada' : '⚠️ Sin datos' }}
+                                <label>🔗 Vinculación MP</label>
+                                <span class="bank-status" [class.registered]="e.mp_collector_id">
+                                    {{ e.mp_collector_id ? '✅ Vinculada' : '⚠️ No vinculada' }}
                                 </span>
                                 <button class="btn-ver-datos" (click)="verDatosBancarios(e)">
-                                    {{ e.banco_titular ? 'Ver' : 'Registrar' }}
+                                    {{ e.mp_collector_id ? 'Gestionar' : 'Vincular' }}
                                 </button>
                             </div>
+
                         </div>
                     </div>
 
