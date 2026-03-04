@@ -77,7 +77,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     // ===== STATS =====
     loadStats() {
-        this.http.get<any>(`${this.apiUrl}/admin/dashboard_stats.php`, { headers: this.headers }).subscribe({
+        this.isLoading = true;
+        this.http.get<any>(`${this.apiUrl}/admin/dashboard_stats.php?year=${this.selectedYear}&month=${this.selectedMonth}`, { headers: this.headers }).subscribe({
             next: (res) => {
                 if (res.success) {
                     this.stats = res.data;
@@ -115,6 +116,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     onFilterChange() {
         this.loadChartData();
+        this.loadStats();
     }
 
     renderCharts() {
