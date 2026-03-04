@@ -26,7 +26,12 @@ export class PerfilComponent implements OnInit {
     facebook: '',
     foto_perfil: '',
     categoria: '',
-    descripcion: ''
+    descripcion: '',
+    banco_titular: '',
+    banco_rut: '',
+    banco_nombre: '',
+    banco_tipo_cuenta: '',
+    banco_numero_cuenta: ''
   };
 
   userRole: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
@@ -254,6 +259,11 @@ export class PerfilComponent implements OnInit {
       foto_perfil: this.profile.foto_perfil, // Include the photo URL
       categoria: this.profile.categoria,
       descripcion: this.profile.descripcion,
+      banco_titular: this.profile.banco_titular || '',
+      banco_rut: this.profile.banco_rut || '',
+      banco_nombre: this.profile.banco_nombre || '',
+      banco_tipo_cuenta: this.profile.banco_tipo_cuenta || '',
+      banco_numero_cuenta: this.profile.banco_numero_cuenta || '',
       ...this.direccion
     };
 

@@ -192,8 +192,49 @@
           </div>
         </div>
 
-      </div>
+        <!-- 4. Datos Bancarios -->
+        <div class="section-card address-card" *ngIf="userRole === 'administrador_club' || userRole === 'entrenador'">
+          <h3 class="section-title">
+            <span class="icon">💳</span> Mis Datos de Cobro (Contabilidad)
+          </h3>
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; margin-top: -10px;">Ingresa tu cuenta para
+            recibir las transferencias de pagos/comisiones.</p>
+          <div class="nike-input-group">
 
+            <div class="nike-item">
+              <label>Titular de la Cuenta</label>
+              <input type="text" [(ngModel)]="profile.banco_titular" placeholder="Nombre completo">
+            </div>
+
+            <div class="nike-item">
+              <label>RUT</label>
+              <input type="text" [(ngModel)]="profile.banco_rut" placeholder="Ej: 11.222.333-4">
+            </div>
+
+            <div class="nike-item">
+              <label>Banco</label>
+              <input type="text" [(ngModel)]="profile.banco_nombre" placeholder="Ej: Banco Santander">
+            </div>
+
+            <div class="nike-item">
+              <label>Tipo de Cuenta</label>
+              <select [(ngModel)]="profile.banco_tipo_cuenta">
+                <option value="" disabled selected>Selecciona tipo</option>
+                <option value="Cuenta Corriente">Cuenta Corriente</option>
+                <option value="Cuenta Vista">Cuenta Vista</option>
+                <option value="Cuenta RUT">Cuenta RUT</option>
+                <option value="Cuenta de Ahorro">Cuenta de Ahorro</option>
+              </select>
+            </div>
+
+            <div class="nike-item">
+              <label>Número de Cuenta</label>
+              <input type="text" [(ngModel)]="profile.banco_numero_cuenta" placeholder="Número de cuenta">
+            </div>
+
+          </div>
+        </div>
+      </div>
       <!-- TOURNAMENTS VIEW -->
       <div class="tournaments-container animate-up" *ngIf="activeTab === 'tournaments'">
         <!-- Filters -->
