@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { Chart, registerables } from 'chart.js';
@@ -45,6 +45,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     ];
 
     private apiUrl = environment.apiUrl;
+    private token = btoa('1|padel_academy');
+    private headers = new HttpHeaders({
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json'
+    });
 
     constructor(private http: HttpClient, private router: Router) { }
 
@@ -72,7 +77,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     // ===== STATS =====
     loadStats() {
-        this.http.get<any>(`${this.apiUrl}/admin/dashboard_stats.php`).subscribe({
+        this.http.get<any>(`${this.apiUrl}/admin/dashboard_stats.php`, { headers: this.headers }).subscribe({
             next: (res) => {
                 if (res.success) {
                     this.stats = res.data;
@@ -91,7 +96,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     // ===== CHARTS =====
     loadChartData() {
         this.isLoading = true;
-        this.http.get<any>(`${this.apiUrl}/admin/dashboard_chart.php?year=${this.selectedYear}&month=${this.selectedMonth}`).subscribe({
+        this.http.get<any>(`${this.apiUrl}/admin/dashboard_chart.php?year=${this.selectedYear}&month=${this.selectedMonth}`, { headers: this.headers }).subscribe({
             next: (res) => {
                 this.isLoading = false;
                 if (res.success) {
@@ -169,7 +174,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     loadEntrenadores() {
         if (this.entrenadores.length > 0) return; // already loaded
         this.loadingEntrenadores = true;
-        this.http.get<any>(`${this.apiUrl}/admin/get_entrenadores.php`).subscribe({
+        this.http.get<any>(`${this.apiUrl}/admin/get_entrenadores.php`, { headers: this.headers }).subscribe({
             next: (res) => {
                 this.loadingEntrenadores = false;
                 if (res.success) {
@@ -211,7 +216,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
             transbank_active: e.transbank_active,
             comision_activa: e.comision_activa,
             comision_porcentaje: e.comision_porcentaje
-        }).subscribe({
+        }, { headers: this.headers }).subscribe({
             next: () => { },
             error: (err) => console.error('Error updating config', err)
         });
@@ -266,7 +271,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                 this.http.post<any>(`${this.apiUrl}/admin/update_entrenador_bank.php`, {
                     entrenador_id: e.id,
                     ...data
-                }).subscribe({
+                }, { headers: this.headers }).subscribe({
                     next: () => {
                         Swal.fire({ icon: 'success', title: 'Guardado', text: 'Datos bancarios actualizados.', timer: 1500 });
                     },
