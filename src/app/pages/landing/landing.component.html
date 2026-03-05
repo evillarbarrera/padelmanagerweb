@@ -45,7 +45,10 @@
                   </div>
                 </div>
                 <!-- App Content (Image) -->
-                <img src="assets/images/app-screenshot-v2.png" alt="App Screenshot" class="app-screen-img">
+                <div class="phone-slider-wrapper">
+                  <img *ngFor="let slide of slides; let i = index" [src]="slide.image" alt="App Screenshot"
+                    class="app-screen-img slider-img" [class.active]="currentSlide === i">
+                </div>
               </div>
             </div>
             <div class="phone-buttons">
@@ -58,18 +61,32 @@
         </div>
 
         <!-- Text Content - Now on Right -->
-        <div class="hero-text-content reveal slide-right">
-          <span class="badge-new">SISTEMA PRO 2.0</span>
-          <h1>DOMINA LA PISTA <br><span class="highlight">CON INTELIGENCIA</span></h1>
-          <p>La primera plataforma que une la gestión de academia con análisis biomécánico avanzado por IA.</p>
+        <div class="hero-text-content reveal slide-right"
+          style="position: relative; min-height: 450px; display: flex; flex-direction: column; justify-content: center;">
+          <div class="slides-wrapper">
+            <div *ngFor="let slide of slides; let i = index" class="slide-item" [class.active]="currentSlide === i">
+              <span class="badge-new">{{ slide.badge }}</span>
+              <h1>{{ slide.title }} <br><span class="highlight">{{ slide.highlight }}</span></h1>
+              <p>{{ slide.description }}</p>
+            </div>
+          </div>
 
           <div class="cta-group">
             <button class="btn-primary-large" (click)="irALogin()">
               <span class="btn-text">EXPLORAR AHORA</span>
             </button>
-            <button class="btn-secondary-large">
+            <button class="btn-secondary-large" (click)="irALogin()">
               <span class="btn-text">VER DEMO</span>
             </button>
+          </div>
+
+          <div class="slider-controls" style="display: flex; gap: 10px; margin-bottom: 30px;">
+            <div *ngFor="let dot of slides; let i = index" class="slider-dot" [class.active]="currentSlide === i"
+              (click)="setSlide(i)"
+              style="width: 30px; height: 4px; border-radius: 2px; cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.2);">
+              <div class="dot-fill" [style.width]="currentSlide === i ? '100%' : '0'"
+                style="height: 100%; background: #ccff00; transition: width 6s linear;"></div>
+            </div>
           </div>
 
           <div class="app-buttons">

@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
@@ -15,7 +15,7 @@ Chart.register(...registerables);
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss']
 })
-export class LandingComponent implements OnInit, AfterViewInit {
+export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   isAuthenticated = false;
   userRole: 'jugador' | 'entrenador' | 'administrador_club' | null = null;
   userName = '';
@@ -53,12 +53,40 @@ export class LandingComponent implements OnInit, AfterViewInit {
   };
 
   // Datos para entrenador
+  // Slider logic
+  currentSlide = 0;
+  slides = [
+    {
+      badge: 'SISTEMA PRO 2.0',
+      title: 'DOMINA LA PISTA',
+      highlight: 'CON INTELIGENCIA',
+      description: 'La primera plataforma que une la gestión de academia con análisis biomécánico avanzado por IA.',
+      image: 'assets/images/app-screenshot-v2.png'
+    },
+    {
+      badge: 'PARA ENTRENADORES',
+      title: 'ADIÓS AL WHATSAPP',
+      highlight: 'Y AL PAPEL',
+      description: 'Digitaliza tu academia hoy mismo. Gestiona cobros, agendas y alumnos desde un solo lugar con Padel Manager.',
+      image: 'assets/images/slide-coaches.jpg'
+    },
+    {
+      badge: 'PARA JUGADORES',
+      title: 'GESTIONA TU',
+      highlight: 'PROGRESO REAL',
+      description: 'Reserva tus packs, haz seguimiento a tus entrenamientos y visualiza tu evolución técnica con gráficas inteligentes.',
+      image: 'assets/images/slide-players.jpg'
+    }
+  ];
+
   entrenadorStats = {
     alumnos_totales: 0,
     clases_hoy: 0,
     packs_activos: 0,
     proximos_entrenamientos: [] as any[]
   };
+
+  private slideInterval: any;
 
   constructor(
     private router: Router,
@@ -95,7 +123,33 @@ export class LandingComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       this.initLandingCharts();
       this.initScrollAnimations();
+      this.startSlider();
     }, 500);
+  }
+
+  ngOnDestroy(): void {
+    if (this.slideInterval) {
+      clearInterval(this.slideInterval);
+    }
+  }
+
+  startSlider(): void {
+    this.slideInterval = setInterval(() => {
+      this.nextSlide();
+    }, 6000);
+  }
+
+  nextSlide(): void {
+    this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+  }
+
+  setSlide(index: number): void {
+    this.currentSlide = index;
+    // Reset interval
+    if (this.slideInterval) {
+      clearInterval(this.slideInterval);
+      this.startSlider();
+    }
   }
 
   initScrollAnimations(): void {
