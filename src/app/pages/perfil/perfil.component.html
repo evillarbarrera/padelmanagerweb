@@ -192,6 +192,22 @@
           </div>
         </div>
 
+        <!-- 5. Zona de Peligro (Eliminar Cuenta) -->
+        <div class="section-card danger-card animate-up" style="animation-delay: 0.2s;">
+          <h3 class="section-title">
+            <span class="icon">⚠️</span> Gestión de Cuenta
+          </h3>
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 20px; line-height: 1.5;">
+            Si deseas eliminar tu cuenta y todos tus datos personales de nuestra base de datos, puedes solicitarlo
+            presionando
+            el siguiente botón. <b>Esta acción es definitiva y no se puede deshacer.</b>
+          </p>
+          <button class="delete-btn" (click)="eliminarCuenta()"
+            style="background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+            <span class="icon">🗑️</span> Eliminar mi Cuenta
+          </button>
+        </div>
+
       </div> <!-- End of profile-container grid -->
 
       <!-- 4. Pagos Mercado Pago (Moved out of grid to take full width) -->

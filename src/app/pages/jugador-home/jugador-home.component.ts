@@ -27,7 +27,6 @@ export class JugadorHomeComponent implements OnInit {
   isLoading = true;
   userId: number | null = null;
   chart: any;
-  radarChart: any;
 
   constructor(
     private mysqlService: MysqlService,
@@ -108,21 +107,6 @@ export class JugadorHomeComponent implements OnInit {
           const labels = sorted.map(e => e.fecha);
           const values = sorted.map(e => Number(e.promedio_general));
           this.renderChart(labels, values);
-
-          // Radar Chart (Latest Evaluation)
-          const latest = sorted[sorted.length - 1];
-          if (latest && latest.scores) {
-            const radarLabels = Object.keys(latest.scores);
-            const radarData = radarLabels.map(key => {
-              const s = latest.scores[key];
-              if (s && typeof s === 'object') {
-                return (Number(s.tecnica) + Number(s.control) + Number(s.direccion) + Number(s.decision)) / 4;
-              }
-              return 0;
-            });
-
-            setTimeout(() => this.renderRadarChart(radarLabels, radarData), 100);
-          }
         }
       },
       error: (err) => console.error(err)
@@ -179,56 +163,7 @@ export class JugadorHomeComponent implements OnInit {
     });
   }
 
-  renderRadarChart(labels: string[], data: number[]) {
-    const ctx = document.getElementById('radarChart') as HTMLCanvasElement;
-    if (!ctx) return;
 
-    if (this.radarChart) this.radarChart.destroy();
-
-    this.radarChart = new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Habilidades',
-          data: data,
-          fill: true,
-          backgroundColor: 'rgba(204, 255, 0, 0.2)',
-          borderColor: '#ccff00',
-          pointBackgroundColor: '#111',
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: '#ccff00'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        elements: {
-          line: { borderWidth: 3 }
-        },
-        scales: {
-          r: {
-            angleLines: { color: '#eee' },
-            grid: { color: '#eee' },
-            suggestedMin: 0,
-            suggestedMax: 10,
-            pointLabels: {
-              font: { size: 11, weight: 'bold' },
-              color: '#444'
-            },
-            ticks: {
-              backdropColor: 'transparent',
-              display: false
-            }
-          }
-        },
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    });
-  }
 
   irAReservas(): void {
     this.router.navigate(['/jugador-reservas']);

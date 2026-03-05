@@ -368,4 +368,23 @@ export class PerfilComponent implements OnInit {
     });
   }
 
+  eliminarCuenta(): void {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "Esta acción no se puede deshacer. Se enviará una solicitud de eliminación de todos tus datos de forma definitiva.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, eliminar mi cuenta',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Redirigir a la URL de eliminación proporcionada por Apple/Cliente
+        window.location.href = `https://api.padelmanager.cl/delete-account?user_id=${this.userId}`;
+      }
+    });
+  }
+
 }

@@ -136,6 +136,29 @@
   grid-row: 2;
 }
 
+.danger-card {
+  grid-column: 1 / span 3;
+  border: 1px solid #fee2e2;
+  background-color: #fef2f2;
+  margin-top: 10px;
+
+  .section-title {
+    color: #ef4444;
+  }
+
+  .delete-btn {
+    &:hover {
+      background: #dc2626 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(220, 38, 38, 0.3) !important;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
 // Inputs - More Compact
 .nike-input-group {
   display: flex;
