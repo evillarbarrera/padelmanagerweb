@@ -11,6 +11,14 @@
 
     <div class="form-box">
       <div class="input-group">
+        <label>Nombre Completo</label>
+        <div class="input-wrapper">
+          <input type="text" placeholder="Tu nombre" [(ngModel)]="nombre" (keypress)="handleKeyPress($event)">
+          <span class="icon">👤</span>
+        </div>
+      </div>
+
+      <div class="input-group">
         <label>Correo Electrónico</label>
         <div class="input-wrapper">
           <input type="email" placeholder="nombre@ejemplo.com" [(ngModel)]="email" (keypress)="handleKeyPress($event)">
