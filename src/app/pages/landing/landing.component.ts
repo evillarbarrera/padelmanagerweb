@@ -64,10 +64,10 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       image: 'assets/images/app-screenshot-v2.png'
     },
     {
-      badge: 'PARA ENTRENADORES',
-      title: 'ADIÓS AL WHATSAPP',
-      highlight: 'Y AL PAPEL',
-      description: 'Digitaliza tu academia hoy mismo. Gestiona cobros, agendas y alumnos desde un solo lugar con Padel Manager.',
+      badge: 'PROMO ENTRENADORES',
+      title: '3 MESES GRATIS',
+      highlight: 'SIN COMISIONES',
+      description: 'Lanza tu academia digital sin costos operativos. Los primeros 3 meses la comisión por venta es 0%. Gestiona cobros y alumnos profesionalmente.',
       image: 'assets/images/slide-coaches.jpg'
     },
     {

@@ -119,7 +119,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
         nombre: nombresDias[fecha.getDay()],
         fecha: this.getLocalISODate(fecha),
         hora_inicio: '07:00',
-        hora_fin: '21:00',
+        hora_fin: '22:00',
         duracion: 60
       });
     }
@@ -420,7 +420,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   initTemplateBlocks() {
     this.templateBlocks = {};
     const horas: string[] = [];
-    for (let h = 7; h <= 22; h++) {
+    for (let h = 7; h < 22; h++) {
       const hh = h < 10 ? '0' + h : h;
       horas.push(`${hh}:00`);
       // Si quieres bloques de 30 min, podrías añadir `${hh}:30` aquí

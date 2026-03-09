@@ -46,6 +46,34 @@
 
       </div>
 
+      <!-- Desglose de Packs por Entrenador -->
+      <div class="packs-breakdown" *ngIf="packsDetalle.length > 0">
+        <h3 class="section-title">Mis Packs</h3>
+        <div class="packs-list">
+          <div class="pack-item" *ngFor="let pack of packsDetalle">
+            <div class="pack-coach-info">
+              <div class="coach-avatar">
+                <img *ngIf="pack.entrenador_foto"
+                  [src]="pack.entrenador_foto.startsWith('http') ? pack.entrenador_foto : 'https://api.padelmanager.cl/' + pack.entrenador_foto"
+                  alt="Coach" />
+                <span *ngIf="!pack.entrenador_foto" class="avatar-fallback">🎾</span>
+              </div>
+              <div class="pack-info">
+                <span class="pack-coach-name">{{ pack.entrenador_nombre }}</span>
+                <span class="pack-name">{{ pack.nombre }}</span>
+              </div>
+            </div>
+            <div class="pack-stats">
+              <div class="pack-progress-bar">
+                <div class="pack-progress-fill"
+                  [style.width.%]="pack.total > 0 ? (pack.disponibles / pack.total) * 100 : 0"></div>
+              </div>
+              <span class="pack-credits">{{ pack.disponibles }} / {{ pack.total }} clases</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Charts Section -->
       <h3 class="section-title">Mi Rendimiento</h3>
       <div class="charts-grid"

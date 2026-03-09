@@ -189,7 +189,9 @@ export class EntrenadorHomeComponent implements OnInit {
           totalAlumnos: res.total_alumnos || 0,
           clasesMes: res.clases_mes || 0,
           clasesGrupalesMes: res.clases_grupales_mes || 0,
-          clasesHoy: res.clases_hoy || 0
+          clasesHoy: res.clases_hoy || 0,
+          promoActiva: res.promo_activa || false,
+          promoDiasRestantes: res.promo_dias_restantes || 0
         };
       }
     });

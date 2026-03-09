@@ -26,6 +26,19 @@
     <!-- Dashboard Content -->
     <div class="dashboard-grid fade-in" *ngIf="!isLoading">
 
+      <!-- Promo Alert: 3 months free -->
+      <div class="promo-alert" *ngIf="quickStats.promoActiva"
+        style="background: #e6ffef; border: 1px solid #b2f2bb; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="display: flex; gap: 15px; align-items: center;">
+          <span style="font-size: 24px;">🎁</span>
+          <div>
+            <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #2b8a3e;">¡Promoción Activa!</h4>
+            <p style="margin: 4px 0 0; font-size: 14px; color: #2b8a3e;">Estás disfrutando de <strong>comisión
+                0%</strong>. Te quedan <strong>{{ quickStats.promoDiasRestantes }} días</strong> de beneficio.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Mercado Pago Reminder Alert -->
       <div class="mp-reminder-alert" *ngIf="showMPReminder"
         style="background: #fff9e6; border: 1px solid #ffeeba; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">

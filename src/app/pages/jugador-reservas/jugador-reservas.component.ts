@@ -401,7 +401,7 @@ export class JugadorReservasComponent implements OnInit {
     const nuevasFechas: string[] = [];
     const ahora = new Date();
     const limite = new Date();
-    limite.setDate(ahora.getDate() + 14);
+    limite.setDate(ahora.getDate() + 30);
 
     // 1. Process explicit availability from the 'disponibilidad' table
     disponibilidades.forEach(d => {
@@ -481,8 +481,8 @@ export class JugadorReservasComponent implements OnInit {
         const [h, m] = p.hora_inicio.split(':');
         const duration = Number(p.duracion_sesion_min || 60);
 
-        // Scan the next 14 days
-        for (let i = 0; i <= 14; i++) {
+        // Scan the next 30 days
+        for (let i = 0; i <= 30; i++) {
           const checkDate = new Date();
           checkDate.setDate(ahora.getDate() + i);
 
@@ -766,7 +766,8 @@ export class JugadorReservasComponent implements OnInit {
       error: (err) => {
         this.isLoading = false;
         console.error('Error creating temporal reservation:', err);
-        this.popupService.error('Error', 'No se pudo preparar la reserva.');
+        const errorMsg = err.error?.error || 'No se pudo preparar la reserva.';
+        this.popupService.error('Conflicto de Horario', errorMsg);
       }
     });
   }
@@ -819,7 +820,8 @@ export class JugadorReservasComponent implements OnInit {
           error: (err) => {
             console.error('Error al agendar reserva:', err);
             this.isLoading = false;
-            this.popupService.error('Error en Agenda', 'El pack se activó pero no pudimos agendar la clase.');
+            const errorMsg = err.error?.error || 'El pack se activó pero no pudimos agendar la clase.';
+            this.popupService.error('Conflicto de Horario', errorMsg);
           }
         });
       },

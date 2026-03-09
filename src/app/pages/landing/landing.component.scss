@@ -871,9 +871,30 @@ body {
         margin-bottom: 1rem;
       }
 
-      .amount {
-        font-size: 4.5rem;
-        font-weight: 950;
+      .amount-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+
+        .amount {
+          font-size: 4.5rem;
+          font-weight: 950;
+        }
+
+        .promo-badge {
+          background: $gold;
+          color: black;
+          padding: 4px 12px;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          display: inline-block;
+          animation: pulse 2s infinite ease-in-out;
+          box-shadow: 0 0 15px rgba($gold, 0.4);
+        }
       }
 
       &.highlight .amount {

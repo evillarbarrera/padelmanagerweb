@@ -24,6 +24,7 @@ export class JugadorHomeComponent implements OnInit {
     disponibles: 0,
     grupales: 0
   };
+  packsDetalle: any[] = [];
   isLoading = true;
   userId: number | null = null;
   chart: any;
@@ -86,6 +87,7 @@ export class JugadorHomeComponent implements OnInit {
           this.stats.reservadas = parseInt(packs.reservadas || packs.reservada) || 0;
           this.stats.disponibles = parseInt(packs.disponibles || packs.disponible) || 0;
           this.stats.grupales = parseInt(packs.grupales || packs.grupal) || 0;
+          this.packsDetalle = packs.detalle || [];
         }
 
         this.isLoading = false;

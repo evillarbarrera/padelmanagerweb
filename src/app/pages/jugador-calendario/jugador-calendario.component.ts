@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,6 +23,25 @@ export class JugadorCalendarioComponent implements OnInit {
   // Pagination
   itemsPerPage = 8;
   currentPage = 1;
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.calcularItemsPerPage();
+  }
+
+  private calcularItemsPerPage() {
+    if (window.innerWidth >= 768) {
+      this.itemsPerPage = 9999;
+      return;
+    }
+    // Restamos cabeceras, titulo de la página
+    const alturaDisponible = window.innerHeight - 250;
+    const filas = Math.max(2, Math.floor(alturaDisponible / 180));
+
+    let columnas = 1;
+
+    this.itemsPerPage = filas * columnas;
+  }
 
   // User Data
   jugadorNombre: string = 'Jugador';
@@ -50,6 +69,7 @@ export class JugadorCalendarioComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+    this.calcularItemsPerPage();
     this.loadUserProfile();
     this.loadReservas();
   }

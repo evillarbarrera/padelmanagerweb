@@ -111,10 +111,9 @@ export class EntrenadorAgendarComponent implements OnInit {
 
             while (inicio < fin) {
                 const bloqueInicio = new Date(inicio);
-                const bloqueFin = new Date(inicio);
-                bloqueFin.setHours(bloqueFin.getHours() + 1);
+                const bloqueFin = new Date(inicio.getTime() + 60 * 60 * 1000); // Consistent 1 hour block
 
-                if (bloqueInicio > ahora && bloqueFin <= fin) {
+                if (bloqueInicio >= ahora && bloqueFin <= fin) {
                     const Y = bloqueInicio.getFullYear();
                     const M = (bloqueInicio.getMonth() + 1).toString().padStart(2, '0');
                     const D = bloqueInicio.getDate().toString().padStart(2, '0');
@@ -203,7 +202,7 @@ export class EntrenadorAgendarComponent implements OnInit {
                     error: (err: any) => {
                         this.isLoading = false;
                         console.error('Error creating reservation:', err);
-                        this.popupService.error('Error', err.error?.message || 'Hubo un problema al crear la reserva.');
+                        this.popupService.error('Conflicto de Horario', err.error?.error || err.error?.message || 'Hubo un problema al crear la reserva.');
                     }
                 });
             }

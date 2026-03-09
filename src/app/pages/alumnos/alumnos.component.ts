@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +32,29 @@ export class AlumnosComponent implements OnInit {
   pagedAlumnos: any[] = [];
   sortCriteria: 'nombre' | 'saldo' = 'nombre';
 
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.calcularItemsPerPage();
+  }
+
+  private calcularItemsPerPage() {
+    if (window.innerWidth >= 768) {
+      this.itemsPerPage = 9999;
+      this.updatePagedAlumnos();
+      return;
+    }
+    // En web usamos un grid de 3 columnas (aprox 350px de alto por card)
+    // Restamos aprox 250px de cabecera/filtros
+    const alturaDisponible = window.innerHeight - 250;
+    const filas = Math.max(2, Math.floor(alturaDisponible / 350));
+
+    // Asumimos 3 columnas en desktop (> 1200), 2 en medianos (> 768), 1 en móvil
+    let columnas = 1;
+    this.itemsPerPage = filas * columnas;
+    this.updatePagedAlumnos();
+    console.log(`Paginación Web dinámica: ${this.itemsPerPage} items (${filas}x${columnas})`);
+  }
+
   constructor(
     private alumnoService: AlumnoService,
     private mysqlService: MysqlService,
@@ -45,6 +68,7 @@ export class AlumnosComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+    this.calcularItemsPerPage();
     this.loadProfile();
     this.loadAlumnos();
   }
@@ -69,13 +93,6 @@ export class AlumnosComponent implements OnInit {
     this.alumnoService.getAlumnos(this.userId).subscribe({
       next: (res) => {
         this.alumnos = (res || []).map(a => {
-          // Debugging
-          console.log(`Checking photo for ${a.jugador_nombre}:`, {
-            foto_perfil: a.foto_perfil,
-            foto: a.foto
-          });
-
-          // Construct photo URL
           const p1 = a.foto_perfil && String(a.foto_perfil).length > 5 ? a.foto_perfil : null;
           const p2 = a.foto && String(a.foto).length > 5 ? a.foto : null;
           let fotoRaw = p1 || p2;
@@ -92,8 +109,6 @@ export class AlumnosComponent implements OnInit {
             fotoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(a.jugador_nombre)}&background=ccff00&color=000`;
           }
 
-          console.log(`Final URL for ${a.jugador_nombre}:`, fotoUrl);
-
           return {
             ...a,
             sesiones_pagadas: Number(a.sesiones_pagadas),
@@ -109,7 +124,6 @@ export class AlumnosComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Error loading alumnos:', err);
         this.isLoading = false;
       }
     });
@@ -170,19 +184,8 @@ export class AlumnosComponent implements OnInit {
     this.router.navigate(['/entrenador-home']);
   }
 
-  verDetalles(alumno: any): void {
-    // Placeholder for future detail view
-    // Swal.fire('Detalles', `Ver detalles de ${alumno.jugador_nombre}`, 'info');
-  }
-
   irAEvaluar(alumno: any): void {
-    console.log('Intento de evaluar:', alumno);
-    console.log('ID Jugador:', alumno.jugador_id);
-    if (!alumno.jugador_id) {
-      console.error('ERROR: jugador_id es undefined/null');
-      return;
-    }
-    // Navigate to evaluation form with student ID
+    if (!alumno.jugador_id) return;
     this.router.navigate(['/evaluar', alumno.jugador_id]);
   }
 
@@ -194,11 +197,9 @@ export class AlumnosComponent implements OnInit {
     const input = document.getElementById('videoInput-' + alumno.jugador_id) as HTMLInputElement;
     if (input) {
       this.popupService.info(
-        'Subir Video de Entrenamiento',
-        'Requisitos:\n- Formato: MP4, MOV\n- Tamaño Máx: 20MB\n- Contenido: Puntos o técnica específica.'
-      ).then(() => {
-        input.click();
-      });
+        'Subir Video',
+        'Formatos permitidos: MP4, MOV (Máx 20MB)'
+      ).then(() => input.click());
     }
   }
 
@@ -206,96 +207,42 @@ export class AlumnosComponent implements OnInit {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validation
-    const allowedExtensions = ['mp4', 'mov', 'avi', 'wmv'];
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-
-    if (!allowedExtensions.includes(fileExtension)) {
-      this.popupService.error('Error', 'Formato de video no permitido. Usa MP4 o MOV.');
-      return;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      this.popupService.error('Error', 'El video supera los 20MB permitidos.');
-      return;
-    }
-
-    // Friendly prompt for details using SweetAlert2 directly
     Swal.fire({
       title: 'Detalles del Video',
       html: `
-        <div style="text-align: left;">
-          <label style="display: block; margin-bottom: 8px; font-weight: bold; font-family: 'Inter', sans-serif;">Categoría / Golpe</label>
-          <select id="swal-category" class="swal2-select" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box; display: block;">
-            <option value="General">General</option>
-            <option value="Derecha">Derecha</option>
-            <option value="Revés">Revés</option>
-            <option value="Volea de Derecha">Volea de Derecha</option>
-            <option value="Volea de Revés">Volea de Revés</option>
-            <option value="Bandeja">Bandeja</option>
-            <option value="Víbora">Víbora</option>
-            <option value="Rulo">Rulo</option>
-            <option value="Remate">Remate</option>
-            <option value="Globo">Globo</option>
-            <option value="Saque">Saque</option>
-            <option value="Pared">Salida de Pared</option>
-            <option value="Físico">Físico</option>
-            <option value="Partido">Partido</option>
-          </select>
-
-          <label style="display: block; margin-bottom: 8px; font-weight: bold; font-family: 'Inter', sans-serif;">Título del video</label>
-          <input id="swal-title" class="swal2-input" placeholder="Ej: Técnica de Drive" style="margin: 0; width: 100%; box-sizing: border-box;">
-          
-          <label style="display: block; margin-top: 20px; margin-bottom: 8px; font-weight: bold; font-family: 'Inter', sans-serif;">Comentario para el alumno</label>
-          <textarea id="swal-comment" class="swal2-textarea" placeholder="Ej: Fíjate en la posición de los pies..." style="margin: 0; width: 100%; height: 100px; box-sizing: border-box;"></textarea>
-        </div>
+        <input id="swal-title" class="swal2-input" placeholder="Título">
+        <textarea id="swal-comment" class="swal2-textarea" placeholder="Comentario"></textarea>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Subir Ahora',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#111',
-      cancelButtonColor: '#888',
+      confirmButtonText: 'Subir',
       preConfirm: () => {
         return {
-          category: (document.getElementById('swal-category') as HTMLSelectElement).value,
           title: (document.getElementById('swal-title') as HTMLInputElement).value,
           comment: (document.getElementById('swal-comment') as HTMLTextAreaElement).value
         };
       }
     }).then((result: any) => {
       if (result.isConfirmed) {
-        const { category, title, comment } = result.value;
-
+        const { title, comment } = result.value;
         const formData = new FormData();
         formData.append('video', file);
         formData.append('jugador_id', alumno.jugador_id.toString());
         formData.append('entrenador_id', this.userId?.toString() || '');
-        formData.append('categoria', category);
-        formData.append('titulo', title || ('Entrenamiento ' + new Date().toLocaleDateString()));
+        formData.append('titulo', title || 'Video Entrenamiento');
         formData.append('comentario', comment || '');
 
-        this.loadingMessage = 'Subiendo video de entrenamiento... 0%';
         this.isLoading = true;
         this.alumnoService.uploadVideo(formData).subscribe({
-          next: (event: any) => {
-            if (event.type === HttpEventType.UploadProgress) {
-              const percentDone = Math.round(100 * event.loaded / event.total);
-              this.loadingMessage = `Subiendo video de entrenamiento... ${percentDone}%`;
-            } else if (event.type === HttpEventType.Response) {
+          next: (ev: any) => {
+            if (ev.type === HttpEventType.Response) {
               this.isLoading = false;
-              this.popupService.success('¡Éxito!', 'Video subido correctamente.');
-              event.target.value = ''; // Reset input
+              this.popupService.success('¡Éxito!', 'Video subido.');
             }
           },
-          error: (err: any) => {
+          error: () => {
             this.isLoading = false;
-            console.error('Error uploading video:', err);
-            this.popupService.error('Error', err.error?.error || 'No se pudo subir el video.');
-            event.target.value = ''; // Reset input
           }
         });
-      } else {
-        event.target.value = ''; // Reset input if cancelled
       }
     });
   }
