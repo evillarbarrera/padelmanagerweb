@@ -109,7 +109,7 @@ export class JugadorReservasComponent implements OnInit {
       // Individual and Multiplayer share the same "availability" blocks (non-group)
       const isGrupal = slot.tipo === 'grupal';
 
-      if (this.tipoEntrenamiento === 'grupal') return isGrupal;
+      if (this.tipoEntrenamiento === 'grupal') return isGrupal || (!isGrupal && !slot.ocupado);
       if (this.tipoEntrenamiento === 'individual' || this.tipoEntrenamiento === 'multiplayer') return !isGrupal;
 
       // If "TODOS", show everything
@@ -375,7 +375,7 @@ export class JugadorReservasComponent implements OnInit {
         const slots = this.horariosPorDia[dia] || [];
         return slots.some(slot => {
           const isGrupal = slot.tipo === 'grupal';
-          if (this.tipoEntrenamiento === 'grupal') return isGrupal;
+          if (this.tipoEntrenamiento === 'grupal') return isGrupal || (!isGrupal && !slot.ocupado);
           return !isGrupal;
         });
       });
