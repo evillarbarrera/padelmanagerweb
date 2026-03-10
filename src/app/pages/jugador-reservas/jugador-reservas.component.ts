@@ -109,7 +109,7 @@ export class JugadorReservasComponent implements OnInit {
       // Individual and Multiplayer share the same "availability" blocks (non-group)
       const isGrupal = slot.tipo === 'grupal';
 
-      if (this.tipoEntrenamiento === 'grupal') return isGrupal || (!isGrupal && !slot.ocupado);
+      if (this.tipoEntrenamiento === 'grupal') return isGrupal;
       if (this.tipoEntrenamiento === 'individual' || this.tipoEntrenamiento === 'multiplayer') return !isGrupal;
 
       // If "TODOS", show everything
@@ -375,7 +375,7 @@ export class JugadorReservasComponent implements OnInit {
         const slots = this.horariosPorDia[dia] || [];
         return slots.some(slot => {
           const isGrupal = slot.tipo === 'grupal';
-          if (this.tipoEntrenamiento === 'grupal') return isGrupal || (!isGrupal && !slot.ocupado);
+          if (this.tipoEntrenamiento === 'grupal') return isGrupal;
           return !isGrupal;
         });
       });
@@ -637,7 +637,8 @@ export class JugadorReservasComponent implements OnInit {
             estado: 'reservado',
             recurrencia: this.recurrencia,
             tipo: targetType,
-            cantidad_personas: 1 // Joining as 1 person
+            cantidad_personas: 1, // Joining as 1 person
+            club_id: horario.club_id
           };
 
           this.entrenamientoService.crearReserva(payload).subscribe({
@@ -729,7 +730,8 @@ export class JugadorReservasComponent implements OnInit {
       pack_id: packId,
       estado: 'bloqueado',
       tipo: finalTipo,
-      cantidad_personas: 1
+      cantidad_personas: 1,
+      club_id: this.pendingHorario.club_id
     };
 
     this.entrenamientoService.crearReserva(payloadReserva).subscribe({
@@ -759,7 +761,8 @@ export class JugadorReservasComponent implements OnInit {
           error: (err) => {
             this.isLoading = false;
             console.error('Error init transaction:', err);
-            this.popupService.error('Error', 'Error al conectar con la pasarela de pagos.');
+            const msg = err.error?.error || 'Error al conectar con la pasarela de pagos.';
+            this.popupService.error('Atención', msg);
           }
         });
       },
@@ -807,7 +810,8 @@ export class JugadorReservasComponent implements OnInit {
           estado: 'reservado',
           tipo: finalTipo,
           cantidad_personas: 1,
-          recurrencia: 1
+          recurrencia: 1,
+          club_id: this.pendingHorario.club_id
         };
 
         this.entrenamientoService.crearReserva(payload).subscribe({
