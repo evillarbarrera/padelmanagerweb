@@ -21,6 +21,7 @@ import { ClubesJugadorComponent } from './pages/clubes-jugador/clubes-jugador.co
 import { ClubReservasComponent } from './pages/club-reservas/club-reservas.component';
 import { TorneoGestionComponent } from './pages/torneo-gestion/torneo-gestion.component';
 import { TorneoJugadorComponent } from './pages/torneo-jugador/torneo-jugador.component';
+import { EntrenadorCuponesComponent } from './pages/entrenador-cupones/entrenador-cupones.component';
 
 export const routes: Routes = [
   { path: 'unete', component: AceptarInvitacionComponent },
@@ -48,6 +49,7 @@ export const routes: Routes = [
   { path: 'alumnos', component: AlumnosComponent },
   { path: 'entrenador-calendario', component: EntrenadorAgendaComponent },
   { path: 'entrenador-packs', component: EntrenadorPacksComponent },
+  { path: 'entrenador-cupones', component: EntrenadorCuponesComponent },
   { path: 'disponibilidad-entrenador', component: DisponibilidadEntrenadorComponent },
   { path: 'admin-club', component: ClubAdminComponent },
   { path: 'crear-americano', component: TorneoAmericanoComponent },

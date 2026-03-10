@@ -255,6 +255,22 @@
           <button class="close-luxury-btn" (click)="showPackModal = false">✕</button>
         </div>
 
+        <div class="coupon-section-web"
+          style="background: #f8fafc; padding: 15px 25px; border-bottom: 1px solid #edf2f7;">
+          <div class="coupon-input-group" style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" [(ngModel)]="couponCode" placeholder="¿TIENES UN CUPÓN?"
+              style="flex: 1; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-weight: 700; text-transform: uppercase;">
+            <button (click)="applyCoupon()"
+              style="background: #000; color: white; padding: 12px 20px; border-radius: 10px; font-weight: 800; border: none; cursor: pointer;">
+              APLICAR
+            </button>
+          </div>
+          <p *ngIf="couponMessage" [style.color]="couponApplied ? '#38a169' : '#e53e3e'"
+            style="margin: 8px 0 0; font-size: 0.8rem; font-weight: 700;">
+            {{ couponMessage }}
+          </p>
+        </div>
+
         <div class="pack-scroll-area">
           <div class="pack-grid-luxury" *ngIf="availablePacks.length > 0">
             <div *ngFor="let pack of availablePacks" class="pack-luxury-card" (click)="comprarPackYReservar(pack)">
@@ -265,7 +281,18 @@
                   <p class="pack-desc">Ideal para mejorar tu técnica y constancia.</p>
                 </div>
                 <div class="price-section">
-                  <span class="price-val">{{ pack.precio | currency:'CLP':'$':'1.0-0' }}</span>
+                  <ng-container *ngIf="couponApplied; else normalPrice">
+                    <span class="price-val original-price"
+                      style="text-decoration: line-through; font-size: 0.9rem; color: #a0aec0; margin-right: 8px;">
+                      {{ pack.precio | currency:'CLP':'$':'1.0-0' }}
+                    </span>
+                    <span class="price-val final-price" style="color: #000; font-weight: 900;">
+                      {{ getDiscountedPrice(pack.precio) | currency:'CLP':'$':'1.0-0' }}
+                    </span>
+                  </ng-container>
+                  <ng-template #normalPrice>
+                    <span class="price-val">{{ pack.precio | currency:'CLP':'$':'1.0-0' }}</span>
+                  </ng-template>
                   <span class="per-session">Pago único</span>
                 </div>
               </div>

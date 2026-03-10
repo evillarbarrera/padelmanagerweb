@@ -1,0 +1,192 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
+        activePage="cupones">
+    </app-sidebar>
+
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <div class="hero-text">
+                    <h2>Gestión de Cupones</h2>
+                    <p>Crea y administra códigos de promoción para tus alumnos</p>
+                </div>
+                <button class="add-btn" (click)="abrirModal()">
+                    + NUEVO CUPÓN
+                </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-value">{{ cupones.length }}</span>
+                        <span class="stat-label">Cupones Activos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coupons Grid -->
+            <div class="coupons-grid" *ngIf="!isLoading; else loading">
+                <div class="coupon-card animate-up" *ngFor="let cupon of cupones; let i = index"
+                    [style.animation-delay]="(i * 0.05) + 's'" [class.inactive]="!cupon.activo">
+
+                    <div class="coupon-header">
+                        <div class="coupon-code">{{ cupon.codigo }}</div>
+                        <div class="discount-badge" [class.percentage]="cupon.tipo_descuento === 'porcentaje'">
+                            {{ cupon.tipo_descuento === 'porcentaje' ? cupon.valor + '%' : '$' + (cupon.valor |
+                            number:'1.0-0':'es') }}
+                        </div>
+                    </div>
+
+                    <div class="coupon-body">
+                        <div class="info-item" *ngIf="cupon.jugador_nombre">
+                            <i class="fas fa-user"></i>
+                            <span>Para: <strong>{{ cupon.jugador_nombre }}</strong></span>
+                        </div>
+                        <div class="info-item" *ngIf="cupon.pack_nombre">
+                            <i class="fas fa-box"></i>
+                            <span>Pack: <strong>{{ cupon.pack_nombre }}</strong></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>{{ (cupon.fecha_inicio | date:'dd MMM') || 'Inicia hoy' }} - {{ (cupon.fecha_fin |
+                                date:'dd MMM yyyy') || 'Sin fin' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-users"></i>
+                            <span>Uso: <strong>{{ cupon.uso_actual }} / {{ cupon.uso_maximo || '∞' }}</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="coupon-footer">
+                        <button class="action-btn edit" (click)="abrirModal(cupon)">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="action-btn delete" (click)="eliminarCupon(cupon.id)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="empty-state" *ngIf="cupones.length === 0">
+                    <div class="empty-icon">🎟️</div>
+                    <h3>No tienes cupones</h3>
+                    <p>Potencia tus ventas ofreciendo descuentos exclusivos.</p>
+                </div>
+            </div>
+
+            <ng-template #loading>
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Actualizando cupones...</p>
+                </div>
+            </ng-template>
+
+            <!-- Back FAB -->
+            <button class="back-fab-web" (click)="goBack()" title="Volver al Home">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+    </main>
+</div>
+
+<!-- Modal de Cupón -->
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+    <div class="modal-card animate-down" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>{{ nuevoCupon.id ? 'Editar Cupón' : 'Nuevo Descuento' }}</h2>
+            <button class="close-btn" (click)="cerrarModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group span-full">
+                    <label>Código del Cupón</label>
+                    <input type="text" [(ngModel)]="nuevoCupon.codigo" placeholder="Ej: PADEL20" class="form-input">
+                    <small>El alumno usará este código al pagar su pack.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select [(ngModel)]="nuevoCupon.tipo_descuento" class="form-input">
+                        <option value="porcentaje">Porcentaje (%)</option>
+                        <option value="monto">Fijo ($)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Valor</label>
+                    <input type="number" [(ngModel)]="nuevoCupon.valor" class="form-input" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" [(ngModel)]="nuevoCupon.fecha_inicio" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" [(ngModel)]="nuevoCupon.fecha_fin" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label>Uso Máximo (Opcional)</label>
+                    <input type="number" [(ngModel)]="nuevoCupon.uso_maximo" class="form-input" placeholder="Ej: 50">
+                </div>
+
+                <div class="form-group">
+                    <label>Pack Específico (Opcional)</label>
+                    <select [(ngModel)]="nuevoCupon.pack_id" class="form-input">
+                        <option [ngValue]="null">Todos los packs</option>
+                        <option *ngFor="let p of packs" [value]="p.id">{{ p.nombre }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group span-full" style="position: relative;">
+                    <label>Restringir a Alumno (Opcional)</label>
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-field-icon"></i>
+                        <input type="text" [(ngModel)]="searchTermAlumno" (input)="filterAlumnos()"
+                            placeholder="Buscar alumno en la base de datos..." class="form-input search-field">
+                    </div>
+
+                    <div class="autocomplete-results"
+                        *ngIf="searchTermAlumno && (isSearchingAlumno || alumnosFiltrados.length > 0)">
+                        <!-- Loading State inside Autocomplete -->
+                        <div class="result-item loading" *ngIf="isSearchingAlumno">
+                            <span>Buscando jugadores...</span>
+                        </div>
+
+                        <!-- Results List -->
+                        <ng-container *ngIf="!isSearchingAlumno">
+                            <div class="result-item" *ngFor="let alu of alumnosFiltrados"
+                                (click)="seleccionarAlumno(alu)">
+                                <div class="alu-info">
+                                    <span class="alu-name">{{ alu.nombre }}</span>
+                                    <span class="alu-mail">{{ alu.usuario }}</span>
+                                    <span class="alu-tag" *ngIf="alu.rol === 'entrenador'">Coach</span>
+                                </div>
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+
+                            <!-- No Results found state -->
+                            <div class="result-item empty"
+                                *ngIf="alumnosFiltrados.length === 0 && searchTermAlumno.length > 1">
+                                <span>No se encontraron jugadores con "{{ searchTermAlumno }}"</span>
+                            </div>
+                        </ng-container>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="cerrarModal()">CANCELAR</button>
+            <button class="btn-save" (click)="guardarCupon()" [disabled]="isSaving">
+                {{ isSaving ? 'GUARDANDO...' : (nuevoCupon.id ? 'GUARDAR CAMBIOS' : 'CREAR CUPÓN') }}
+            </button>
+        </div>
+    </div>
+</div>

@@ -112,4 +112,23 @@ export class EntrenamientoService {
     const payload = { entrenador_id: entrenadorId, club_id: clubId };
     return this.http.post<any>(`${this.apiUrl}/disponibilidad/migrate_to_club.php`, payload, { headers: this.headers });
   }
+
+  // --- CUPONES ---
+  getCupones(entrenadorId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/entrenador/get_cupones.php?entrenador_id=${entrenadorId}`, { headers: this.headers });
+  }
+
+  saveCupon(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/entrenador/save_cupon.php`, payload, { headers: this.headers });
+  }
+
+  deleteCupon(cuponId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/entrenador/delete_cupon.php`, { id: cuponId }, { headers: this.headers });
+  }
+
+  validateCupon(codigo: string, entrenadorId: number, jugadorId: number, packId?: number): Observable<any> {
+    let url = `${this.apiUrl}/packs/validate_cupon.php?codigo=${codigo}&entrenador_id=${entrenadorId}&jugador_id=${jugadorId}`;
+    if (packId) url += `&pack_id=${packId}`;
+    return this.http.get<any>(url, { headers: this.headers });
+  }
 }

@@ -115,4 +115,11 @@ export class MysqlService {
     }
     return this.http.get<any[]>(url, { headers: this.headers });
   }
+
+  searchAlumnos(term: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/user/get_users.php?rol=jugador&search=${term}&limit=10`,
+      { headers: this.headers }
+    );
+  }
 }

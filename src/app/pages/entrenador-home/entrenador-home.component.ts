@@ -213,6 +213,10 @@ export class EntrenadorHomeComponent implements OnInit {
     this.router.navigate(['/disponibilidad-entrenador']);
   }
 
+  irACupones(): void {
+    this.router.navigate(['/entrenador-cupones']);
+  }
+
   irAPerfil(): void {
     this.router.navigate(['/perfil']);
   }

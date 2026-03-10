@@ -42,6 +42,12 @@ export class JugadorReservasComponent implements OnInit {
   entrenadorTelefono: string = '';
   selectedCoachName: string = '';
 
+  // Coupon State
+  couponCode: string = '';
+  couponApplied: boolean = false;
+  appliedCouponData: any = null;
+  couponMessage: string = '';
+
   // Discovery & Location
   isLoadingDiscovery = false;
   useLocation = false; // Changed to false by default as we use region/comuna now
@@ -692,6 +698,10 @@ export class JugadorReservasComponent implements OnInit {
         }
 
         this.showPackModal = true;
+        this.couponCode = '';
+        this.couponApplied = false;
+        this.appliedCouponData = null;
+        this.couponMessage = '';
         this.isLoading = false;
       },
       error: (err) => {
@@ -700,6 +710,40 @@ export class JugadorReservasComponent implements OnInit {
         this.popupService.error('Error', 'No se pudieron cargar los packs del entrenador.');
       }
     });
+  }
+
+  applyCoupon() {
+    if (!this.couponCode) return;
+
+    this.entrenamientoService.validateCupon(this.couponCode, this.selectedEntrenador!, this.userId!, this.pendingHorario?.pack_id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.couponApplied = true;
+          this.appliedCouponData = res.cupon;
+          this.couponMessage = `¡Cupón aplicado! Descuento de ${res.cupon.valor}${res.cupon.tipo_descuento === 'porcentaje' ? '%' : '$'}`;
+        } else {
+          this.couponApplied = false;
+          this.appliedCouponData = null;
+          this.couponMessage = res.error || 'Cupón no válido';
+        }
+      },
+      error: (err) => {
+        this.couponApplied = false;
+        this.appliedCouponData = null;
+        this.couponMessage = err.error?.error || 'Error al validar el cupón';
+      }
+    });
+  }
+
+  getDiscountedPrice(price: number): number {
+    if (!this.couponApplied || !this.appliedCouponData) return price;
+
+    const val = Number(this.appliedCouponData.valor);
+    if (this.appliedCouponData.tipo_descuento === 'porcentaje') {
+      return price * (1 - (val / 100));
+    } else {
+      return Math.max(0, price - val);
+    }
   }
 
   async comprarPackYReservar(pack: any) {
@@ -742,8 +786,9 @@ export class JugadorReservasComponent implements OnInit {
         const paymentPayload = {
           pack_id: packId,
           jugador_id: Number(this.userId),
-          amount: pack.precio,
+          amount: this.getDiscountedPrice(pack.precio),
           reserva_id: reservaId,
+          cupon_id: this.appliedCouponData?.id,
           origin: window.location.origin + window.location.pathname
         };
 
@@ -785,7 +830,9 @@ export class JugadorReservasComponent implements OnInit {
     // 1. Primero registramos la "compra" del pack
     const packPayload = {
       pack_id: packId,
-      jugador_id: Number(this.userId)
+      jugador_id: Number(this.userId),
+      cupon_id: this.appliedCouponData?.id,
+      precio_pagado: this.getDiscountedPrice(pack.precio)
     };
 
     this.alumnoService.insertPack(packPayload).subscribe({
