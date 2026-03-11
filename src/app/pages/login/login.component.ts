@@ -45,14 +45,16 @@ export class LoginComponent {
       next: (response: any) => {
         this.isLoading = false;
         if (response.id) {
-          // Si hay múltiples perfiles, mostrar selector
-          if (response.perfiles && response.perfiles.length > 1) {
+          // Filtrar perfiles para excluir administrador_club (Pedido cliente: "sacar perfil admin club")
+          const filteredProfiles = (response.perfiles || []).filter((p: any) => p.rol !== 'administrador_club');
+
+          if (filteredProfiles.length > 1) {
             this.authService.setCurrentUser(response); // Guardamos user base
-            this.availableProfiles = response.perfiles;
+            this.availableProfiles = filteredProfiles;
             this.showProfileSelector = true;
           } else {
             // Caso único perfil (o legacy)
-            const perfil = (response.perfiles && response.perfiles.length > 0) ? response.perfiles[0] : null;
+            const perfil = (filteredProfiles.length > 0) ? filteredProfiles[0] : null;
             this.finalizeLogin(response, perfil);
           }
         } else {
