@@ -1,9 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+
+declare var google: any;
 
 @Component({
   selector: 'app-login',
@@ -12,7 +14,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, AfterViewInit {
   email = '';
   password = '';
   isLoading = false;
@@ -28,6 +30,87 @@ export class LoginComponent {
     private authService: AuthService,
     private router: Router
   ) { }
+
+  ngOnInit(): void {
+  }
+
+  ngAfterViewInit(): void {
+    this.initGoogleAuth();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.initGoogleAuth();
+  }
+
+  initGoogleAuth(): void {
+    if (typeof google !== 'undefined') {
+      google.accounts.id.initialize({
+        client_id: '786145270372-liov6hu5v7lcmf2028s9ihi600rp3353.apps.googleusercontent.com',
+        callback: (response: any) => this.handleGoogleLogin(response)
+      });
+
+      const btnContainer = document.getElementById("googleBtn");
+      if (btnContainer) {
+        // Clear previous button
+        btnContainer.innerHTML = '';
+
+        // Calculate available width
+        const availableWidth = btnContainer.offsetWidth;
+        const finalWidth = availableWidth > 0 ? Math.min(380, availableWidth) : 300;
+
+        google.accounts.id.renderButton(
+          btnContainer,
+          {
+            theme: "filled_blue",
+            size: "large",
+            width: finalWidth,
+            text: "continue_with",
+            shape: "pill",
+            logo_alignment: "left"
+          }
+        );
+      }
+    } else {
+      setTimeout(() => this.initGoogleAuth(), 1000);
+    }
+  }
+
+  handleGoogleLogin(response: any): void {
+    const payload = this.decodeToken(response.credential);
+    const email = payload.email;
+    const name = payload.name;
+
+    this.isLoading = true;
+    this.authService.googleCheck(email).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        if (res.success && res.exists) {
+          // Login existoso desde Google
+          this.finalizeLogin(res, null);
+        } else if (res.success && !res.exists) {
+          // Usuario nuevo -> Redirigir a registro con datos precargados o mostrar selección de rol
+          this.error = 'Usuario no registrado. Por favor regístrate primero.';
+        } else {
+          this.error = res.error || 'Error al autenticar con Google';
+        }
+      },
+      error: (err) => {
+        console.error('Google Check Error:', err);
+        this.isLoading = false;
+        this.error = 'Error de conexión con el servidor.';
+      }
+    });
+  }
+
+  private decodeToken(token: string): any {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  }
 
   availableProfiles: any[] = [];
   showProfileSelector = false;

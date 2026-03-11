@@ -33,6 +33,14 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/recover-password.php`, { email });
   }
 
+  googleCheck(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/google_auth.php`, { email }, { headers: this.getHeaders() });
+  }
+
+  googleRegister(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/google_register.php`, userData, { headers: this.getHeaders() });
+  }
+
   resetPassword(token: string, password: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/auth/reset-password.php`, { token, password });
   }
