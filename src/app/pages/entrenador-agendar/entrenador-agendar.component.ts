@@ -57,8 +57,8 @@ export class EntrenadorAgendarComponent implements OnInit {
     loadAlumnos(): void {
         if (!this.entrenadorId) return;
         this.entrenamientoService.getMisAlumnos(this.entrenadorId).subscribe({
-            next: (res) => {
-                this.alumnos = res;
+            next: (res: any[]) => {
+                this.alumnos = res.filter(a => (a.sesiones_restantes || 0) > 0);
             },
             error: (err: any) => console.error('Error loading students:', err)
         });
