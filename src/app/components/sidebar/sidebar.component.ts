@@ -55,7 +55,7 @@ export class SidebarComponent implements OnInit {
 
     ngOnInit() {
         // Initial load from local storage
-        this.availableProfiles = this.authService.getProfiles();
+        this.availableProfiles = this.authService.getProfiles().filter(p => p.rol !== 'administrador_club');
 
         // Subscribe to user changes for real-time updates (photo, name, etc)
         this.authService.currentUser$.subscribe(currentUser => {
@@ -77,7 +77,7 @@ export class SidebarComponent implements OnInit {
         const currentUserId = this.userId || currentUser?.id;
         if (currentUserId) {
             this.authService.refreshSession(currentUserId).subscribe(() => {
-                this.availableProfiles = this.authService.getProfiles();
+                this.availableProfiles = this.authService.getProfiles().filter(p => p.rol !== 'administrador_club');
             });
         }
     }
@@ -129,13 +129,13 @@ export class SidebarComponent implements OnInit {
                         <p style="font-size: 11px; color: #666; margin: 5px 0 0 0;">Quiero ofrecer clases</p>
                     </div>
 
-                    <div id="btn-admin" style="cursor: pointer; border: 2px solid #eee; border-radius: 12px; padding: 20px; width: 140px; transition: all 0.2s;"
+                    <!-- <div id="btn-admin" style="cursor: pointer; border: 2px solid #eee; border-radius: 12px; padding: 20px; width: 140px; transition: all 0.2s;"
                         onmouseover="this.style.borderColor='#ccff00'; this.style.background='#f9f9f9'"
                         onmouseout="this.style.borderColor='#eee'; this.style.background='transparent'">
                         <div style="font-size: 40px; margin-bottom: 10px;">🏢</div>
                         <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: #111;">Encargado Club</h3>
                         <p style="font-size: 11px; color: #666; margin: 5px 0 0 0;">Gestionar mi club</p>
-                    </div>
+                    </div> -->
                 </div>
             `,
             showConfirmButton: false,

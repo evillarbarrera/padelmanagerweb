@@ -45,7 +45,7 @@ export class PerfilComponent implements OnInit {
       input: 'radio',
       inputOptions: {
         'entrenador': '🎾 Entrenador',
-        'administrador_club': '🏢 Administrador de Club'
+        // 'administrador_club': '🏢 Administrador de Club'
       },
       showCancelButton: true,
       confirmButtonText: 'Enviar Solicitud',
