@@ -167,10 +167,9 @@ export class JugadorCalendarioComponent implements OnInit {
       if (result) {
         if (!this.userId) return;
 
-        // Check if it is a group reservation
-        if (reserva.tipo === 'grupal' || reserva.inscripcion_id) {
-          const inscId = reserva.inscripcion_id || id;
-          this.mysqlService.cancelarInscripcionGrupal(inscId, this.userId).subscribe({
+        // Check if it is a group enrollment (not a physical slot yet)
+        if (reserva.inscripcion_id) {
+          this.mysqlService.cancelarInscripcionGrupal(reserva.inscripcion_id, this.userId).subscribe({
             next: (res) => {
               this.popupService.success('¡Cancelada!', res.message || 'Tu cupo ha sido liberado.');
               this.loadReservas();
@@ -181,7 +180,7 @@ export class JugadorCalendarioComponent implements OnInit {
             }
           });
         } else {
-          // Individual Reservation
+          // Normal Reservation (even if it's marked as grupal, we use the reserva_id)
           this.mysqlService.cancelarReserva(id, this.userId).subscribe({
             next: () => {
               this.popupService.success('¡Cancelada!', 'Tu reserva ha sido cancelada.');
