@@ -33,7 +33,7 @@ export class AlumnosComponent implements OnInit {
   sortCriteria: 'nombre' | 'saldo' = 'nombre';
 
   @HostListener('window:resize', ['$event'])
-  onResize() {
+  onResize(event: any) {
     this.calcularItemsPerPage();
   }
 
@@ -114,7 +114,7 @@ export class AlumnosComponent implements OnInit {
             sesiones_pagadas: Number(a.sesiones_pagadas),
             sesiones_reservadas: a.sesiones_reservadas,
             sesiones_grupales: a.sesiones_grupales,
-            sesiones_restantes: a.sesiones_pendientes,
+            sesiones_pendientes: a.sesiones_pendientes,
             pack_nombre: a.pack_nombres,
             foto: fotoUrl
           };

@@ -10,7 +10,7 @@
             <!-- Standard Page Header -->
             <div class="page-header">
                 <h2 class="section-title">Mis Packs Activos</h2>
-                <button class="add-btn" (click)="irAComprar()">
+                <button class="add-btn" (click)="irAComprar()" *ngIf="!hasAvailableCredits()">
                     + Comprar Nuevos Packs
                 </button>
             </div>
@@ -43,14 +43,18 @@
 
                     <div class="pack-body">
                         <div class="info-row">
-                            <span class="label">Clases Usadas:</span>
-                            <span class="val">{{ pack.sesiones_usadas }} / {{ pack.sesiones_totales }}</span>
+                            <span class="label">Sesiones Pendientes:</span>
+                            <span class="val">{{ pack.pendientes }} / {{ pack.sesiones_totales }}</span>
+                        </div>
+                        <div class="info-row" style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 5px;">
+                            <span class="label">Historial (Res.):</span>
+                            <span class="val">{{ pack.sesiones_reservadas }} sesiones</span>
                         </div>
 
                         <!-- Progress Bar -->
                         <div class="progress-bar-bg">
                             <div class="progress-bar-fill"
-                                [style.width.%]="(pack.sesiones_usadas / pack.sesiones_totales) * 100">
+                                [style.width.%]="(pack.pendientes / pack.sesiones_totales) * 100">
                             </div>
                         </div>
 

@@ -61,7 +61,10 @@ export class AlumnoMisPacks implements OnInit {
     this.isLoading = true;
     this.alumnoService.getMisPacks(this.userId).subscribe({
       next: (res: any) => {
-        this.packs = res.data || [];
+        this.packs = (res.data || []).map((p: any) => ({
+          ...p,
+          pendientes: Math.max(0, Number(p.sesiones_totales) - Number(p.sesiones_pasadas))
+        }));
         this.isLoading = false;
       },
       error: (err) => {
@@ -71,7 +74,15 @@ export class AlumnoMisPacks implements OnInit {
     });
   }
 
+  hasAvailableCredits(): boolean {
+    return this.packs.some(p => p.pendientes > 0);
+  }
+
   irAComprar() {
+    if (this.hasAvailableCredits()) {
+      this.popupService.warning('Acción restringida', 'Ya tienes créditos disponibles. Debes usarlos antes de adquirir un nuevo pack.');
+      return;
+    }
     this.router.navigate(['/jugador-packs']);
   }
 

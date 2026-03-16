@@ -228,18 +228,27 @@ export class JugadorPacksComponent implements OnInit {
     }
 
     async comprarPack(pack: any) {
-        // Si es pack grupal, usar inscripción grupal (Si existiera la lógica aquí)
-
-        this.popupService.confirm(
-            '¿Confirmar compra?',
-            `Vas a adquirir el pack "${pack.nombre}" por $${pack.precio}.`
-        ).then((confirmed) => {
-            if (confirmed) {
-                if (pack.transbank_activo == 1 || pack.transbank_activo == '1') {
-                    this.iniciarPagoTransbank(pack);
-                } else {
-                    this.procesarCompraManual(pack);
+        // Redirección si hay créditos disponibles
+        this.mysqlService.getHomeStats(Number(this.userId)).subscribe({
+            next: (res: any) => {
+                const disponibles = res.estadisticas?.packs?.disponibles || 0;
+                if (disponibles > 0) {
+                    this.popupService.warning('Acción restringida', 'Ya tienes créditos disponibles. Debes usarlos antes de adquirir un nuevo pack.');
+                    return;
                 }
+
+                this.popupService.confirm(
+                    '¿Confirmar compra?',
+                    `Vas a adquirir el pack "${pack.nombre}" por $${pack.precio}.`
+                ).then((confirmed) => {
+                    if (confirmed) {
+                        if (pack.transbank_activo == 1 || pack.transbank_activo == '1') {
+                            this.iniciarPagoTransbank(pack);
+                        } else {
+                            this.procesarCompraManual(pack);
+                        }
+                    }
+                });
             }
         });
     }

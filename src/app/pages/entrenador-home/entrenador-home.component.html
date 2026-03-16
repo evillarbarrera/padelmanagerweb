@@ -26,43 +26,58 @@
     <!-- Dashboard Content -->
     <div class="dashboard-grid fade-in" *ngIf="!isLoading">
 
-      <!-- Promo Alert: 3 months free -->
-      <div class="promo-alert" *ngIf="quickStats.promoActiva"
-        style="background: #e6ffef; border: 1px solid #b2f2bb; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-        <div style="display: flex; gap: 15px; align-items: center;">
-          <span style="font-size: 24px;">🎁</span>
-          <div>
-            <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #2b8a3e;">¡Promoción Activa!</h4>
-            <p style="margin: 4px 0 0; font-size: 14px; color: #2b8a3e;">Estás disfrutando de <strong>comisión
-                0%</strong>. Te quedan <strong>{{ quickStats.promoDiasRestantes }} días</strong> de beneficio.</p>
+      <!-- Top Welcome Header -->
+      <header class="dashboard-header">
+        <div class="welcome-text">
+          <h1>Hola, <span>{{ coachNombre }}</span></h1>
+          <p>Gestiona tus clases y alumnos para el día de hoy.</p>
+        </div>
+        <div class="date-widget">
+          <span class="icon">📅</span>
+          <div class="date-info">
+            <span class="day">{{ hoyNombre }}</span>
+            <span class="full-date">{{ fechaHoyFormatted }}</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Promo Alert: Premium Status -->
+      <div class="promo-alert" *ngIf="quickStats.promoActiva">
+        <div class="promo-content">
+          <span class="promo-icon">🎁</span>
+          <div class="promo-text">
+            <h4>¡Promoción Activa!</h4>
+            <p>Estás disfrutando de <strong>comisión 0%</strong>. Te quedan <strong>{{ quickStats.promoDiasRestantes }}
+                días</strong> de beneficio.</p>
           </div>
         </div>
       </div>
 
       <!-- Mercado Pago Reminder Alert -->
-      <div class="mp-reminder-alert" *ngIf="showMPReminder"
-        style="background: #fff9e6; border: 1px solid #ffeeba; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-        <div style="display: flex; gap: 15px; align-items: center;">
-          <span style="font-size: 24px;">⚠️</span>
-          <div>
-            <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #856404;">Configura tus Pagos</h4>
-            <p style="margin: 4px 0 0; font-size: 14px; color: #856404;">Para recibir pagos automáticos de tus alumnos,
-              vincula tu cuenta de Mercado Pago en tu perfil.</p>
+      <div class="mp-reminder-alert slide-in" *ngIf="showMPReminder">
+        <div class="alert-content">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-text">
+            <h4>Configura tus Pagos</h4>
+            <p>Para recibir pagos automáticos de tus alumnos, vincula tu cuenta de Mercado Pago.</p>
           </div>
         </div>
-        <div style="display: flex; gap: 12px;">
-          <button (click)="dismissMPReminder()"
-            style="background: transparent; border: none; color: #856404; font-weight: 600; cursor: pointer; font-size: 13px;">No
-            mostrar de nuevo</button>
-          <button (click)="irAPerfil()"
-            style="background: #856404; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px;">Ir
-            a mi Perfil</button>
+        <div class="alert-actions">
+          <button (click)="dismissMPReminder()" class="btn-dismiss">Omitir</button>
+          <button (click)="irAPerfil()" class="btn-primary-alert">Ir a Perfil</button>
         </div>
       </div>
 
 
       <!-- Stats Summary Widgets -->
       <div class="stats-row">
+        <div class="stat-widget" style="background: #111; color: white;">
+          <div class="widget-icon" style="background: rgba(204, 255, 0, 0.1); color: #ccff00;">⏳</div>
+          <div class="widget-data">
+            <span class="widget-val" style="color: #ccff00;">{{ quickStats.clasesPendientes }}</span>
+            <span class="widget-label">Clases Pendientes</span>
+          </div>
+        </div>
         <div class="stat-widget">
           <div class="widget-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563eb;">👤</div>
           <div class="widget-data">
@@ -95,80 +110,94 @@
 
 
 
-      <!-- Quick Actions Grid -->
-      <h3 class="section-title">Panel de Control</h3>
-      <div class="actions-grid">
-        <div class="action-card primary" (click)="irAAlumnos()">
-          <div class="card-content">
-            <span class="card-icon">👥</span>
-            <h3>Mis Alumnos</h3>
-            <p>Gestiona tu base de datos</p>
-          </div>
-          <span class="arrow-icon">→</span>
-        </div>
+      <!-- Main Grid Layout -->
+      <div class="main-dashboard-content">
 
-        <div class="action-card secondary" (click)="irACalendario()">
-          <div class="card-content">
-            <span class="card-icon">📅</span>
-            <h3>Mi Agenda</h3>
-            <p>Visualiza tus entrenamientos</p>
-          </div>
-          <span class="arrow-icon">→</span>
-        </div>
+        <!-- Left Column: Classes and Agenda -->
+        <div class="content-column left">
+          <div class="today-classes-section">
+            <h3 class="column-title">Próximas Sesiones</h3>
 
-        <div class="action-card tertiary" (click)="irAPacks()">
-          <div class="card-content">
-            <span class="card-icon">📦</span>
-            <h3>Gestionar Packs</h3>
-            <p>Crea y edita paquetes</p>
-          </div>
-          <span class="arrow-icon">→</span>
-        </div>
-
-        <div class="action-card quaternary" (click)="irADisponibilidad()">
-          <div class="card-content">
-            <span class="card-icon">⏰</span>
-            <h3>Disponibilidad</h3>
-            <p>Configura tus horarios</p>
-          </div>
-          <span class="arrow-icon">→</span>
-        </div>
-
-        <div class="action-card" (click)="irACupones()" style="background: #fff5f5; border: 1px solid #fed7d7;">
-          <div class="card-content">
-            <span class="card-icon">🎟️</span>
-            <h3 style="color: #c53030;">Cupones</h3>
-            <p style="color: #9b2c2c;">Descuentos y promos</p>
-          </div>
-          <span class="arrow-icon" style="color: #c53030;">→</span>
-        </div>
-      </div>
-
-      <!-- Clases de Hoy y Mañana Section -->
-      <div class="today-classes-section">
-        <h3 class="section-title">Próximas Clases</h3>
-
-        <div class="classes-list" *ngIf="clasesHoyList.length > 0">
-          <div class="class-card" *ngFor="let clase of clasesHoyList">
-            <div class="time-col">
-              <span class="day-badge" [class.tomorrow]="clase.diaLabel === 'Mañana'">{{ clase.diaLabel }}</span>
-              <span class="time">{{ clase.hora }}</span>
+            <div class="classes-list" *ngIf="clasesHoyList.length > 0">
+              <div class="class-card animate-up" *ngFor="let clase of clasesHoyList; let i = index"
+                [style.animation-delay]="i * 0.1 + 's'">
+                <div class="time-col">
+                  <span class="day-badge" [class.tomorrow]="clase.diaLabel === 'Mañana'">{{ clase.diaLabel }}</span>
+                  <span class="time">{{ clase.hora }}</span>
+                </div>
+                <div class="info-col">
+                  <span class="class-title">{{ clase.titulo }}</span>
+                  <span class="class-subtitle">{{ clase.subtitulo }}</span>
+                </div>
+                <div class="type-col">
+                  <span class="badge" [ngClass]="clase.tipo === 'Grupal' ? 'badge-grupal' : 'badge-indiv'">
+                    {{ clase.tipo }}
+                  </span>
+                </div>
+                <span class="arrow-indicator">→</span>
+              </div>
             </div>
-            <div class="info-col">
-              <span class="class-title">{{ clase.titulo }}</span>
-              <span class="class-subtitle">{{ clase.subtitulo }}</span>
-            </div>
-            <div class="type-col">
-              <span class="badge" [ngClass]="clase.tipo === 'Grupal' ? 'badge-grupal' : 'badge-indiv'">
-                {{ clase.tipo }}
-              </span>
+
+            <div class="empty-classes" *ngIf="clasesHoyList.length === 0">
+              <span class="empty-icon">🎾</span>
+              <p>No tienes clases programadas para hoy ni mañana.</p>
+              <button class="btn-outline-small" (click)="irACalendario()">Ver mi Agenda Completa</button>
             </div>
           </div>
         </div>
 
-        <div class="empty-classes" *ngIf="clasesHoyList.length === 0">
-          <p>No hay clases para hoy ni mañana 🎉</p>
+        <!-- Right Column: Quick Actions and Feedback -->
+        <div class="content-column right">
+          <h3 class="column-title">Acciones Rápidas</h3>
+          <div class="vertical-actions">
+            <div class="mini-card" (click)="irAAlumnos()">
+              <span class="m-icon">👥</span>
+              <div class="m-text">
+                <h4>Mis Alumnos</h4>
+                <p>Base de datos completa</p>
+              </div>
+            </div>
+
+            <div class="mini-card" (click)="irACalendario()">
+              <span class="m-icon">📅</span>
+              <div class="m-text">
+                <h4>Agenda Semanal</h4>
+                <p>Horarios y reservas</p>
+              </div>
+            </div>
+
+            <div class="mini-card" (click)="irAPacks()">
+              <span class="m-icon">📦</span>
+              <div class="m-text">
+                <h4>Packs de Clases</h4>
+                <p>Precios y ventas</p>
+              </div>
+            </div>
+
+            <div class="mini-card" (click)="irADisponibilidad()">
+              <span class="m-icon">⏰</span>
+              <div class="m-text">
+                <h4>Mi Disponibilidad</h4>
+                <p>Definir horarios</p>
+              </div>
+            </div>
+
+            <div class="mini-card coupon" (click)="irACupones()">
+              <span class="m-icon">🎟️</span>
+              <div class="m-text">
+                <h4>Cupones</h4>
+                <p>Ofertas y descuentos</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secondary Widget -->
+          <div class="feedback-card">
+            <h4>💡 Tip de hoy</h4>
+            <p>Mantener tus horarios actualizados ayuda a que tus alumnos reserven con mayor facilidad.</p>
+          </div>
         </div>
+
       </div>
 
     </div>

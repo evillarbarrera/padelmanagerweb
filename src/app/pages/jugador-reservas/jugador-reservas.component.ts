@@ -150,9 +150,30 @@ export class JugadorReservasComponent implements OnInit {
     const storedUserId = localStorage.getItem('userId');
     this.userId = storedUserId ? Number(storedUserId) : null;
 
+    this.checkBookingRestriction();
     this.loadUserProfile();
     // Prefer loading profile first to set default location
     this.checkQueryParams();
+  }
+
+  checkBookingRestriction() {
+    if (!this.userId) return;
+    this.mysqlService.getHomeStats(this.userId).subscribe({
+      next: (res: any) => {
+        const stats = res.estadisticas?.packs;
+        if (stats) {
+          const creditos = stats.disponibles;
+          const pendientes = stats.pendientes;
+
+          if (creditos <= 0 && pendientes > 0) {
+            this.popupService.info(
+              'Atención',
+              'Aún tienes clases reservadas por asistir. Podrás comprar un nuevo pack una vez que hayas completado tus reservas actuales.'
+            );
+          }
+        }
+      }
+    });
   }
 
   updateComunas(keepComuna = false): void {
@@ -663,8 +684,21 @@ export class JugadorReservasComponent implements OnInit {
         }
       });
     } else {
-      // NO TIENE PACK: Mostrar packs disponibles para comprar
-      this.mostrarPacksDisponibles(horario);
+      // NO TIENE PACK: Verificar si tiene clases pendientes (futuras) antes de dejar comprar
+      this.mysqlService.getHomeStats(this.userId!).subscribe({
+        next: (res: any) => {
+          const stats = res.estadisticas?.packs;
+          if (stats && stats.pendientes > 0) {
+            this.popupService.info(
+              'Atención',
+              'Aún tienes clases reservadas por asistir. Cuando las completes todas, podrás comprar un nuevo pack.'
+            );
+          } else {
+            this.mostrarPacksDisponibles(horario);
+          }
+        },
+        error: () => this.mostrarPacksDisponibles(horario)
+      });
     }
   }
 

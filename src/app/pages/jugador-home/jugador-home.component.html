@@ -12,11 +12,19 @@
 
       <!-- Stats Row -->
       <div class="stats-row">
-        <div class="stat-card pagadas">
-          <div class="icon-box">💳</div>
+        <div class="stat-card pendientes" style="background: #111; color: white;">
+          <div class="icon-box" style="background: rgba(204, 255, 0, 0.1); color: #ccff00;">⏳</div>
           <div class="stat-details">
-            <span class="value">{{ stats.pagadas }}</span>
-            <span class="label">Clases Pagadas</span>
+            <span class="value" style="color: #ccff00;">{{ stats.pendientes }}</span>
+            <span class="label">Clases Pendientes</span>
+          </div>
+        </div>
+
+        <div class="stat-card disponibles" style="background: #fff; border: 2px solid #000;">
+          <div class="icon-box" style="color: #000;">✨</div>
+          <div class="stat-details">
+            <span class="value" style="color: #000;">{{ stats.disponibles }}</span>
+            <span class="label">Créditos Disponibles</span>
           </div>
         </div>
 
@@ -24,15 +32,15 @@
           <div class="icon-box">📅</div>
           <div class="stat-details">
             <span class="value">{{ stats.reservadas }}</span>
-            <span class="label">Reservadas</span>
+            <span class="label">Próximas Reservas</span>
           </div>
         </div>
 
-        <div class="stat-card disponibles">
-          <div class="icon-box">✅</div>
+        <div class="stat-card pagadas">
+          <div class="icon-box">💳</div>
           <div class="stat-details">
-            <span class="value">{{ stats.disponibles }}</span>
-            <span class="label">Disponibles</span>
+            <span class="value">{{ stats.pagadas }}</span>
+            <span class="label">Clases Compradas</span>
           </div>
         </div>
 
@@ -68,7 +76,7 @@
                 <div class="pack-progress-fill"
                   [style.width.%]="pack.total > 0 ? (pack.disponibles / pack.total) * 100 : 0"></div>
               </div>
-              <span class="pack-credits">{{ pack.disponibles }} / {{ pack.total }} clases</span>
+              <span class="pack-credits">{{ pack.disponibles }} / {{ pack.total }} créditos disponibles</span>
             </div>
           </div>
         </div>
@@ -109,14 +117,6 @@
           <span class="arrow-icon">→</span>
         </div>
 
-        <div class="action-card tertiary" (click)="irAPacks()">
-          <div class="card-content">
-            <span class="card-icon">⚡</span>
-            <h3>Comprar Packs</h3>
-            <p>Adquiere más clases</p>
-          </div>
-          <span class="arrow-icon">→</span>
-        </div>
       </div>
 
     </div>

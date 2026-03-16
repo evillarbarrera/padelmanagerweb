@@ -24,6 +24,8 @@ export class EntrenadorHomeComponent implements OnInit {
     clasesHoy: 0
   };
   showMPReminder = false;
+  hoyNombre = '';
+  fechaHoyFormatted = '';
 
 
   constructor(
@@ -64,10 +66,11 @@ export class EntrenadorHomeComponent implements OnInit {
   }
 
   clasesHoyList: any[] = [];
-  hoyNombre: string = '';
 
   loadData(): void {
     if (!this.userId) return;
+
+    this.setDates();
 
     // Load Profile
     this.mysqlService.getPerfil(this.userId).subscribe({
@@ -190,6 +193,7 @@ export class EntrenadorHomeComponent implements OnInit {
           clasesMes: res.clases_mes || 0,
           clasesGrupalesMes: res.clases_grupales_mes || 0,
           clasesHoy: res.clases_hoy || 0,
+          clasesPendientes: res.clases_pendientes || 0,
           promoActiva: res.promo_activa || false,
           promoDiasRestantes: res.promo_dias_restantes || 0
         };
@@ -230,6 +234,14 @@ export class EntrenadorHomeComponent implements OnInit {
   dismissMPReminder() {
     this.showMPReminder = false;
     localStorage.setItem('hideMPReminder', 'true');
+  }
+
+  setDates() {
+    const options: any = { weekday: 'long', day: 'numeric', month: 'long' };
+    const date = new Date();
+    const formatted = new Intl.DateTimeFormat('es-CL', options).format(date);
+    this.hoyNombre = formatted.split(' ')[0].replace(',', '');
+    this.fechaHoyFormatted = formatted;
   }
 }
 

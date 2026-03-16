@@ -49,9 +49,9 @@
       <div *ngIf="!isLoading && pagedAlumnos.length > 0">
         <div class="alumnos-grid">
           <div *ngFor="let alumno of pagedAlumnos" class="alumno-card"
-            [class.critical-balance]="alumno.sesiones_restantes <= 1">
+            [class.critical-balance]="alumno.sesiones_pendientes <= 1">
             <div class="card-header">
-              <div class="critical-badge" *ngIf="alumno.sesiones_restantes <= 1">
+              <div class="critical-badge" *ngIf="alumno.sesiones_pendientes <= 1">
                 ⚠️ RENOVACIÓN
               </div>
               <div class="avatar-container">
@@ -68,21 +68,21 @@
             <div class="card-body">
               <div class="session-info">
                 <div class="session-stat">
-                  <span class="label">Pagadas</span>
+                  <span class="label">Pag.</span>
                   <span class="value">{{ alumno.sesiones_pagadas || 0 }}</span>
                 </div>
                 <div class="session-stat">
-                  <span class="label">Reservas</span>
+                  <span class="label">Res.</span>
                   <span class="value">{{ alumno.sesiones_reservadas }}</span>
                 </div>
                 <div class="session-stat">
-                  <span class="label">Grupales</span>
+                  <span class="label">Grup.</span>
                   <span class="value" style="color: #2196f3; font-weight: 800;">{{ alumno.sesiones_grupales || 0
                     }}</span>
                 </div>
                 <div class="session-stat">
-                  <span class="label">Restantes</span>
-                  <span class="value highlight">{{ alumno.sesiones_restantes }}</span>
+                  <span class="label">Pend.</span>
+                  <span class="value highlight">{{ alumno.sesiones_pendientes }}</span>
                 </div>
               </div>
             </div>

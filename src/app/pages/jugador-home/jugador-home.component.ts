@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { EvaluacionService } from '../../services/evaluacion.service';
+import { PopupService } from '../../services/popup.service';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -22,7 +23,8 @@ export class JugadorHomeComponent implements OnInit {
     pagadas: 0,
     reservadas: 0,
     disponibles: 0,
-    grupales: 0
+    grupales: 0,
+    pendientes: 0
   };
   packsDetalle: any[] = [];
   isLoading = true;
@@ -32,7 +34,8 @@ export class JugadorHomeComponent implements OnInit {
   constructor(
     private mysqlService: MysqlService,
     private router: Router,
-    private evaluacionService: EvaluacionService
+    private evaluacionService: EvaluacionService,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
@@ -87,6 +90,7 @@ export class JugadorHomeComponent implements OnInit {
           this.stats.reservadas = parseInt(packs.reservadas || packs.reservada) || 0;
           this.stats.disponibles = parseInt(packs.disponibles || packs.disponible) || 0;
           this.stats.grupales = parseInt(packs.grupales || packs.grupal) || 0;
+          this.stats.pendientes = parseInt(packs.pendientes || packs.pendiente) || 0;
           this.packsDetalle = packs.detalle || [];
         }
 
@@ -176,7 +180,7 @@ export class JugadorHomeComponent implements OnInit {
   }
 
   irAPacks(): void {
-    this.router.navigate(['/jugador-packs']);
+    this.popupService.info('Información', 'Para adquirir un nuevo pack, debes seleccionar un horario en "Agendar Clase" una vez hayas completado tus clases actuales.');
   }
 
   irAPerfil(): void {

@@ -76,11 +76,7 @@ export class PerfilComponent implements OnInit {
   };
 
   // Tournament Filters
-  filterRegion: string = '';
-  filterComuna: string = '';
-  filteredComunasFilter: string[] = [];
-  availableTournaments: any[] = [];
-  activeTab: string = 'profile'; // 'profile' | 'tournaments'
+  activeTab: string = 'profile'; // 'profile'
 
   regions = [
     { id: '13', name: 'Metropolitana de Santiago' },
@@ -187,14 +183,6 @@ export class PerfilComponent implements OnInit {
           if (res.direccion) {
             this.direccion = { ...res.direccion };
             this.updateComunas(true);
-
-            // Initialize filters for tournaments
-            if (this.userRole === 'jugador') {
-              this.filterRegion = this.direccion.region;
-              this.updateFilterComunas(true);
-              this.filterComuna = this.direccion.comuna;
-              this.loadTournaments();
-            }
           }
         }
         this.isLoading = false;
@@ -335,38 +323,6 @@ export class PerfilComponent implements OnInit {
     });
   }
 
-  updateFilterComunas(keepComuna = false): void {
-    const selectedRegion = this.regions.find(r => r.name === this.filterRegion);
-
-    if (selectedRegion) {
-      this.filteredComunasFilter = this.allComunas[selectedRegion.id] || [];
-      if (!keepComuna) {
-        this.filterComuna = '';
-        this.loadTournaments();
-      }
-    } else {
-      this.filteredComunasFilter = [];
-      this.filterComuna = '';
-      this.loadTournaments();
-    }
-  }
-
-  onFilterRegionChange(): void {
-    this.updateFilterComunas();
-  }
-
-  onFilterComunaChange(): void {
-    this.loadTournaments();
-  }
-
-  loadTournaments(): void {
-    this.clubesService.getTorneosPublicos(this.filterRegion, this.filterComuna).subscribe({
-      next: (res) => {
-        this.availableTournaments = res;
-      },
-      error: (err) => console.error(err)
-    });
-  }
 
   eliminarCuenta(): void {
     Swal.fire({
