@@ -18,6 +18,7 @@
           <div class="club-selector-web">
             <span class="selector-label">RECINTO:</span>
             <select [(ngModel)]="selectedClubId" (change)="onClubChange()" class="club-select-modern">
+              <option [ngValue]="null" disabled selected>Selecciona un club...</option>
               <option *ngFor="let club of clubes" [value]="club.id">{{ club.nombre }}</option>
             </select>
           </div>

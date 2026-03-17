@@ -40,7 +40,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   isLoading = true;
 
   clubes: any[] = [];
-  selectedClubId: number = 1;
+  selectedClubId: number | null = null;
   dias: DiaSemana[] = [];
   diaSeleccionado: string = '';
   bloquesPorDia: { [fecha: string]: BloqueHorario[] } = {};
@@ -310,6 +310,11 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   ============================== */
 
   guardarDisponibilidad() {
+    if (!this.selectedClubId) {
+      this.popupService.error('Recinto Obligatorio', 'Debes seleccionar un club/recinto antes de guardar tu disponibilidad.');
+      return;
+    }
+
     const crear: any[] = [];
     const eliminar: any[] = [];
 
@@ -366,11 +371,15 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   }
 
   migrateSlots() {
+    if (!this.selectedClubId) {
+      this.popupService.error('Error', 'Selecciona un club para vincular');
+      return;
+    }
     this.popupService.confirm('Vincular Horarios', 'Tienes horarios guardados que no están asociados a ningún club. ¿Deseas vincularlos todos al club seleccionado actualmente?')
       .then(conf => {
         if (conf) {
           this.isLoading = true;
-          this.entrenamientoService.migrateAvailability(this.userId!, this.selectedClubId).subscribe({
+          this.entrenamientoService.migrateAvailability(this.userId!, this.selectedClubId!).subscribe({
             next: (res: any) => {
               this.popupService.success('Éxito', res.message || 'Horarios vinculados correctamente');
               this.cargarDisponibilidadExistente();
@@ -444,6 +453,11 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   }
 
   async saveDefaultConfig() {
+    if (!this.selectedClubId) {
+      this.popupService.error('Recinto Obligatorio', 'Debes seleccionar un club/recinto para tu plantilla.');
+      return;
+    }
+
     this.isLoading = true;
     const config: any[] = [];
 
@@ -459,6 +473,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
           if (!currentRange) {
             currentRange = {
               dia_semana: dayId,
+              club_id: this.selectedClubId,
               hora_inicio: b.time,
               duracion_bloque: 60
             };
