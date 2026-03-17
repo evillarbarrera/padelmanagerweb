@@ -37,6 +37,12 @@ export class MysqlService {
     });
   }
 
+  checkPendientesEntrenador(jugadorId: number, entrenadorId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/alumno/check_pendientes_entrenador.php?jugador_id=${jugadorId}&entrenador_id=${entrenadorId}`, {
+      headers: this.headers
+    });
+  }
+
   getEntrenadorStats(entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/entrenador/get_agenda.php?entrenador_id=${entrenadorId}`, {
       headers: this.headers

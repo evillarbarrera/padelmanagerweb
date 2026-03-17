@@ -150,27 +150,20 @@ export class JugadorReservasComponent implements OnInit {
     const storedUserId = localStorage.getItem('userId');
     this.userId = storedUserId ? Number(storedUserId) : null;
 
-    this.checkBookingRestriction();
     this.loadUserProfile();
     // Prefer loading profile first to set default location
     this.checkQueryParams();
   }
 
-  checkBookingRestriction() {
-    if (!this.userId) return;
-    this.mysqlService.getHomeStats(this.userId).subscribe({
+  checkBookingRestriction(entrenadorId: number) {
+    if (!this.userId || !entrenadorId) return;
+    this.mysqlService.checkPendientesEntrenador(this.userId, entrenadorId).subscribe({
       next: (res: any) => {
-        const stats = res.estadisticas?.packs;
-        if (stats) {
-          const creditos = stats.disponibles;
-          const pendientes = stats.pendientes;
-
-          if (creditos <= 0 && pendientes > 0) {
-            this.popupService.info(
-              'Atención',
-              'Aún tienes clases reservadas por asistir. Podrás comprar un nuevo pack una vez que hayas completado tus reservas actuales.'
-            );
-          }
+        if (res.success && res.pendientes > 0 && res.disponibles <= 0) {
+          this.popupService.info(
+            'Atención',
+            'Aún tienes clases reservadas por asistir con este entrenador. Podrás comprar un nuevo pack una vez que hayas completado tus reservas actuales.'
+          );
         }
       }
     });
@@ -383,6 +376,8 @@ export class JugadorReservasComponent implements OnInit {
       Number(p.entrenador_id) === Number(this.selectedEntrenador) &&
       Number(p.sesiones_restantes) > 0
     );
+
+    this.checkBookingRestriction(this.selectedEntrenador!);
   }
 
   get filteredDias(): string[] {
@@ -685,13 +680,12 @@ export class JugadorReservasComponent implements OnInit {
       });
     } else {
       // NO TIENE PACK: Verificar si tiene clases pendientes (futuras) antes de dejar comprar
-      this.mysqlService.getHomeStats(this.userId!).subscribe({
+      this.mysqlService.checkPendientesEntrenador(this.userId!, this.selectedEntrenador!).subscribe({
         next: (res: any) => {
-          const stats = res.estadisticas?.packs;
-          if (stats && stats.pendientes > 0) {
+          if (res.success && res.pendientes > 0 && res.disponibles <= 0) {
             this.popupService.info(
               'Atención',
-              'Aún tienes clases reservadas por asistir. Cuando las completes todas, podrás comprar un nuevo pack.'
+              'Aún tienes clases reservadas por asistir con este entrenador. Cuando las completes todas, podrás comprar un nuevo pack.'
             );
           } else {
             this.mostrarPacksDisponibles(horario);
