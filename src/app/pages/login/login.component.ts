@@ -46,7 +46,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   initGoogleAuth(): void {
     if (typeof google !== 'undefined') {
       google.accounts.id.initialize({
-        client_id: '786145270372-liov6hu5v7lcmf2028s9ihi600rp3353.apps.googleusercontent.com',
+        client_id: '786145270372-e637i46g6uu1kekcr1ioqdka901acud7.apps.googleusercontent.com',
         callback: (response: any) => this.handleGoogleLogin(response)
       });
 
