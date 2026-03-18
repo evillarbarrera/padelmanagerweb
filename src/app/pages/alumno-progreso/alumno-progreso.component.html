@@ -102,6 +102,10 @@
                     </div>
 
                     <div class="header-actions">
+                        <button class="upload-video-btn" (click)="triggerVideoUpload()">
+                            ➕ Subir Video
+                        </button>
+
                         <button class="compare-mode-btn" [class.active]="isComparisonMode"
                             (click)="toggleComparisonMode()">
                             {{ isComparisonMode ? 'Cancelar Comparación' : '⚖️ Comparar Videos' }}

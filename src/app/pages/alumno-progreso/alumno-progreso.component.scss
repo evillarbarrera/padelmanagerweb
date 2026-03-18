@@ -212,6 +212,30 @@
                 color: white;
             }
         }
+
+        .upload-video-btn {
+            background: #ccff00;
+            color: #111;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(204, 255, 0, 0.2);
+
+            @media (max-width: 480px) {
+                width: 100%;
+                padding: 12px;
+            }
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(204, 255, 0, 0.3);
+                background: white;
+            }
+        }
     }
 
     .origin-selector-wrapper {

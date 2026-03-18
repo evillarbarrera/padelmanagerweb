@@ -8,6 +8,7 @@ import { AlumnoService } from '../../services/alumno.service';
 import { PopupService } from '../../services/popup.service';
 import { Chart, registerables } from 'chart.js';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import Swal from 'sweetalert2';
 
 Chart.register(...registerables);
 
@@ -56,6 +57,11 @@ export class AlumnoProgresoComponent implements OnInit {
     aiResults: { [key: number]: any } = {};
     aiActiveResult: any = null;
     isAnalyzing: { [key: number]: boolean } = {};
+
+    golpesList = [
+        'General', 'Derecha', 'Revés', 'Volea de Derecha', 'Volea de Revés', 'Bandeja', 'Víbora',
+        'Rulo', 'Remate', 'Salida de Pared', 'Globo', 'Saque', 'Resto'
+    ];
 
     constructor(
         private route: ActivatedRoute,
@@ -326,16 +332,23 @@ export class AlumnoProgresoComponent implements OnInit {
 
                 // Grouping only coach videos
                 this.groupedVideos = {};
-                const catsSet = new Set<string>(['Todos']);
+                const catsWithContent = new Set<string>(['Todos']);
 
                 this.videosCoach.forEach((v: any) => {
                     const cat = v.categoria || 'General';
-                    catsSet.add(cat);
+                    catsWithContent.add(cat);
                     if (!this.groupedVideos[cat]) this.groupedVideos[cat] = [];
                     this.groupedVideos[cat].push(v);
                 });
 
-                this.availableCategories = Array.from(catsSet);
+                this.availableCategories = Array.from(catsWithContent);
+
+                // Sort categories based on golpesList order + Todos
+                this.availableCategories.sort((a, b) => {
+                    if (a === 'Todos') return -1;
+                    if (b === 'Todos') return 1;
+                    return this.golpesList.indexOf(a) - this.golpesList.indexOf(b);
+                });
 
                 // Keep active category if it still exists
                 if (!this.availableCategories.includes(this.activeCategory)) {
@@ -345,6 +358,85 @@ export class AlumnoProgresoComponent implements OnInit {
             error: (err) => console.error('Error al cargar videos:', err)
         });
     }
+
+    async triggerVideoUpload() {
+        if (!this.alumnoId) return;
+
+        const { value: formValues } = await Swal.fire({
+            title: 'Subir Video de Entrenamiento',
+            html: `
+            <div style="text-align: left; font-family: 'Inter', sans-serif;">
+                <p style="margin-bottom: 20px; color: #666; font-size: 14px;">Ingresa los detalles técnicos antes de seleccionar el video.</p>
+                
+                <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #111;">Título del Clip</label>
+                <input id="swal-input-title" class="swal2-input" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box; border-radius: 8px; height: 45px;" placeholder="Ej: Análisis de Saque">
+                
+                <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #111;">¿A qué golpe corresponde?</label>
+                <select id="swal-input-category" class="swal2-select" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box; display: block; border-radius: 8px; background: #f8fafc; height: 45px;">
+                    ${this.golpesList.map(g => `<option value="${g}">${g}</option>`).join('')}
+                </select>
+    
+                <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #111;">Observaciones para el Alumno</label>
+                <textarea id="swal-input-comment" class="swal2-textarea" style="margin: 0; width: 100%; box-sizing: border-box; border-radius: 8px; min-height: 100px;" placeholder="Detalles técnicos a mejorar..."></textarea>
+            </div>
+          `,
+            showCancelButton: true,
+            confirmButtonText: 'Seleccionar Video',
+            confirmButtonColor: '#ccff00',
+            cancelButtonText: 'Cancelar',
+            focusConfirm: false,
+            preConfirm: () => {
+                const titulo = (document.getElementById('swal-input-title') as HTMLInputElement).value;
+                const categoria = (document.getElementById('swal-input-category') as HTMLSelectElement).value;
+                const comentario = (document.getElementById('swal-input-comment') as HTMLTextAreaElement).value;
+
+                if (!titulo) {
+                    Swal.showValidationMessage('El título es obligatorio');
+                    return false;
+                }
+                return { titulo, categoria, comentario };
+            }
+        });
+
+        if (formValues) {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'video/*';
+            fileInput.onchange = (e: any) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                this.ejecutarSubida(file, formValues.titulo, formValues.categoria, formValues.comentario);
+            };
+            fileInput.click();
+        }
+    }
+
+    private ejecutarSubida(file: File, title: string, category: string, comment: string) {
+        const formData = new FormData();
+        formData.append('video', file);
+        formData.append('jugador_id', this.alumnoId?.toString() || '');
+        formData.append('entrenador_id', this.userId?.toString() || '');
+        formData.append('titulo', title);
+        formData.append('categoria', category);
+        formData.append('comentario', comment || '');
+
+        this.isLoading = true;
+        this.alumnoService.uploadVideo(formData).subscribe({
+            next: (ev: any) => {
+                this.isLoading = false;
+                this.popupService.success('¡Éxito!', 'Video subido correctamente.');
+                this.loadVideos();
+            },
+            error: (err) => {
+                this.isLoading = false;
+                console.error(err);
+                this.popupService.error('Error', 'No se pudo subir el video.');
+            }
+        });
+    }
+
+    // Explicitly removed old methods to avoid confusion
+    // onVideoSelected removed because now handled inside triggerVideoUpload
 
     setCategory(cat: string) {
         this.activeCategory = cat;

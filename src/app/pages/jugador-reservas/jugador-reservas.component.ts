@@ -775,11 +775,27 @@ export class JugadorReservasComponent implements OnInit {
   }
 
   async comprarPackYReservar(pack: any) {
-    if (pack.transbank_activo == 1 || pack.transbank_activo == '1') {
-      this.iniciarPagoPackTransbank(pack);
-    } else {
-      this.comprarPackYReservarManual(pack);
-    }
+    const precioFinal = this.getDiscountedPrice(pack.precio);
+    const precioFormateado = new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0
+    }).format(precioFinal);
+
+    this.popupService.confirm(
+      'Confirmar Selección',
+      `Pack: ${pack.nombre}\nSesiones: ${pack.sesiones_totales}\nTotal a pagar: ${precioFormateado}\n\n${pack.transbank_activo == 1 
+        ? 'Serás redirigido a Webpay para realizar el pago.' 
+        : 'Deberás coordinar el pago con el profesor.'}`
+    ).then((confirmed) => {
+      if (confirmed) {
+        if (pack.transbank_activo == 1 || pack.transbank_activo == '1') {
+          this.iniciarPagoPackTransbank(pack);
+        } else {
+          this.comprarPackYReservarManual(pack);
+        }
+      }
+    });
   }
 
   async iniciarPagoPackTransbank(pack: any) {

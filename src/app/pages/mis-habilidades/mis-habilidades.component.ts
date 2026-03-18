@@ -413,6 +413,7 @@ export class MisHabilidadesComponent implements OnInit {
                         <option value="Salida de Pared">Salida de Pared</option>
                         <option value="Globo">Globo</option>
                         <option value="Saque">Saque</option>
+                        <option value="Resto">Resto</option>
                     </select>
 
                     <label style="display: block; margin-bottom: 8px; font-weight: bold;">Comentarios</label>

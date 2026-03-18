@@ -95,11 +95,6 @@
               <button class="action-btn" (click)="verProgreso(alumno)">
                 📈 Progreso
               </button>
-              <button class="action-btn video-btn" (click)="triggerVideoUpload(alumno)">
-                🎥 Videos
-              </button>
-              <input type="file" [id]="'videoInput-' + alumno.jugador_id" style="display: none;"
-                (change)="onVideoSelected($event, alumno)" accept="video/*">
             </div>
           </div>
         </div>
