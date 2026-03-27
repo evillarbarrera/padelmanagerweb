@@ -10,12 +10,15 @@
 <!-- Overlay for mobile -->
 <div class="sidebar-overlay" [class.active]="isOpen" (click)="closeSidebar()"></div>
 
-<aside class="sidebar" [class.open]="isOpen">
+<aside class="sidebar" [class.open]="isOpen" [class.collapsed]="isCollapsed">
     <div class="sidebar-header">
-        <img src="assets/images/logo-circular.png" class="logo-icon" alt="PadelManager" />
-        <h2>Padel<span class="accent">Manager</span></h2>
-        <!-- Close button mobile -->
-        <button class="close-btn" (click)="closeSidebar()">✕</button>
+        <div class="logo-area">
+            <img src="assets/images/logo-circular.png" class="logo-icon" alt="PadelManager" />
+            <h2 *ngIf="!isCollapsed">Padel<span class="accent">Manager</span></h2>
+        </div>
+        <button class="collapse-btn" (click)="sidebarService.toggle()" [title]="isCollapsed ? 'Expandir' : 'Minimizar'">
+            {{ isCollapsed ? '▶' : '◀' }}
+        </button>
     </div>
 
     <nav class="sidebar-nav">
@@ -29,7 +32,6 @@
             <button class="current-profile-btn" (click)="toggleSwitchMenu()">
                 <div class="info">
                     <span class="role-label">{{ computedRole | titlecase }}</span>
-                    <!-- We'd ideally show current club name, but it's not in Input, could be fetched or stored -->
                     <span class="club-label" style="font-size: 0.75rem; opacity: 0.7;">
                         {{ availableProfiles.length > 1 ? 'Cambiar Perfil' : 'Gestionar Perfil' }}
                     </span>
@@ -39,17 +41,14 @@
 
             <div class="switch-menu" [class.expanded]="showSwitchMenu">
                 <div *ngFor="let p of availableProfiles" class="switch-item" (click)="switchProfile(p)">
-                    <span class="p-icon">{{ p.rol === 'administrador_club' ? '🏢' : (p.rol === 'entrenador' ? '🎾' :
-                        '👤') }}</span>
+                    <span class="p-icon">{{ p.rol === 'administrador_club' ? '🏢' : (p.rol === 'entrenador' ? '🎾' : '👤') }}</span>
                     <div class="p-text">
                         <span class="p-club">{{ p.club_nombre || 'Sin Club' }}</span>
                         <span class="p-rol">{{ p.rol | titlecase }}</span>
                     </div>
                 </div>
 
-                <!-- Add New Profile Option -->
-                <div class="switch-item create-new" (click)="navigate('create-profile')"
-                    style="border-top: 1px dashed #eee; color: #2563eb;">
+                <div class="switch-item create-new" (click)="navigate('create-profile')" style="border-top: 1px dashed #eee; color: #2563eb;">
                     <span class="p-icon">➕</span>
                     <div class="p-text">
                         <span class="p-club">Nuevo Rol</span>
@@ -60,95 +59,75 @@
         </div>
 
         <div class="menu-sections">
-            <!-- PLAYER MENU -->
             <ng-container *ngIf="computedRole === 'jugador'">
+                <div class="menu-divider">Principal</div>
                 <a class="nav-item" [class.active]="activePage === 'inicio'" (click)="navigate('/jugador-home')">
-                    <span class="icon">🏠</span>
-                    <span>Inicio</span>
+                    <span class="icon">🏠</span> <span>Dashboard</span>
                 </a>
-                <a class="nav-item" [class.active]="activePage === 'calendario'"
-                    (click)="navigate('/jugador-calendario')">
-                    <span class="icon">📅</span>
-                    <span>Mis Clases</span>
+                <a class="nav-item" [class.active]="activePage === 'calendario'" (click)="navigate('/jugador-calendario')">
+                    <span class="icon">📅</span> <span>Mis Clases</span>
                 </a>
+
+                <div class="menu-divider">Configuración</div>
+
                 <a class="nav-item" [class.active]="activePage === 'reservas'" (click)="navigate('/jugador-reservas')">
-                    <span class="icon">📋</span>
-                    <span>Reservar Clase</span>
+                    <span class="icon">🎾</span> <span>Reservar Clase</span>
                 </a>
-                <a class="nav-item" [class.active]="activePage === 'habilidades'"
-                    (click)="navigate('/mis-habilidades')">
-                    <span class="icon">📈</span>
-                    <span>Habilidades</span>
+                <a class="nav-item" [class.active]="activePage === 'habilidades'" (click)="navigate('/mis-habilidades')">
+                    <span class="icon">📈</span> <span>Mis Habilidades</span>
                 </a>
                 <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
-                    <span class="icon">👤</span>
-                    <span>Mi Perfil</span>
+                    <span class="icon">👤</span> <span>Mi Perfil</span>
                 </a>
             </ng-container>
 
-            <!-- TRAINER MENU -->
+            <!-- TRAINER MENU (RESTORED) -->
             <ng-container *ngIf="computedRole === 'entrenador'">
+                <div class="menu-divider">Principal</div>
                 <a class="nav-item" [class.active]="activePage === 'inicio'" (click)="navigate('/entrenador-home')">
-                    <span class="icon">🏠</span>
-                    <span>Dashboard</span>
+                    <span class="icon">🏠</span> <span>Dashboard</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'agendar-alumno'" (click)="navigate('/entrenador-agendar')">
+                    <span class="icon">🎾</span> <span>Mi Calendario</span>
                 </a>
                 <a class="nav-item" [class.active]="activePage === 'alumnos'" (click)="navigate('/alumnos')">
-                    <span class="icon">👥</span>
-                    <span>Mis Alumnos</span>
+                    <span class="icon">👥</span> <span>Mis Alumnos</span>
                 </a>
-                <a class="nav-item" [class.active]="activePage === 'agendar-alumno'"
-                    (click)="navigate('/entrenador-agendar')">
-                    <span class="icon">🎾</span>
-                    <span>Agendar Clase</span>
+                <a class="nav-item" [class.active]="activePage === 'pizarra-tactica'" (click)="navigate('/pizarra-tactica')">
+                    <span class="icon">📋</span> <span>Coach</span>
                 </a>
-                <a class="nav-item" [class.active]="activePage === 'agenda'"
-                    (click)="navigate('/entrenador-calendario')">
-                    <span class="icon">📅</span>
-                    <span>Mi Agenda</span>
-                </a>
+
+                <div class="menu-divider">Gestión y Ajustes</div>
+
                 <a class="nav-item" [class.active]="activePage === 'packs'" (click)="navigate('/entrenador-packs')">
-                    <span class="icon">📦</span>
-                    <span>Mis Packs</span>
+                    <span class="icon">📦</span> <span>Mis Packs</span>
                 </a>
-                <a class="nav-item" [class.active]="activePage === 'disponibilidad'"
-                    (click)="navigate('/disponibilidad-entrenador')">
-                    <span class="icon">⏰</span>
-                    <span>Disponibilidad</span>
+                <a class="nav-item" [class.active]="activePage === 'planificacion'" (click)="navigate('/planificacion-mallas')">
+                    <span class="icon">📝</span> <span>Planificación</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'disponibilidad'" (click)="navigate('/disponibilidad-entrenador')">
+                    <span class="icon">⏰</span> <span>Disponibilidad</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'cupones'" (click)="navigate('/entrenador-cupones')">
+                    <span class="icon">🎟️</span> <span>Cupones</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'mi-plan'" (click)="navigate('/mi-plan')">
+                    <span class="icon">💎</span> <span>Mi Plan</span>
                 </a>
                 <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
-                    <span class="icon">👤</span>
-                    <span>Mi Perfil</span>
+                    <span class="icon">👤</span> <span>Mi Perfil</span>
                 </a>
             </ng-container>
 
-            <!-- CLUB ADMIN MENU (Removed for now) -->
-            <!-- <ng-container *ngIf="computedRole === 'administrador_club'">
-                <a class="nav-item" [class.active]="activePage === 'club-admin'" (click)="navigate('/admin-club')">
-                    <span class="icon">🏢</span>
-                    <span>Mi Club</span>
-                </a>
-                <a class="nav-item" [class.active]="activePage === 'club-reservas'"
-                    (click)="navigate('/club-reservas')">
-                    <span class="icon">📅</span>
-                    <span>Agenda Club</span>
-                </a>
-                <a class="nav-item" [class.active]="activePage === 'americanos'" (click)="navigate('/crear-americano')">
-                    <span class="icon">🎾</span>
-                    <span>Americanos</span>
-                </a>
-                <a class="nav-item" [class.active]="activePage === 'torneos'" (click)="navigate('/torneos')">
-                    <span class="icon">🏆</span>
-                    <span>Torneos PRO</span>
-                </a>
-                <a class="nav-item" [class.active]="activePage === 'ranking'" (click)="navigate('/ranking')">
-                    <span class="icon">🥇</span>
-                    <span>Ranking</span>
+            <!-- SUPER ADMIN MENU -->
+            <ng-container *ngIf="computedRole === 'administrador'">
+                <a class="nav-item" [class.active]="activePage === 'admin-dashboard'" (click)="navigate('/admin-dashboard')">
+                    <span class="icon">📊</span> <span>Dashboard Global</span>
                 </a>
                 <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
-                    <span class="icon">👤</span>
-                    <span>Perfil Admin</span>
+                    <span class="icon">👤</span> <span>Mi Perfil Admin</span>
                 </a>
-            </ng-container> -->
+            </ng-container>
         </div>
     </nav>
 

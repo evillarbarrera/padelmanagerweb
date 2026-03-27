@@ -10,7 +10,6 @@ import { environment } from '../../environments/environment';
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
-  private authToken = 'Bearer ' + btoa('1|padel_academy');
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -18,9 +17,17 @@ export class AuthService {
     this.loadUser();
   }
 
+  private getAuthToken(): string {
+    const token = localStorage.getItem('token');
+    if (!token || token === 'null' || token === 'undefined') return '';
+    return `Bearer ${token}`;
+  }
+
   private getHeaders(): HttpHeaders {
+    const token = this.getAuthToken();
     return new HttpHeaders({
-      'Authorization': this.authToken,
+      'Authorization': token,
+      'X-Authorization': token,
       'Content-Type': 'application/json'
     });
   }
@@ -63,6 +70,9 @@ export class AuthService {
   }
 
   setCurrentUser(user: any): void {
+    if (user.token) {
+      localStorage.setItem('token', user.token);
+    }
     localStorage.setItem('currentUser', JSON.stringify(user));
     localStorage.setItem('userId', user.id);
     localStorage.setItem('userRole', user.rol || 'jugador');
@@ -136,6 +146,7 @@ export class AuthService {
   }
 
   logout(): void {
+    localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
@@ -151,7 +162,7 @@ export class AuthService {
   }
 
   refreshSession(userId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/user/refresh_session.php?user_id=${userId}`).pipe(
+    return this.http.get(`${this.apiUrl}/user/refresh_session.php?user_id=${userId}`, { headers: this.getHeaders() }).pipe(
       tap((res: any) => {
         if (res.success && res.user) {
           const freshUser = res.user;

@@ -9,15 +9,13 @@ import { environment } from '../../environments/environment';
 export class EvaluacionService {
     private apiUrl = `${environment.apiUrl}/evaluaciones`;
 
-    // Headers typically handled by interceptors, but adding basic auth header logic if needed or relying on explicit token passing
-    private token = localStorage.getItem('token') || '';
-
     constructor(private http: HttpClient) { }
 
-    private getHeaders() {
+    private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('token');
         return new HttpHeaders({
             'Content-Type': 'application/json',
-            // 'Authorization': `Bearer ${this.token}` // Uncomment if your API enforces auth
+            'Authorization': token ? `Bearer ${token}` : ''
         });
     }
 
@@ -25,7 +23,11 @@ export class EvaluacionService {
         return this.http.post(`${this.apiUrl}/create_evaluacion.php`, data, { headers: this.getHeaders() });
     }
 
-    getEvaluaciones(jugadorId: number): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/get_evaluaciones.php?jugador_id=${jugadorId}`, { headers: this.getHeaders() });
+    getEvaluaciones(jugadorId: number, entrenadorId?: number): Observable<any[]> {
+        let url = `${this.apiUrl}/get_evaluaciones.php?jugador_id=${jugadorId}`;
+        if (entrenadorId) {
+            url += `&entrenador_id=${entrenadorId}`;
+        }
+        return this.http.get<any[]>(url, { headers: this.getHeaders() });
     }
 }

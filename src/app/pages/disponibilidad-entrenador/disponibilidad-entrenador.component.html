@@ -54,6 +54,14 @@
             <button class="close-btn" (click)="showDefaultModal = false">✕</button>
           </div>
 
+          <!-- Club Selector inside Modal -->
+          <div class="modal-club-picker">
+            <span class="m-label">RECINTO PARA PLANTILLA:</span>
+            <select [(ngModel)]="selectedClubId" (change)="openDefaultModal()" class="club-select-modern modal-select">
+              <option *ngFor="let club of clubes" [value]="club.id">{{ club.nombre }}</option>
+            </select>
+          </div>
+
           <!-- Day Selector for Template -->
           <div class="template-day-tabs">
             <button *ngFor="let d of diasSemana" class="template-day-tab" [class.active]="selectedDayTemplate === d.id"
@@ -83,9 +91,13 @@
           </div>
 
           <div class="modal-footer">
-            <p class="modal-hint">Los bloques "pincados" (verdes) se copiarán a los próximos 30 días al aplicar la
-              plantilla.</p>
-            <button class="btn-primary" (click)="saveDefaultConfig()">💾 Guardar Plantilla</button>
+            <div class="modal-info-box">
+              <span class="info-icon">💡</span>
+              <p class="modal-hint">Los bloques seleccionados se auto-generarán para los <b>próximos 30 días</b> al usar "Aplicar Plantilla".</p>
+            </div>
+            <button class="btn-primary-neon" (click)="saveDefaultConfig()">
+              <i class="fas fa-save"></i> Guardar Ajustes
+            </button>
           </div>
         </div>
       </div>

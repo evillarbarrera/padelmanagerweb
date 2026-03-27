@@ -1,0 +1,297 @@
+@use '../../theme/colors.scss' as *;
+
+.admin-layout {
+    display: flex; height: 100vh; background-color: #f3f4f6; color: #111; font-family: 'Inter', sans-serif; overflow: hidden;
+}
+
+.main-content {
+    flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #fdfdfd;
+}
+
+.dashboard-grid {
+    padding: 32px 40px; max-width: 1300px; margin: 0 auto; width: 100%;
+}
+
+// Page Header
+.page-header-flex {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; gap: 20px;
+
+    .section-title { font-size: 28px; font-weight: 950; margin: 0; color: #111; text-transform: uppercase; letter-spacing: -1px; }
+    .section-subtitle { margin: 8px 0 0; color: #666; font-size: 14px; b { color: #111; font-weight: 800; } }
+}
+
+// List View Styles
+.mallas-list-section {
+    position: relative;
+    min-height: 400px;
+    animation: fadeIn 0.4s ease;
+}
+
+.mallas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.malla-card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px !important;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+        transform: translateY(-8px);
+        border-color: #ccff00;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+
+        .malla-badge {
+            background: #111;
+            color: #ccff00;
+        }
+    }
+
+    .malla-badge {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        background: #f2f2f7;
+        color: #111;
+        font-weight: 900;
+        font-size: 10px;
+        text-transform: uppercase;
+        padding: 4px 12px;
+        border-radius: 20px;
+        transition: 0.3s;
+    }
+
+    .malla-info {
+        h3 {
+            margin: 0 0 12px;
+            font-size: 20px;
+            font-weight: 900;
+            color: #111;
+            padding-right: 60px;
+        }
+
+        .meta-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            
+            span {
+                font-size: 12px;
+                color: #666;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                
+                i { font-size: 14px; color: #111; opacity: 0.5; }
+            }
+        }
+    }
+
+    .malla-actions {
+        margin-top: auto;
+        display: flex;
+        gap: 12px;
+        
+        .btn-edit-line {
+            flex: 1;
+            background: #f2f2f7;
+            color: #111;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+            
+            &:hover {
+                background: #111;
+                color: #ccff00;
+            }
+        }
+    }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    .icon-circle {
+        width: 80px;
+        height: 80px;
+        background: #f2f2f7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+    }
+
+    h3 { margin: 0; font-weight: 900; font-size: 24px; }
+    p { margin: 0; color: #666; }
+}
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 20px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f2f2f7;
+    border-top-color: #ccff00;
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// Cards
+.card-pm {
+    background: #fff; border-radius: 20px; padding: 32px; border: 1px solid #f0f0f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+// Config Section
+.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+
+.form-group {
+    display: flex; flex-direction: column; gap: 8px;
+
+    label { font-weight: 800; font-size: 13px; text-transform: uppercase; color: #111; letter-spacing: 0.5px; }
+
+    input, select, textarea {
+        padding: 14px 20px; border-radius: 12px; border: 1.5px solid #eee; background: #f9f9f9; font-family: inherit; font-size: 15px; outline: none; transition: 0.2s;
+        &::placeholder { color: #aaa; }
+        &:focus { border-color: #111; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    }
+
+    &.full-width { grid-column: 1 / -1; }
+}
+
+.number-input {
+    display: flex; align-items: center; gap: 12px;
+    input { width: 100px; text-align: center; font-weight: 900; font-size: 18px; color: #111; }
+    span { font-size: 14px; font-weight: 600; color: #666; }
+}
+
+// Tabs
+.tabs-nav {
+    background: #fff; padding: 12px; border-radius: 20px; border: 1px solid #f0f0f0;
+
+    .tabs-scroll {
+        display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
+        &::-webkit-scrollbar { height: 4px; }
+        &::-webkit-scrollbar-track { background: #f2f2f7; border-radius: 4px; }
+        &::-webkit-scrollbar-thumb { background: #111; border-radius: 4px; }
+    }
+
+    .tab-item {
+        flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: #f2f2f7; border-radius: 14px; border: 2px solid transparent; color: #666; cursor: pointer; transition: 0.2s;
+        
+        &:hover { background: #e5e5ea; color: #111; }
+        
+        &.active {
+            background: #111; color: #ccff00; border-color: #ccff00; transform: scale(1.02);
+            .num { background: #ccff00; color: #000; }
+        }
+
+        .num { background: #111; color: #fff; font-weight: 950; font-size: 11px; padding: 4px 8px; border-radius: 6px; }
+        .tab-txt { font-weight: 800; font-size: 13px; text-transform: uppercase; white-space: nowrap; }
+    }
+}
+
+// Progress
+.progress-box {
+    background: #fff; padding: 20px; border-radius: 20px; border: 1px dashed #ccff00;
+    .progress-head { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 900; font-size: 13px; text-transform: uppercase; }
+    .bar-bg { height: 12px; background: #f2f2f7; border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; background: #ccff00; border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(204, 255, 0, 0.5); }
+}
+
+// Session Blocks
+.session-blocks {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;
+    
+    .block {
+        padding: 20px; border-radius: 20px; background: #fcfcfc; border: 2px solid #f2f2f7; border-left-width: 8px; transition: all 0.2s;
+        
+        .block-head { font-weight: 950; font-size: 12px; margin-bottom: 12px; letter-spacing: 0.5px; opacity: 0.8; }
+        textarea { width: 100%; height: 120px; background: transparent; border: none; font-size: 14px; font-family: inherit; resize: none; overflow-y: auto; color: #333; }
+
+        &:focus-within { border-color: #111; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        &.b-lime { border-left-color: #ccff00; .block-head { color: #82a300; } }
+        &.b-black { border-left-color: #111; .block-head { color: #111; } }
+        &.b-gray { border-left-color: #ccc; .block-head { color: #666; } }
+        &.b-outline { border: 2px dashed #111; border-left: 8px solid #111; .block-head { color: #111; } }
+    }
+}
+
+// Internal Header
+.clase-sub-header {
+    display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f2f2f7; padding-bottom: 20px;
+    .badge-lime { background: #ccff00; color: #000; font-weight: 950; font-size: 11px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; }
+}
+
+// Controls
+.btn-ctrl {
+    background: #111; color: #fff; padding: 10px 20px; border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; border: none; margin-left: 8px;
+    &:disabled { opacity: 0.2; cursor: not-allowed; }
+    &:hover:not(:disabled) { background: #ccff00; color: #000; }
+}
+
+// Media Icon Group
+.input-with-icon {
+    display: flex; align-items: center; background: #f9f9f9; border: 1.5px solid #eee; border-radius: 12px; padding: 0 15px;
+    .icon { font-size: 18px; margin-right: 12px; }
+    input { border: none; background: transparent; flex: 1; padding: 14px 0; &:focus { box-shadow: none; } }
+}
+
+// Footer
+.footer-actions {
+    display: flex; justify-content: space-between; align-items: center; background: #111; color: #fff; padding: 24px 40px;
+    .footer-info { p { margin: 0; font-size: 18px; font-weight: 900; &.meta { font-size: 12px; opacity: 0.6; margin-top: 4px; font-weight: 600; text-transform: uppercase; } } }
+    .footer-btns { display: flex; gap: 16px; }
+    .btn-cancel { background: rgba(255,255,255,0.1); color: #fff; &:hover { background: rgba(255,255,255,0.2); } }
+}
+
+// Global UI Fixes
+.mb-4 { margin-bottom: 32px; }
+.mt-4 { margin-top: 32px; }
+.mt-5 { margin-top: 48px; }
+.mb-3 { margin-bottom: 16px; }
+.divider { display: flex; align-items: center; margin: 40px 0 24px; position: relative;
+    &::before { content: ""; flex: 1; height: 2px; background: #f2f2f7; }
+    span { padding: 0 20px; font-weight: 950; font-size: 12px; color: #aaa; letter-spacing: 2px; }
+}
+
+// Buttons
+button:not(.tab-item) { font-family: inherit; font-weight: 900; padding: 14px 28px; border-radius: 14px; cursor: pointer; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; transition: 0.2s; border: none; }
+.btn-save {
+    background: #ccff00; color: #000; box-shadow: 0 10px 20px rgba(204, 255, 0, 0.2);
+    &:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(204, 255, 0, 0.4); background: #bbff00; }
+    &.btn-glow { box-shadow: 0 0 20px rgba(204, 255, 0, 0.6); &:hover { box-shadow: 0 0 35px rgba(204, 255, 0, 0.8); } }
+}
+
+.btn-edit-line {
+    cursor: pointer;
+    transition: 0.2s;
+    border: none;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

@@ -8,7 +8,6 @@ import { environment } from '../../environments/environment';
 })
 export class ApiService {
   private apiUrl = environment.apiUrl;
-  private authToken = 'Bearer ' + btoa('1|padel_academy');
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -17,8 +16,28 @@ export class ApiService {
   }
 
   private getHeaders(): HttpHeaders {
+    let token = localStorage.getItem('token');
+    
+    // Auto-repair missing token if we have a user session
+    if (!token) {
+        const currentUserStr = localStorage.getItem('currentUser');
+        if (currentUserStr) {
+            try {
+                const currentUser = JSON.parse(currentUserStr);
+                if (currentUser && currentUser.id) {
+                    token = btoa(currentUser.id + '|padel_academy');
+                    localStorage.setItem('token', token || '');
+                }
+            } catch (e) {
+                console.error("Error repairing token", e);
+            }
+        }
+    }
+
+    const authValue = token ? `Bearer ${token}` : '';
     return new HttpHeaders({
-      'Authorization': this.authToken,
+      'Authorization': authValue,
+      'X-Authorization': authValue,
       'Content-Type': 'application/json'
     });
   }
@@ -70,6 +89,9 @@ export class ApiService {
   }
 
   setCurrentUser(user: any): void {
+    if (user.token) {
+        localStorage.setItem('token', user.token);
+    }
     localStorage.setItem('currentUser', JSON.stringify(user));
     localStorage.setItem('userId', user.id);
     localStorage.setItem('userRole', user.rol || 'jugador');
@@ -88,6 +110,7 @@ export class ApiService {
   }
 
   logout(): void {
+    localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');

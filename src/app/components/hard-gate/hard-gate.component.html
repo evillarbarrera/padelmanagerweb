@@ -1,0 +1,19 @@
+<div class="hard-gate-overlay animate-in" *ngIf="isLocked">
+    <div class="gate-modal card-pm">
+        <div class="modal-content">
+            <div class="icon-header">💎</div>
+            <h2 class="modal-title">Activa tu Periodo de Prueba</h2>
+            <p class="modal-desc">
+                Para empezar a gestionar tu academia y automatizar tus cobros, selecciona un plan de suscripción.
+                <br><br>
+                <b>No se te cobrará nada hoy.</b> Tus primeros 3 meses son totalmente gratuitos para que vivas la experiencia PadelManager.
+            </p>
+            <div class="btn-container mt-5">
+                <button class="btn-activate btn-glow" (click)="goToPlans()">
+                    VER PLANES Y ACTIVAR 90 DÍAS GRATIS
+                </button>
+            </div>
+            <p class="footer-note">Podrás cancelar en cualquier momento antes de que termine el trial.</p>
+        </div>
+    </div>
+</div>

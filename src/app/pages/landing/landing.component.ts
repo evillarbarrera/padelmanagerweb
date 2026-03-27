@@ -64,17 +64,17 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       image: 'assets/images/app-screenshot-v2.png'
     },
     {
-      badge: 'PROMO ENTRENADORES',
-      title: '3 MESES GRATIS',
-      highlight: 'SIN COMISIONES',
-      description: 'Lanza tu academia digital sin costos operativos. Los primeros 3 meses la comisión por venta es 0%. Gestiona cobros y alumnos profesionalmente.',
+      badge: 'PROMO EXCLUSIVA ⚡',
+      title: '3 MESES DE REGALO',
+      highlight: 'PARA ENTRENADORES',
+      description: 'Lanza tu academia digital hoy. Durante los primeros 90 días, todas las funciones son gratuitas y la comisión por venta es 0%. Tu éxito es nuestro éxito.',
       image: 'assets/images/slide-coaches.jpg'
     },
     {
-      badge: 'PARA JUGADORES',
+      badge: 'CRECIMIENTO REAL',
       title: 'GESTIONA TU',
-      highlight: 'PROGRESO REAL',
-      description: 'Reserva tus packs, haz seguimiento a tus entrenamientos y visualiza tu evolución técnica con gráficas inteligentes.',
+      highlight: 'ACADEMIA 360°',
+      description: 'Desde pagos automáticos hasta análisis técnico por IA. Todo lo que necesitas para escalar tu negocio de pádel en un solo lugar.',
       image: 'assets/images/slide-players.jpg'
     }
   ];

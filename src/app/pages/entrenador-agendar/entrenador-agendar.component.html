@@ -1,169 +1,488 @@
 <div class="admin-layout">
-    <app-sidebar [userId]="entrenadorId" role="entrenador" activePage="agendar-alumno"></app-sidebar>
+    <app-sidebar [userId]="entrenadorId" [jugadorNombre]="coachNombre || ''" [jugadorFoto]="coachFoto || ''" [role]="'entrenador'"
+        [activePage]="'agendar-alumno'"></app-sidebar>
 
     <main class="main-content">
-
-
         <div class="dashboard-grid">
-            <!-- Loading Overlay -->
-            <div *ngIf="isLoading" class="loading-overlay">
-                <div class="spinner"></div>
-                <p>Sincronizando disponibilidad...</p>
+            
+            <!-- Page Header -->
+            <div class="page-header-flex">
+                <div>
+                    <h1 class="section-title">Mi Calendario (Agendar Alumno)</h1>
+                    <div class="legend compact-top">
+                        <div class="l-item"><span class="box-l box-avail"></span> AGENDAR</div>
+                        <div class="l-item"><span class="box-l box-booked"></span> CONFIRMADA</div>
+                        <div class="l-item"><span class="box-l box-empty"></span> CERRADO</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="view-switch">
+                        <button [class.active]="viewMode === 'day'" (click)="switchView('day')">DÍA</button>
+                        <button [class.active]="viewMode === 'week'" (click)="switchView('week')">SEMANA</button>
+                        <button [class.active]="viewMode === 'month'" (click)="switchView('month')">MES</button>
+                    </div>
+                    <div class="nav-sep"></div>
+                    <button class="btn-nav" (click)="changeDate(-1)">ANTERIOR</button>
+                    <button class="btn-nav" (click)="changeDate(1)">SIGUIENTE</button>
+                </div>
             </div>
 
-            <div class="booking-container animate-up" [class.loading-fade]="isLoading">
-
-                <!-- Step 1: Select Student -->
-                <section class="section-card">
-                    <div class="section-header-flex">
-                        <h2 class="section-title">
-                            <div class="step-num">1</div>
-                            Selecciona al Alumno
-                        </h2>
-                        <div class="search-box-mini">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" [(ngModel)]="filtroAlumnos" placeholder="Buscar por nombre o pack...">
-                        </div>
-                    </div>
-
-                    <div class="student-list" *ngIf="alumnosFiltrados.length > 0">
-                        <div *ngFor="let a of alumnosFiltrados" class="student-item"
-                            [class.selected]="alumnoSeleccionado?.pack_jugador_id === a.pack_jugador_id"
-                            (click)="seleccionarAlumno(a)">
-
-                            <div class="avatar-wrapper">
-                                <img [src]="a.jugador_foto || 'assets/images/placeholder_avatar.png'">
-                            </div>
-
-                            <div class="info">
-                                <span class="name">{{ a.jugador_nombre }}</span>
-                                <span class="pack-info">
-                                    {{ a.pack_nombre }}
-                                    <span class="badge" [class.no-credits]="a.sesiones_restantes <= 0">
-                                        • {{ a.sesiones_restantes }} cred.
-                                    </span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- No Results inside Step 1 -->
-                    <div class="empty-results-mini" *ngIf="alumnosFiltrados.length === 0 && alumnos.length > 0">
-                        <p>No se encontraron alumnos que coincidan con la búsqueda.</p>
-                    </div>
-                </section>
-
-                <!-- Step 2: Recurrence -->
-                <section class="section-card">
-                    <h2 class="section-title">
-                        <div class="step-num">2</div>
-                        Opciones de Recurrencia
-                    </h2>
-                    <div class="recurrence-box">
-                        <div class="label-group">
-                            <label>¿Repetir reserva por varias semanas?</label>
-                        </div>
-                        <select [(ngModel)]="recurrencia" class="nike-select">
-                            <option [value]="1">Solo esta vez</option>
-                            <option [value]="2">2 Semanas</option>
-                            <option [value]="4">4 Semanas (1 mes)</option>
-                            <option [value]="8">8 Semanas (2 meses)</option>
-                            <option [value]="12">12 Semanas (3 meses)</option>
-                        </select>
-                    </div>
-                </section>
-
-                <!-- Step 3: Select Day & Time -->
-                <div class="booking-layout">
-                    <!-- Calendario lateral -->
-                    <section class="section-card calendar-column">
-                        <h2 class="section-title">
-                            <div class="step-num">3</div>
-                            Selecciona el Día
-                        </h2>
-                        <div class="days-grid" *ngIf="dias.length > 0">
-                            <button *ngFor="let d of dias" class="day-btn" [class.active]="diaSeleccionado === d"
-                                (click)="seleccionarDia(d)">
-                                <span class="day-name">{{ d | date:'EEE':'':'es' }}</span>
-                                <span class="day-num">{{ d | date:'dd' }}</span>
-                            </button>
+            <!-- Calendar Container -->
+            <div class="calendar-wrapper" [class]="'mode-' + viewMode">
+                <div class="calendar-grid">
+                    
+                    <!-- WEEK & DAY VIEW -->
+                    <ng-container *ngIf="viewMode !== 'month'">
+                        <div class="grid-header time-col">HORARIO</div>
+                        <div *ngFor="let day of displayDates" class="grid-header day-col" [class.today]="isToday(day)">
+                            <span class="day-name">{{ day | date:'EEEE':'':'es' }}</span>
+                            <span class="day-num">{{ day | date:'dd MMM' }}</span>
                         </div>
 
-                        <!-- Empty state when no days are found -->
-                        <div *ngIf="dias.length === 0" class="no-selection">
-                            <div class="empty-icon">⚠️</div>
-                            <p>No tienes disponibilidad vigente cargada.</p>
-                            <span style="font-size: 0.8rem; opacity: 0.8;">Configúrala en el menú lateral.</span>
-                        </div>
-                    </section>
-
-                    <!-- Horarios -->
-                    <section class="section-card times-column">
-                        <h2 class="section-title">Selecciona la Hora</h2>
-
-                        <div
-                            *ngIf="diaSeleccionado && horariosPorDia[diaSeleccionado] && horariosPorDia[diaSeleccionado].length > 0">
-                            <!-- Morning -->
-                            <div class="time-category"
-                                *ngIf="getSlotsByCategory(diaSeleccionado, 'morning').length > 0">
-                                <span class="category-label">Mañana</span>
-                                <div class="times-grid">
-                                    <button *ngFor="let h of getSlotsByCategory(diaSeleccionado, 'morning')"
-                                        class="time-btn" [disabled]="h.ocupado || isLoading"
-                                        [class.occupied]="h.ocupado" [class.with-info]="h.jugador_nombre"
-                                        (click)="reservarHorario(h)">
-                                        <div class="time-main">{{ h.hora_inicio | date:'HH:mm' }}</div>
-                                        <div class="time-sub" *ngIf="h.jugador_nombre">{{ h.jugador_nombre }}</div>
-                                    </button>
+                        <ng-container *ngFor="let hour of hours">
+                            <div class="time-label">{{ hour }}</div>
+                            <div *ngFor="let day of displayDates" 
+                                 class="slot-cell"
+                                 [class.available]="getSlotData(day, hour) && !getSlotData(day, hour).ocupado"
+                                 [class.booked]="getSlotData(day, hour)?.ocupado"
+                                 (click)="openBooking(day, hour, getSlotData(day, hour))">
+                                <div class="content-box" *ngIf="getSlotData(day, hour) as slot">
+                                    <ng-container *ngIf="slot.ocupado">
+                                        <span class="booked-name" [title]="slot.jugador_nombre">{{ slot.jugador_nombre || 'RESERVADO' }}</span>
+                                        <div class="booked-club" *ngIf="slot.club_nombre" [title]="slot.club_nombre">
+                                            <i class="fas fa-location-dot"></i> {{ slot.club_nombre }}
+                                        </div>
+                                        <span class="booked-pack-badge">{{ (slot.tipo || slot.reserva_tipo) | uppercase }}</span>
+                                    </ng-container>
+                                    <ng-container *ngIf="!slot.ocupado">
+                                        <span class="avail-badge">RESERVAR</span>
+                                    </ng-container>
                                 </div>
                             </div>
+                        </ng-container>
+                    </ng-container>
 
-                            <!-- Afternoon -->
-                            <div class="time-category"
-                                *ngIf="getSlotsByCategory(diaSeleccionado, 'afternoon').length > 0">
-                                <span class="category-label">Tarde</span>
-                                <div class="times-grid">
-                                    <button *ngFor="let h of getSlotsByCategory(diaSeleccionado, 'afternoon')"
-                                        class="time-btn" [disabled]="h.ocupado || isLoading"
-                                        [class.occupied]="h.ocupado" [class.with-info]="h.jugador_nombre"
-                                        (click)="reservarHorario(h)">
-                                        <div class="time-main">{{ h.hora_inicio | date:'HH:mm' }}</div>
-                                        <div class="time-sub" *ngIf="h.jugador_nombre">{{ h.jugador_nombre }}</div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Evening -->
-                            <div class="time-category"
-                                *ngIf="getSlotsByCategory(diaSeleccionado, 'evening').length > 0">
-                                <span class="category-label">Noche</span>
-                                <div class="times-grid">
-                                    <button *ngFor="let h of getSlotsByCategory(diaSeleccionado, 'evening')"
-                                        class="time-btn" [disabled]="h.ocupado || isLoading"
-                                        [class.occupied]="h.ocupado" [class.with-info]="h.jugador_nombre"
-                                        (click)="reservarHorario(h)">
-                                        <div class="time-main">{{ h.hora_inicio | date:'HH:mm' }}</div>
-                                        <div class="time-sub" *ngIf="h.jugador_nombre">{{ h.jugador_nombre }}</div>
-                                    </button>
-                                </div>
+                    <!-- MONTH VIEW -->
+                    <ng-container *ngIf="viewMode === 'month'">
+                        <div *ngFor="let dName of ['LUN','MAR','MIE','JUE','VIE','SAB','DOM']" class="grid-header month-day-label">
+                            {{ dName }}
+                        </div>
+                        <div *ngFor="let day of displayDates" 
+                             class="month-day-cell" 
+                             [class.today]="isToday(day)"
+                             [class.other-month]="day.getMonth() !== currentDate.getMonth()">
+                            <span class="m-num">{{ day | date:'d' }}</span>
+                            <div class="m-status-dots">
+                                <div *ngIf="slotsByDay[formatDate(day)]?.length" class="dot"></div>
                             </div>
                         </div>
-
-                        <!-- No selection or empty states -->
-                        <div *ngIf="!diaSeleccionado" class="no-selection">
-                            <div class="empty-icon">📅</div>
-                            <p>Selecciona un día para ver horarios</p>
-                        </div>
-
-                        <div *ngIf="diaSeleccionado && horariosPorDia[diaSeleccionado] && horariosPorDia[diaSeleccionado].length === 0"
-                            class="no-selection">
-                            <div class="empty-icon">😴</div>
-                            <p>No hay horarios disponibles para este día</p>
-                        </div>
-                    </section>
+                    </ng-container>
                 </div>
-
             </div>
         </div>
     </main>
+
+    <!-- Modal Booking Overlay -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-card animate-up wide-modal" (click)="$event.stopPropagation()">
+            <div class="m-header">
+                <h3>Agendar Alumno</h3>
+                <p>Fecha: {{ selectedSlot.date | date:'fullDate':'':'es' }} @ {{ selectedSlot.hour }}</p>
+                <button class="close" (click)="closeModal()">×</button>
+            </div>
+
+            <div class="m-body">
+                <div class="booking-flow">
+                    <div class="grid-2-cols">
+                        
+                        <!-- Columna Izquierda: Alumno y Tipo -->
+                        <div class="flow-col">
+                            <div class="col-header">
+                                <span class="step-num">1</span>
+                                <h3>Alumno y Clase</h3>
+                            </div>
+
+                            <div class="type-selector">
+                                <div class="type-pills">
+                                    <button [class.active]="tipoClaseSeleccionado === 'individual'" (click)="onTipoClaseChange('individual')">INDIVIDUAL</button>
+                                    <button [class.active]="tipoClaseSeleccionado === 'multijugador'" (click)="onTipoClaseChange('multijugador')">MULTI (2-4)</button>
+                                    <button [class.active]="tipoClaseSeleccionado === 'grupal'" (click)="onTipoClaseChange('grupal')">GRUPAL (2-6)</button>
+                                </div>
+                            </div>
+
+                            <!-- Selected players pills -->
+                            <div class="selected-players-pills" *ngIf="tipoClaseSeleccionado !== 'individual' && alumnosSeleccionados.length > 0">
+                                <span class="pill" *ngFor="let s of alumnosSeleccionados">
+                                    {{ s.jugador_nombre }}
+                                    <i class="fas fa-times" (click)="seleccionarAlumno(s)"></i>
+                                </span>
+                                <span class="pill-count">{{ alumnosSeleccionados.length }} / {{ maxAlumnos }}</span>
+                            </div>
+
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" [(ngModel)]="filtroAlumnos" placeholder="Buscar alumno...">
+                            </div>
+
+                            <div class="st-list compact">
+                                <div *ngFor="let a of alumnosFiltrados" 
+                                     class="st-row"
+                                     [class.selected]="isAlumnoSelected(a)"
+                                     (click)="seleccionarAlumno(a)">
+                                    <img [src]="a.jugador_foto || 'assets/images/placeholder_avatar.png'">
+                                    <div class="st-meta">
+                                        <b>{{ a.jugador_nombre }}</b>
+                                        <span [class.negativo]="(a.sesiones_restantes || 0) <= 0">
+                                            {{ a.pack_nombre || 'Sin Pack' }} ({{ a.sesiones_restantes || 0 }} créd.)
+                                        </span>
+                                    </div>
+                                    <div class="check" *ngIf="isAlumnoSelected(a)">✔</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna Derecha: Planificación -->
+                        <div class="flow-col">
+                            <div class="col-header">
+                                <span class="step-num">2</span>
+                                <h3>Planificación y Pack</h3>
+                            </div>
+
+                            <div class="plan-section">
+                                <div class="filter-chips">
+                                    <button [class.active]="categoriaFiltro === 'todos'" (click)="categoriaFiltro = 'todos'; onCategoriaChange()">TODOS</button>
+                                    <button [class.active]="categoriaFiltro === 'adulto'" (click)="categoriaFiltro = 'adulto'; onCategoriaChange()">ADULTO</button>
+                                    <button [class.active]="categoriaFiltro === 'menor'" (click)="categoriaFiltro = 'menor'; onCategoriaChange()">MENOR</button>
+                                </div>
+
+                                <select [(ngModel)]="planificacionId" (change)="onMallaChange()" class="modern-select">
+                                    <option [ngValue]="null">-- Seleccionar Malla --</option>
+                                    <option *ngFor="let m of mallasFiltradas" [value]="m.id">{{ m.nombre }} ({{ m.nivel }})</option>
+                                </select>
+
+                                <select [(ngModel)]="claseMallaId" (change)="onClaseChange()" class="modern-select" [disabled]="!planificacionId">
+                                    <option [ngValue]="null">-- Seleccionar Clase --</option>
+                                    <option *ngFor="let c of clasesDisponibles; let i = index" [value]="c.id">Clase {{ i + 1 }}: {{ c.titulo }}</option>
+                                </select>
+
+                                <div class="class-info-card" *ngIf="contenidoClase">
+                                    <i class="fas fa-book-open"></i>
+                                    <div class="txt">
+                                        <b>Contenido:</b>
+                                        <p>{{ contenidoClase }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pack-section mt-3">
+                                <!-- INDIVIDUAL: Pack actual del alumno -->
+                                <ng-container *ngIf="tipoClaseSeleccionado === 'individual'">
+                                    <div class="class-info-card current-pack" *ngIf="alumnoSeleccionado && (alumnoSeleccionado.sesiones_restantes || 0) > 0">
+                                        <i class="fas fa-ticket-alt"></i>
+                                        <div class="txt">
+                                            <b>Pack del Alumno:</b>
+                                            <p>{{ alumnoSeleccionado.pack_nombre }} ({{ alumnoSeleccionado.sesiones_restantes }} créd.)</p>
+                                        </div>
+                                    </div>
+
+                                    <div *ngIf="alumnoSeleccionado && (alumnoSeleccionado.sesiones_restantes || 0) <= 0">
+                                        <label class="info-label">EL ALUMNO NO TIENE PACK ACTIVO:</label>
+                                        <div class="manual-check active">
+                                            <input type="checkbox" [checked]="true" [disabled]="true">
+                                            <span>Asignar nuevo pack hoy</span>
+                                        </div>
+                                        <select [(ngModel)]="packAAsignar" class="modern-select highlight animate-up">
+                                            <option [ngValue]="null">-- Elegir Pack Individual --</option>
+                                            <option *ngFor="let p of packsParaTipo" [ngValue]="p">{{ p.nombre }} - ${{ p.precio }}</option>
+                                        </select>
+                                    </div>
+                                </ng-container>
+                                
+                                <!-- MULTI: Seleccionar pack multijugador -->
+                                <ng-container *ngIf="tipoClaseSeleccionado === 'multijugador'">
+                                    <label class="info-label">PACK MULTIJUGADOR ({{ alumnosSeleccionados.length }} jugadores):</label>
+                                    <div *ngIf="packsParaTipo.length > 0">
+                                        <select [(ngModel)]="packAAsignar" class="modern-select highlight">
+                                            <option [ngValue]="null">-- Elegir Pack Multi --</option>
+                                            <option *ngFor="let p of packsParaTipo" [ngValue]="p">
+                                                {{ p.nombre }} ({{ p.cantidad_personas || '2+' }} pers.) - ${{ p.precio }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div *ngIf="packsParaTipo.length === 0 && alumnosSeleccionados.length > 0" class="no-packs-alert">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>No hay packs multijugador para {{ alumnosSeleccionados.length }} jugadores. Crea uno en "Mis Packs".</span>
+                                    </div>
+
+                                    <!-- Show which students don't have matching pack -->
+                                    <div class="students-pack-status" *ngIf="alumnosSeleccionados.length > 0">
+                                        <div *ngFor="let s of alumnosSeleccionados" class="sp-row">
+                                            <span class="sp-name">{{ s.jugador_nombre }}</span>
+                                            <span class="sp-badge" [class.active]="(s.sesiones_restantes || 0) > 0"
+                                                  [class.inactive]="(s.sesiones_restantes || 0) <= 0">
+                                                {{ (s.sesiones_restantes || 0) > 0 ? s.pack_nombre : 'Sin pack' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </ng-container>
+
+                                <!-- GRUPAL: Seleccionar pack grupal -->
+                                <ng-container *ngIf="tipoClaseSeleccionado === 'grupal'">
+                                    <label class="info-label">PACK GRUPAL ({{ alumnosSeleccionados.length }} jugadores):</label>
+                                    <div *ngIf="packsParaTipo.length > 0">
+                                        <select [(ngModel)]="packAAsignar" class="modern-select highlight">
+                                            <option [ngValue]="null">-- Elegir Pack Grupal --</option>
+                                            <option *ngFor="let p of packsParaTipo" [ngValue]="p">
+                                                {{ p.nombre }} ({{ p.capacidad_minima }}-{{ p.capacidad_maxima }} pers.) - ${{ p.precio }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div *ngIf="packsParaTipo.length === 0" class="no-packs-alert">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>No hay packs grupales. Crea uno en "Mis Packs".</span>
+                                    </div>
+
+                                    <div class="students-pack-status" *ngIf="alumnosSeleccionados.length > 0">
+                                        <div *ngFor="let s of alumnosSeleccionados" class="sp-row">
+                                            <span class="sp-name">{{ s.jugador_nombre }}</span>
+                                            <span class="sp-badge active">Incluido</span>
+                                        </div>
+                                    </div>
+                                </ng-container>
+                            </div>
+
+                            <!-- New location for recurrence -->
+                            <div class="recurrence-section mt-4">
+                                <label class="info-label">3. REPETIR CLASE:</label>
+                                <div class="chips-row">
+                                    <button *ngFor="let r of [1,2,4,8,12]" 
+                                            [class.active]="recurrencia === r" 
+                                            (click)="recurrencia = r">
+                                        {{ r === 1 ? 'UNA VEZ' : r + ' SEM' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="m-footer">
+                <button class="b-cancel" (click)="closeModal()">DESCARTAR</button>
+                <button class="b-confirm" 
+                        (click)="confirmarAgenda()" 
+                        [disabled]="isLoading || 
+                            (tipoClaseSeleccionado === 'individual' && (!alumnoSeleccionado || ((alumnoSeleccionado.sesiones_restantes || 0) <= 0 && !packAAsignar))) ||
+                            (tipoClaseSeleccionado !== 'individual' && (alumnosSeleccionados.length < 2 || !packAAsignar))">
+                    <span *ngIf="!isLoading">CONFIRMAR Y AGENDAR</span>
+                    <span *ngIf="isLoading" class="loader-flex">
+                        <i class="fas fa-spinner fa-spin"></i> PROCESANDO...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-hard-gate></app-hard-gate>
+
+<!-- RESERVATION DETAIL MODAL -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeModal()">
+    <div class="modal-card detail-modal-content" [class.wide-modal]="isEditingDetail" (click)="$event.stopPropagation()">
+        <div class="m-header">
+            <div class="h-left">
+                <h3>DETALLE DE CLASE</h3>
+                <p>{{ selectedSlot?.date | date:'EEEE, d MMMM y' }} @ {{ selectedSlot?.hour }}</p>
+            </div>
+            <div class="h-right">
+                <button class="btn-edit-tech" *ngIf="!isEditingDetail" (click)="onEditDetail()">
+                    <i class="fas fa-edit"></i> EDITAR TÉCNICA
+                </button>
+                <button class="btn-close" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="m-body">
+            <!-- VIEW MODE: EXACT REPLICA -->
+            <div class="detail-card" *ngIf="!isEditingDetail">
+                <div class="player-info">
+                    <img [src]="'https://ui-avatars.com/api/?name=' + selectedSlot?.slotData?.jugador_nombre + '&background=ccff00&color=000'" alt="Alumno">
+                    <div class="txt">
+                        <b>ALUMNO</b>
+                        <h3>{{ selectedSlot?.slotData?.jugador_nombre }}</h3>
+                    </div>
+                </div>
+
+                <div class="info-stack">
+                    <div class="info-card">
+                        <div class="square-icon"><i class="fas fa-box-open"></i></div>
+                        <div class="txt">
+                            <b>PACK / SESIÓN</b>
+                            <p>{{ selectedSlot?.slotData?.reserva_tipo || 'Individual Estándar' }}</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="square-icon"><i class="fas fa-clipboard-list"></i></div>
+                        <div class="txt">
+                            <b>PLANIFICACIÓN / MALLA</b>
+                            <p [style.color]="selectedSlot?.slotData?.malla_id ? '#0f172a' : '#94a3b8'">
+                                {{ selectedSlot?.slotData?.malla_nombre || 'Sin planificación asignada' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="info-card" *ngIf="selectedSlot?.slotData?.club_nombre">
+                        <div class="square-icon location"><i class="fas fa-location-dot"></i></div>
+                        <div class="txt">
+                            <b>RECINTO / CLUB</b>
+                            <p>{{ selectedSlot?.slotData?.club_nombre }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TECHNICAL DOSSIER VERTICAL -->
+                <div class="technical-dossier">
+                    <div class="td-header">
+                        <b>CLASE ASIGNADA</b>
+                        <h4 [style.color]="selectedSlot?.slotData?.clase_id ? '#fff' : '#94a3b8'">
+                            {{ selectedSlot?.slotData?.clase_titulo || 'Pendiente de asignar clase' }}
+                        </h4>
+                    </div>
+                    <div class="td-body" *ngIf="selectedSlot?.slotData?.clase_id">
+                        <div class="section" *ngIf="selectedSlot?.slotData?.clase_objetivo">
+                            <h5>OBJETIVOS</h5>
+                            <p>{{ selectedSlot?.slotData?.clase_objetivo }}</p>
+                        </div>
+                        <div class="section" *ngIf="selectedSlot?.slotData?.clase_calentamiento">
+                            <h5>CALENTAMIENTO</h5>
+                            <p>{{ selectedSlot?.slotData?.clase_calentamiento }}</p>
+                        </div>
+                        <div class="section" *ngIf="selectedSlot?.slotData?.clase_contenido">
+                            <h5>TEMA PRINCIPAL</h5>
+                            <p>{{ selectedSlot?.slotData?.clase_contenido }}</p>
+                        </div>
+                        <div class="section" *ngIf="selectedSlot?.slotData?.clase_drills">
+                            <h5>PRÁCTICA TEMA PRINCIPAL</h5>
+                            <p>{{ selectedSlot?.slotData?.clase_drills }}</p>
+                        </div>
+                        <div class="section" *ngIf="selectedSlot?.slotData?.clase_juego">
+                            <h5>VUELTA A LA CALMA</h5>
+                            <p>{{ selectedSlot?.slotData?.clase_juego }}</p>
+                        </div>
+                        <div class="section" *ngIf="selectedSlot?.slotData?.clase_recursos">
+                            <h5>NOTAS / RECURSOS</h5>
+                            <p>{{ selectedSlot?.slotData?.clase_recursos }}</p>
+                        </div>
+                    </div>
+                    <!-- Empty State for Dossier -->
+                    <div class="td-body" *ngIf="!selectedSlot?.slotData?.clase_id" style="padding: 30px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                        <p style="color: #94a3b8; font-size: 14px; font-style: italic; font-weight: 500; line-height: 1.6;">
+                            <i class="fas fa-info-circle" style="display: block; font-size: 24px; margin-bottom: 12px; color: #ccff00;"></i>
+                            Haz clic en "EDITAR TÉCNICA" para seleccionar una clase y ver los contenidos didácticos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EDIT MODE (MIRROR OF BOOKING FLOW) -->
+            <div class="booking-flow" *ngIf="isEditingDetail" style="padding: 10px;">
+                <div class="row" style="display: flex; gap: 25px; align-items: flex-start;">
+                    
+                    <!-- COL 1: ALUMNO Y TIPO (VIEW ONLY REFERENCE) -->
+                    <div class="col card-box" style="flex: 1; border-left: 6px solid #ccff00;">
+                        <div class="col-header">
+                            <span class="num">1</span>
+                            <h3>ALUMNO Y SESIÓN</h3>
+                        </div>
+
+                        <div class="player-info" style="margin-top: 20px;">
+                            <img [src]="'https://ui-avatars.com/api/?name=' + selectedSlot?.slotData?.jugador_nombre + '&background=ccff00&color=000'" alt="Alumno">
+                            <div class="txt">
+                                <b>ALUMNO ACTUAL</b>
+                                <h3 style="color: #fff;">{{ selectedSlot?.slotData?.jugador_nombre }}</h3>
+                                <div class="badge-mini" style="background: #ccff00; color: #000; padding: 4px 10px; border-radius: 8px; font-size: 10px; display: inline-block; margin-top: 8px; font-weight: 950; text-transform: uppercase;">
+                                    {{ selectedSlot?.slotData?.reserva_tipo || 'Individual Estándar' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 11px; color: #999; margin-top: 20px; line-height: 1.5; font-weight: 600;">
+                            <i class="fas fa-info-circle"></i> La sesión y el alumno están vinculados a esta reserva. Para cambiar el pack, favor eliminar y re-agendar.
+                        </p>
+                    </div>
+
+                    <!-- COL 2: PLANIFICACION (EDITABLE) -->
+                    <div class="col card-box" style="flex: 1.2;">
+                        <div class="col-header">
+                            <span class="num">2</span>
+                            <h3>PLANIFICACIÓN Y CLASE</h3>
+                        </div>
+
+                        <div class="filter-chips">
+                            <button [class.active]="categoriaFiltro === 'todos'" (click)="categoriaFiltro = 'todos'; onCategoriaChange()">TODOS</button>
+                            <button [class.active]="categoriaFiltro === 'adulto'" (click)="categoriaFiltro = 'adulto'; onCategoriaChange()">ADULTOS</button>
+                            <button [class.active]="categoriaFiltro === 'menor'" (click)="categoriaFiltro = 'menor'; onCategoriaChange()">MENORES</button>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="font-size: 10px; color: #666; font-weight: 950; margin-bottom: 8px; display: block;">SELECCIONAR MALLA</label>
+                            <select class="modern-select" [(ngModel)]="planificacionId" (change)="onMallaChange()">
+                                <option [ngValue]="null">-- Sin Malla Asignada --</option>
+                                <option *ngFor="let m of mallasFiltradas" [ngValue]="m.id">{{ m.nombre }}</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="font-size: 10px; color: #666; font-weight: 950; margin-bottom: 8px; display: block;">SELECCIONAR CLASE</label>
+                            <select class="modern-select" [(ngModel)]="claseMallaId" (change)="onClaseChange()">
+                                <option [ngValue]="null">-- Seleccionar Clase --</option>
+                                <option *ngFor="let c of clasesDisponibles" [ngValue]="c.id">{{ c.titulo }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Technical Dossier Preview -->
+                        <div class="technical-dossier mini" *ngIf="selectedClaseToPreview" style="margin-top: 20px; background: #111;">
+                            <div class="td-header" style="padding: 15px 20px;">
+                                <b style="font-size: 9px; opacity: 0.6;">VISTA PREVIA DE CLASE</b>
+                                <h4 style="font-size: 15px; color: var(--padel-neon);">{{ selectedClaseToPreview.titulo }}</h4>
+                            </div>
+                            <div class="td-body" style="padding: 15px; display: block;">
+                                <div class="section" style="margin-bottom: 10px; padding: 12px; background: rgba(255,255,255,0.05);">
+                                    <h5 style="margin-bottom: 5px; font-size: 9px;">OBJETIVOS</h5>
+                                    <p style="font-size: 12px; color: #ccc;">{{ selectedClaseToPreview.objetivo || 'Sin objetivos.' }}</p>
+                                </div>
+                                <div class="section" style="margin-bottom: 10px; padding: 12px; background: rgba(255,255,255,0.05);" *ngIf="selectedClaseToPreview.calentamiento">
+                                    <h5 style="margin-bottom: 5px; font-size: 9px;">CALENTAMIENTO</h5>
+                                    <p style="font-size: 12px; color: #ccc;">{{ selectedClaseToPreview.calentamiento }}</p>
+                                </div>
+                                <div class="section" style="padding: 12px; background: rgba(255,255,255,0.05);" *ngIf="selectedClaseToPreview.parte_tecnica">
+                                    <h5 style="margin-bottom: 5px; font-size: 9px;">TEMA PRINCIPAL</h5>
+                                    <p style="font-size: 12px; color: #ccc;">{{ selectedClaseToPreview.parte_tecnica }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="m-footer">
+            <ng-container *ngIf="!isEditingDetail">
+                <button class="b-cancel btn-delete-ghost" (click)="confirmarCancelacion()">ELIMINAR RESERVA</button>
+                <button class="b-confirm" (click)="closeModal()">CERRAR</button>
+            </ng-container>
+            <ng-container *ngIf="isEditingDetail">
+                <button class="b-cancel btn-delete-ghost" (click)="confirmarCancelacion()" style="flex: 0.6;">
+                    <i class="fas fa-trash"></i> CANCELAR
+                </button>
+                <button class="b-cancel" (click)="isEditingDetail = false" style="flex: 0.8;">DESCARTAR</button>
+                <button class="b-confirm btn-save-neon" (click)="saveTechnicalEdit()" [disabled]="!claseMallaId" style="flex: 1.6;">
+                    GUARDAR Y ACTUALIZAR
+                </button>
+            </ng-container>
+        </div>
+    </div>
 </div>

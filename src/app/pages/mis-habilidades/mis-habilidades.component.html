@@ -16,6 +16,9 @@
                 <button [class.active]="selectedMainTab === 'habilidades'" (click)="selectedMainTab = 'habilidades'">
                     📊 Habilidades & Evolución
                 </button>
+                <button [class.active]="selectedMainTab === 'desglose'" (click)="selectedMainTab = 'desglose'">
+                    🔍 Desglose Detallado
+                </button>
                 <button [class.active]="selectedMainTab === 'videos'" (click)="selectedMainTab = 'videos'">
                     🎬 Historial de Videos
                 </button>
@@ -30,26 +33,89 @@
                     </button>
                 </div>
 
-                <div class="charts-row" *ngIf="!isLoading && hasData">
-                    <div class="card chart-card">
-                        <div class="card-title">Distribución Técnica</div>
+                <!-- Performance Scoreboard -->
+                <div class="performance-scoreboard animate-up" *ngIf="!isLoading && hasData">
+                    <div class="score-item">
+                        <span class="score-label">🎾 Técnico</span>
+                        <span class="score-value">{{ avgTecnico | number:'1.1-1' }}</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">🧠 Táctico</span>
+                        <span class="score-value">{{ avgTactico | number:'1.1-1' }}</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">🏃‍♂️ Físico</span>
+                        <span class="score-value">{{ avgFisico | number:'1.1-1' }}</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">🧘 Mental</span>
+                        <span class="score-value">{{ avgMental | number:'1.1-1' }}</span>
+                    </div>
+                    <div class="final-score-box">
+                        <span class="final-label">SCORE FINAL</span>
+                        <span class="final-value">{{ finalScore | number:'1.1-1' }}</span>
+                    </div>
+                </div>
+
+                <div class="charts-gallery" *ngIf="!isLoading && hasData">
+                    <div class="card chart-card radar">
+                        <div class="card-title">Mapa de Habilidades</div>
                         <div class="chart-container">
                             <canvas id="radarChart"></canvas>
                         </div>
                     </div>
 
-                    <div class="card chart-card">
-                        <div class="card-title">Evolución de Promedio</div>
+                    <div class="card chart-card radar">
+                        <div class="card-title">Métricas Tácticas</div>
                         <div class="chart-container">
-                            <canvas id="lineChart"></canvas>
+                            <canvas id="tacticoChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card chart-card radar">
+                        <div class="card-title">Métricas Físicas</div>
+                        <div class="chart-container">
+                            <canvas id="fisicoChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card chart-card radar">
+                        <div class="card-title">Métricas Mentales</div>
+                        <div class="chart-container">
+                            <canvas id="mentalChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- Detailed Analysis Table -->
+                <!-- Empty Stats for Skills -->
+                <div class="card empty-card" *ngIf="!isLoading && !hasData">
+                    <div class="icon">📈</div>
+                    <h3>Aún no tienes evaluaciones</h3>
+                    <p>Tus gráficos aparecerán cuando tu entrenador realice tu primera evaluación técnica.</p>
+                </div>
+            </ng-container>
+
+            <!-- Detailed Analysis Content -->
+            <ng-container *ngIf="selectedMainTab === 'desglose'">
+                <div class="trainers-tabs" *ngIf="trainers.length > 1">
+                    <button *ngFor="let t of trainers" class="tab-btn" [class.active]="selectedTrainerId === t.id"
+                        (click)="selectTrainer(t.id)">
+                        {{t.nombre}}
+                    </button>
+                </div>
+
                 <div class="card analysis-card" *ngIf="!isLoading && hasData">
-                    <div class="card-title">Detalle por Golpe</div>
-                    <div class="analysis-table-container">
+                    <div class="card-title">Desglose Detallado</div>
+                    
+                    <div class="detail-tabs">
+                        <button class="dt-btn" [class.active]="activeDetailSubTab === 'tecnico'" (click)="activeDetailSubTab = 'tecnico'">🎾 Técnico</button>
+                        <button class="dt-btn" [class.active]="activeDetailSubTab === 'tactico'" (click)="activeDetailSubTab = 'tactico'">🧠 Táctico</button>
+                        <button class="dt-btn" [class.active]="activeDetailSubTab === 'fisico'" (click)="activeDetailSubTab = 'fisico'">🏃‍♂️ Físico</button>
+                        <button class="dt-btn" [class.active]="activeDetailSubTab === 'mental'" (click)="activeDetailSubTab = 'mental'">🧘 Mental</button>
+                    </div>
+
+                    <!-- TÉCNICO TABLE -->
+                    <div class="analysis-table-container fade-in" *ngIf="activeDetailSubTab === 'tecnico'">
                         <table class="analysis-table">
                             <thead>
                                 <tr>
@@ -68,9 +134,91 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="info-btn" (click)="verDetalleGolpe(label)">
-                                            ℹ️
-                                        </button>
+                                        <button class="info-btn" (click)="verDetalleGolpe(label)">ℹ️</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- TÁCTICO TABLE -->
+                    <div class="analysis-table-container fade-in" *ngIf="activeDetailSubTab === 'tactico'">
+                        <table class="analysis-table">
+                            <thead>
+                                <tr>
+                                    <th>Situación</th>
+                                    <th>Nota</th>
+                                    <th>Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let label of storedTacticoLabels; let i = index">
+                                    <td class="hit-name">{{ label }}</td>
+                                    <td>
+                                        <span class="score-badge" [class.high]="storedTacticoData[i] >= 8"
+                                            [class.mid]="storedTacticoData[i] >= 5" [class.low]="storedTacticoData[i] < 5">
+                                            {{ storedTacticoData[i] | number:'1.1-1' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="info-btn" *ngIf="detailedScores?.tactico?.[label]?.comentario" 
+                                            (click)="popupService.info(label, detailedScores.tactico[label].comentario)">💬</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- FÍSICO TABLE -->
+                    <div class="analysis-table-container fade-in" *ngIf="activeDetailSubTab === 'fisico'">
+                        <table class="analysis-table">
+                            <thead>
+                                <tr>
+                                    <th>Capacidad</th>
+                                    <th>Nota</th>
+                                    <th>Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let label of storedFisicoLabels; let i = index">
+                                    <td class="hit-name">{{ label }}</td>
+                                    <td>
+                                        <span class="score-badge fisico" [class.high]="storedFisicoData[i] >= 8"
+                                            [class.mid]="storedFisicoData[i] >= 5" [class.low]="storedFisicoData[i] < 5">
+                                            {{ storedFisicoData[i] | number:'1.1-1' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="info-btn" *ngIf="detailedScores?.fisico?.[label]?.comentario" 
+                                            (click)="popupService.info(label, detailedScores.fisico[label].comentario)">💬</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- MENTAL TABLE -->
+                    <div class="analysis-table-container fade-in" *ngIf="activeDetailSubTab === 'mental'">
+                        <table class="analysis-table">
+                            <thead>
+                                <tr>
+                                    <th>Indicador</th>
+                                    <th>Nota</th>
+                                    <th>Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let label of storedMentalLabels; let i = index">
+                                    <td class="hit-name">{{ label }}</td>
+                                    <td>
+                                        <span class="score-badge mental" [class.high]="storedMentalData[i] >= 8"
+                                            [class.mid]="storedMentalData[i] >= 5" [class.low]="storedMentalData[i] < 5">
+                                            {{ storedMentalData[i] | number:'1.1-1' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="info-btn" *ngIf="detailedScores?.mental?.[label]?.comentario" 
+                                            (click)="popupService.info(label, detailedScores.mental[label].comentario)">💬</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -78,11 +226,10 @@
                     </div>
                 </div>
 
-                <!-- Empty Stats -->
                 <div class="card empty-card" *ngIf="!isLoading && !hasData">
                     <div class="icon">📈</div>
                     <h3>Aún no tienes evaluaciones</h3>
-                    <p>Tus gráficos aparecerán cuando tu entrenador realice tu primera evaluación técnica.</p>
+                    <p>Tu desglose detallado aparecerá después de tu primera clase evaluada.</p>
                 </div>
             </ng-container>
 

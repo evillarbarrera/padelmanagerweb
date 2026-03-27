@@ -2,5 +2,5 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'https://api.padelmanager.cl'
+  apiUrl: 'https://api.padelmanager.cl/prd'
 };

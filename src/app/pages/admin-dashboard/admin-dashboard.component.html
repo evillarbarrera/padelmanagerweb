@@ -15,16 +15,20 @@
             <div class="menu-sections">
                 <a class="nav-item" [class.active]="activeTab === 'resumen'" (click)="activeTab = 'resumen'">
                     <span class="icon">📊</span>
-                    <span>Resumen</span>
+                    <span>RESUMEN EJECUTIVO</span>
                 </a>
                 <a class="nav-item" [class.active]="activeTab === 'entrenadores'"
                     (click)="activeTab = 'entrenadores'; loadEntrenadores()">
                     <span class="icon">🎾</span>
-                    <span>Entrenadores</span>
+                    <span>COACHES Y ACADEMIAS</span>
+                </a>
+                <a class="nav-item" [class.active]="activeTab === 'config'" (click)="activeTab = 'config'">
+                    <span class="icon">⚙️</span>
+                    <span>CONFIGURACIÓN GLOBAL</span>
                 </a>
                 <a class="nav-item" (click)="navigate('/perfil')">
                     <span class="icon">👤</span>
-                    <span>Mi Perfil</span>
+                    <span>MI PERFIL</span>
                 </a>
             </div>
         </nav>
@@ -32,7 +36,7 @@
         <div class="sidebar-footer">
             <button class="logout-btn" (click)="logout()">
                 <span class="icon">🚪</span>
-                <span>Cerrar Sesión</span>
+                <span>CERRAR SESIÓN</span>
             </button>
         </div>
     </aside>
@@ -42,133 +46,56 @@
 
             <!-- TAB: RESUMEN -->
             <ng-container *ngIf="activeTab === 'resumen'">
-                <div class="page-intro"
-                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <div class="page-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                     <div>
-                        <h1>Resumen del Sistema ⚙️</h1>
-                        <p>Métricas y uso global de la plataforma PadelManager.</p>
+                        <h1>BIENVENIDO, {{ adminNombre }}</h1>
+                        <p>Analíticas globales del ecosistema PadelManager.</p>
                     </div>
 
-                    <div class="filter-controls"
-                        style="background: white; padding: 10px 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center;">
-                        <span style="font-size: 13px; font-weight: 700; color: #64748b;">Período:</span>
-                        <select [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select"
-                            style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; font-weight: 600;">
+                    <div class="filter-controls-pm d-flex gap-2">
+                        <select [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select">
                             <option *ngFor="let m of months" [value]="m.value">{{ m.label }}</option>
                         </select>
-                        <select [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select"
-                            style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; font-weight: 600;">
+                        <select [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select">
                             <option *ngFor="let y of years" [value]="y">{{ y }}</option>
                         </select>
                     </div>
                 </div>
 
-                <div *ngIf="isLoading" class="loading-state">
-                    <div class="spinner"></div>
-                    <p>Cargando estadísticas...</p>
-                </div>
-
                 <div class="stats-cards-grid" *ngIf="!isLoading && stats">
-                    <!-- Ingresos -->
-                    <div class="stat-card sum-card" style="background: #111; color: white;">
-                        <div class="icon" style="background: rgba(255,255,255,0.1);">💰</div>
+                    <div class="stat-card sum-card">
+                        <div class="icon">💰</div>
                         <div class="stat-info">
-                            <span class="label" style="color: #aaa;">Ingresos {{ months[selectedMonth-1].label }} {{
-                                selectedYear }}</span>
-                            <span class="value" style="color: #ccff00;">${{ stats.ingresos_packs | number:'1.0-0'
-                                }}</span>
+                            <span class="label">INGRESOS {{ months[selectedMonth-1].label }}</span>
+                            <span class="value">${{ stats.ingresos_packs | number:'1.0-0' }}</span>
                         </div>
                     </div>
-
-                    <!-- Comisiones -->
-                    <div class="stat-card sum-card" style="background: #ccff00; color: #111;">
-                        <div class="icon" style="background: rgba(0,0,0,0.1);">💸</div>
-                        <div class="stat-info">
-                            <span class="label" style="color: #444;">Comisión App (3.5%)</span>
-                            <span class="value" style="color: #111;">${{ stats.ganancia_estimada | number:'1.0-0'
-                                }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Packs Totales -->
                     <div class="stat-card">
-                        <div class="icon">📦</div>
+                        <div class="icon" style="color: #ccff00;">⚡</div>
                         <div class="stat-info">
-                            <span class="label">Packs Vendidos (Mes)</span>
-                            <span class="value">{{ stats.total_packs_vendidos }}</span>
+                            <span class="label">COMISIÓN ESTIMADA</span>
+                            <span class="value">${{ stats.ganancia_estimada | number:'1.0-0' }}</span>
                         </div>
                     </div>
-
-                    <!-- Packs Grupales -->
-                    <div class="stat-card" style="border-left: 5px solid #4a90e2;">
-                        <div class="icon">🏘️</div>
-                        <div class="stat-info">
-                            <span class="label">Packs Grupales</span>
-                            <span class="value">{{ stats.packs_grupales || 0 }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Packs Individuales -->
-                    <div class="stat-card" style="border-left: 5px solid #10b981;">
-                        <div class="icon">👤</div>
-                        <div class="stat-info">
-                            <span class="label">Packs Individuales</span>
-                            <span class="value">{{ stats.packs_individuales || 0 }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Packs Multijugador -->
-                    <div class="stat-card" style="border-left: 5px solid #f59e0b;">
-                        <div class="icon">👥</div>
-                        <div class="stat-info">
-                            <span class="label">Packs Multijugador</span>
-                            <span class="value">{{ stats.packs_multijugador || 0 }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Usuarios -->
-                    <div class="stat-card">
-                        <div class="icon">👤</div>
-                        <div class="stat-info">
-                            <span class="label">Nuevos Usuarios (Mes)</span>
-                            <span class="value">{{ stats.nuevos_usuarios || 0 }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Usuarios Totales -->
                     <div class="stat-card">
                         <div class="icon">🌎</div>
                         <div class="stat-info">
-                            <span class="label">Usuarios Totales</span>
+                            <span class="label">AUDIENCIA TOTAL</span>
                             <span class="value">{{ stats.total_usuarios }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Torneos -->
-                    <div class="stat-card">
-                        <div class="icon">🏆</div>
-                        <div class="stat-info">
-                            <span class="label">Torneos Mes</span>
-                            <span class="value">{{ stats.total_torneos || 0 }}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="charts-section fade-in" *ngIf="!isLoading">
-                    <div class="chart-header">
-                        <h2>Análisis de Rendimiento</h2>
-                    </div>
-
                     <div class="charts-row">
-                        <div class="chart-container card">
-                            <h3>Ingresos por Packs</h3>
+                        <div class="chart-container">
+                            <h3>Rendimiento de Ingresos ($)</h3>
                             <div class="canvas-wrapper">
                                 <canvas id="revenueChart"></canvas>
                             </div>
                         </div>
-
-                        <div class="chart-container card">
-                            <h3>Usuarios Registrados &amp; Packs Vendidos</h3>
+                        <div class="chart-container">
+                            <h3>Crecimiento de Usuarios</h3>
                             <div class="canvas-wrapper">
                                 <canvas id="usersPacksChart"></canvas>
                             </div>
@@ -180,68 +107,78 @@
             <!-- TAB: ENTRENADORES -->
             <ng-container *ngIf="activeTab === 'entrenadores'">
                 <div class="page-intro">
-                    <h1>Gestión de Entrenadores 🎾</h1>
-                    <p>Controla la activación de pagos, comisiones y datos bancarios de cada entrenador.</p>
+                    <h1>GESTIÓN DE COACHES 🎾</h1>
+                    <p>Panel de control de facturación y fintech por academia.</p>
                 </div>
-
-                <div *ngIf="loadingEntrenadores" class="loading-state">
-                    <div class="spinner"></div>
-                    <p>Cargando entrenadores...</p>
-                </div>
-
                 <div class="entrenadores-list" *ngIf="!loadingEntrenadores">
                     <div class="entrenador-card" *ngFor="let e of entrenadores">
                         <div class="entrenador-header">
-                            <div class="entrenador-avatar">
-                                <img [src]="e.foto_perfil || e.foto || 'assets/images/placeholder_avatar.png'"
-                                    (error)="e.foto_perfil = 'assets/images/placeholder_avatar.png'" alt="Avatar" />
-                            </div>
+                            <img [src]="e.foto_perfil || e.foto || 'assets/images/placeholder_avatar.png'" alt="Avatar" />
                             <div class="entrenador-info">
                                 <h3>{{ e.nombre }}</h3>
                                 <span class="email-tag">{{ e.usuario }}</span>
                             </div>
                         </div>
-
                         <div class="entrenador-controls">
-                            <!-- Pagos Switch (Mercado Pago) -->
                             <div class="control-row">
-                                <label>💳 Pagos Automáticos (MP)</label>
-                                <div class="toggle-switch" [class.active]="e.transbank_activo == 1"
-                                    (click)="toggleTransbank(e)">
+                                <label>PAGOS AUTOMÁTICOS</label>
+                                <div class="toggle-switch" [class.active]="e.transbank_activo == 1" (click)="toggleTransbank(e)">
                                     <div class="toggle-thumb"></div>
                                 </div>
                             </div>
-
-
-                            <!-- Comisión Switch -->
                             <div class="control-row">
-                                <label>💸 Comisión</label>
-                                <div class="toggle-switch" [class.active]="e.comision_activa == 1"
-                                    (click)="toggleComision(e)">
-                                    <div class="toggle-thumb"></div>
-                                </div>
-                                <input type="number" class="comision-input" [(ngModel)]="e.comision_porcentaje"
-                                    (blur)="updateComision(e)" step="0.5" min="0" max="100" placeholder="3.5" />
-                                <span class="percent-label">%</span>
+                                <label>COMISIÓN APP (%)</label>
+                                <input type="number" class="comision-input" [(ngModel)]="e.comision_porcentaje" (blur)="updateComision(e)">
                             </div>
-
-                            <!-- Estado Cuenta MP -->
                             <div class="control-row">
-                                <label>🔗 Vinculación MP</label>
-                                <span class="bank-status" [class.registered]="e.mp_collector_id">
-                                    {{ e.mp_collector_id ? '✅ Vinculada' : '⚠️ No vinculada' }}
-                                </span>
-                                <button class="btn-ver-datos" (click)="verDatosBancarios(e)">
-                                    {{ e.mp_collector_id ? 'Gestionar' : 'Vincular' }}
-                                </button>
+                                <label>MERCADO PAGO</label>
+                                <span class="bank-status" [class.registered]="e.mp_collector_id">{{ e.mp_collector_id ? 'VINCULADO' : 'PENDIENTE' }}</span>
+                                <button class="btn-ver-datos" (click)="verDatosBancarios(e)">GESTIONAR</button>
                             </div>
-
                         </div>
                     </div>
+                </div>
+            </ng-container>
 
-                    <div *ngIf="entrenadores.length === 0" class="empty-state">
-                        <div style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;">🎾</div>
-                        <p>No hay entrenadores registrados aún.</p>
+            <!-- TAB: CONFIGURACIÓN GLOBAL -->
+            <ng-container *ngIf="activeTab === 'config'">
+                <div class="page-intro">
+                    <h1>CONFIGURACIÓN GLOBAL ⚙️</h1>
+                    <p>Gestión de cuentas de recaudo para los planes de suscripción de PadelManager.</p>
+                </div>
+                <div class="billing-main-grid" style="display: grid; grid-template-columns: 1fr; gap: 32px;">
+                    <div class="card-pm" style="padding: 40px;">
+                        <h3 style="font-size: 20px; font-weight: 950; margin-bottom: 24px;">🏦 CUENTA DE RECAUDACIÓN PRINCIPAL</h3>
+                        <p style="color: #666; margin-bottom: 32px;">Todos los pagos del <b>Plan PadelManager</b> realizados por los coaches llegarán a estas credenciales.</p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="form-group">
+                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Modo de Transacción</label>
+                                <select class="filter-select" style="width: 100%; margin-top: 8px;">
+                                    <option value="test">Sandbox / Pruebas</option>
+                                    <option value="prod">Producción / En Vivo</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Mercado Pago Public Key</label>
+                                <input type="text" class="swal2-input" placeholder="APP_USR-..." style="width: 100%; border: 1.5px solid #eee; border-radius: 12px; padding: 12px; margin: 8px 0; font-family: monospace;">
+                            </div>
+
+                            <div class="form-group">
+                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Mercado Pago Access Token</label>
+                                <input type="password" class="swal2-input" placeholder="TEST-..." style="width: 100%; border: 1.5px solid #eee; border-radius: 12px; padding: 12px; margin: 8px 0; font-family: monospace;">
+                            </div>
+                            
+                            <hr style="opacity: 0.1; margin: 24px 0;">
+
+                            <div class="form-group">
+                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Periodo de Prueba Global (Días)</label>
+                                <input type="number" class="swal2-input" value="90" style="width: 100%; border: 1.5px solid #eee; border-radius: 12px; padding: 12px; margin: 8px 0;">
+                            </div>
+                        </div>
+
+                        <button class="btn-save btn-glow mt-5" style="width: auto; padding: 16px 40px;">GUARDAR CAMBIOS 💾</button>
                     </div>
                 </div>
             </ng-container>

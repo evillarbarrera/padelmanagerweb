@@ -22,6 +22,9 @@
           <button class="sort-btn" [class.active]="sortCriteria === 'saldo'" (click)="cambiarOrden('saldo')">
             Saldo Bajo
           </button>
+          <button class="create-btn" (click)="mostrarModalCrear()">
+            + Registrar Alumno
+          </button>
         </div>
       </div>
 
@@ -43,7 +46,7 @@
       <div *ngIf="!isLoading && alumnosFiltrados.length === 0" class="empty-state">
         <div class="empty-icon">📭</div>
         <h3>No tienes alumnos</h3>
-        <p>Tus alumnos aparecerán aquí cuando se inscriban</p>
+        <p>Registra a tu primer alumno usando el botón superior.</p>
       </div>
 
       <div *ngIf="!isLoading && pagedAlumnos.length > 0">
@@ -61,7 +64,7 @@
               </div>
               <div class="header-info">
                 <h3>{{ alumno.jugador_nombre }}</h3>
-                <p class="pack">{{ alumno.pack_nombre }}</p>
+                <p class="pack">{{ alumno.pack_nombre || 'Sin pack activo' }}</p>
               </div>
             </div>
 
@@ -73,7 +76,7 @@
                 </div>
                 <div class="session-stat">
                   <span class="label">Res.</span>
-                  <span class="value">{{ alumno.sesiones_reservadas }}</span>
+                  <span class="value">{{ alumno.sesiones_reservadas || 0 }}</span>
                 </div>
                 <div class="session-stat">
                   <span class="label">Grup.</span>
@@ -82,18 +85,15 @@
                 </div>
                 <div class="session-stat">
                   <span class="label">Pend.</span>
-                  <span class="value highlight">{{ alumno.sesiones_pendientes }}</span>
+                  <span class="value highlight">{{ alumno.sesiones_pendientes || 0 }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="card-footer">
-              <button class="action-btn eval-btn" (click)="irAEvaluar(alumno)"
-                style="background-color: #ccff00; color: black; font-weight: bold;">
-                ⚡ Evaluar
-              </button>
-              <button class="action-btn" (click)="verProgreso(alumno)">
-                📈 Progreso
+            <div class="card-footer" style="padding: 15px;">
+              <button class="action-btn" (click)="verClases(alumno)"
+                style="width: 100%; background-color: #111; color: #ccff00; border: 2px solid #ccff00; font-weight: 800; border-radius: 12px; height: 50px;">
+                📋 Malla / Evaluar
               </button>
             </div>
           </div>
@@ -105,11 +105,46 @@
             Anterior
           </button>
           <span class="page-indicator">Página {{ currentPage }} de {{ totalPages }}</span>
-          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <button class="page-btn next-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
             Siguiente
           </button>
         </div>
       </div>
     </div>
   </main>
+
+  <!-- MODAL CREACIÓN ALUMNO -->
+  <div class="modal-overlay" *ngIf="isCreatingAlumno">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Nuevo Alumno</h3>
+        <button class="close-btn" (click)="cerrarModalCrear()">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">Ingresa los datos del alumno para crear su cuenta y enviarle sus credenciales de acceso.</p>
+        
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="nuevoAlumno.nombre" placeholder="Ej: Juan Pérez" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label>Correo Electrónico (Será su Usuario)</label>
+          <input type="email" [(ngModel)]="nuevoAlumno.email" placeholder="alumno@correo.com" class="form-input">
+        </div>
+
+        <div class="info-box" style="background: #eef2ff; padding: 12px; border-radius: 8px; display: flex; align-items: flex-start; gap: 10px; margin-top: 15px;">
+          <span style="font-size: 1.2rem;">📧</span>
+          <p style="margin: 0; font-size: 0.9rem; color: #4338ca;">Se enviará un correo automáticamente con una contraseña genérica vinculada a tu perfil de entrenador.</p>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #eee;">
+        <button class="btn-secondary" (click)="cerrarModalCrear()" style="background: none; border: 1px solid #ccc; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancelar</button>
+        <button class="btn-primary" (click)="crearAlumno()" [disabled]="!nuevoAlumno.nombre || !nuevoAlumno.email" 
+          style="background: #111; color: #ccff00; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+          Crear y Notificar
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

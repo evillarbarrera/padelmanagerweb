@@ -407,8 +407,9 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
           const dayId = range.dia_semana;
           const start = range.hora_inicio;
           const end = range.hora_fin;
+          const clubId = range.club_id;
 
-          if (this.templateBlocks[dayId]) {
+          if (this.templateBlocks[dayId] && (clubId == this.selectedClubId)) {
             this.templateBlocks[dayId].forEach(b => {
               if (b.time >= start && b.time < end) {
                 b.selected = true;
@@ -498,6 +499,7 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
 
     const payload = {
       entrenador_id: this.userId,
+      club_id: this.selectedClubId, // Added for backend deletion safety
       config: config
     };
 

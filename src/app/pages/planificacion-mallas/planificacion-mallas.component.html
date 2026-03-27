@@ -1,0 +1,224 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="entrenadorId" [jugadorNombre]="coachNombre || ''" [jugadorFoto]="coachFoto || ''" [role]="'entrenador'"
+        [activePage]="'planificacion'"></app-sidebar>
+
+    <main class="main-content">
+        <div class="dashboard-grid">
+            
+            <!-- Page Header -->
+            <div class="page-header-flex">
+                <div>
+                    <h1 class="section-title">Módulo de Planificación</h1>
+                    <p class="section-subtitle">
+                        {{ viewMode === 'list' ? 'Gestiona tus mallas de entrenamiento guardadas' : 'Diseña la progresión de tus Mallas de Entrenamiento' }}
+                    </p>
+                </div>
+                <div class="header-actions">
+                    <button *ngIf="viewMode === 'list'" class="btn-save btn-glow" (click)="nuevaMalla()">
+                        Nueva Planificación
+                    </button>
+                    <button *ngIf="viewMode === 'editor'" class="btn-cancel" (click)="volverAlListado()">
+                        Volver al Listado
+                    </button>
+                    <button *ngIf="viewMode === 'editor'" class="btn-cancel" (click)="togglePreview()">
+                        {{ isPreviewMode ? 'Ver Edición' : 'Vista Previa' }}
+                    </button>
+                    <button *ngIf="viewMode === 'editor'" class="btn-save" (click)="guardarMalla()" [disabled]="isLoading">
+                        {{ currentMallaId ? 'Actualizar Plan' : 'Guardar Plan' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- List Mode -->
+            <section class="mallas-list-section" *ngIf="viewMode === 'list'">
+                <div class="loading-overlay" *ngIf="isLoading">
+                    <div class="spinner"></div>
+                </div>
+
+                <div class="empty-state card-pm" *ngIf="!isLoading && mallasList.length === 0">
+                    <div class="icon-circle">📜</div>
+                    <h3>No tienes mallas creadas</h3>
+                    <p>Comienza creando tu primera planificación para asignar a tus alumnos.</p>
+                    <button class="btn-save mt-3" (click)="nuevaMalla()">Crear Primera Malla</button>
+                </div>
+
+                <div class="mallas-grid" *ngIf="!isLoading && mallasList.length > 0">
+                    <div class="malla-card card-pm" *ngFor="let malla of mallasList">
+                        <div class="malla-badge">{{ malla.nivel }}</div>
+                        <div class="malla-info">
+                            <h3>{{ malla.nombre }}</h3>
+                            <div class="meta-row">
+                                <span><i class="fas fa-users"></i> {{ malla.publico }}</span>
+                                <span><i class="fas fa-calendar-alt"></i> {{ malla.created_at | date:'dd/MM/yyyy' }}</span>
+                            </div>
+                        </div>
+                        <div class="malla-actions">
+                            <button class="btn-edit-line" (click)="editarMalla(malla.id)">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Editor Mode (Wrapper) -->
+            <div class="editor-container" *ngIf="viewMode === 'editor'">
+                <!-- Configuration Card -->
+                <section class="config-section card-pm mb-4" *ngIf="!isPreviewMode">
+                    <form [formGroup]="mallaForm" class="config-grid">
+                        <div class="form-group">
+                            <label>Nombre de la Malla</label>
+                            <input type="text" formControlName="nombreMalla" placeholder="Ej: Especialista Salida de Pared">
+                        </div>
+                        <div class="form-group">
+                            <label>Público Objetivo</label>
+                            <select formControlName="publico">
+                                <option value="Adultos">Adultos</option>
+                                <option value="Menores">Menores (Juniors)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nivel</label>
+                            <select formControlName="nivel">
+                                <option *ngFor="let lvl of levels" [value]="lvl">{{ lvl }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nº Clases</label>
+                            <div class="number-input">
+                                <input type="number" formControlName="numClases" min="1" max="20">
+                                <span>Módulos</span>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Progress Bar -->
+                <div class="progress-box mb-4">
+                    <div class="progress-head">
+                        <span>Estado del Borrador</span>
+                        <span class="pct">{{ getProgreso() }}%</span>
+                    </div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" [style.width.%]="getProgreso()"></div>
+                    </div>
+                </div>
+
+                <!-- Tabs Navigation -->
+                <div class="tabs-nav mb-4" *ngIf="clases.length > 0">
+                    <div class="tabs-scroll">
+                        <button *ngFor="let clase of clases.controls; let i = index" 
+                                class="tab-item" 
+                                [class.active]="selectedClaseIndex === i"
+                                (click)="selectClase(i)">
+                            <span class="num">#{{ i + 1 }}</span>
+                            <span class="txt">{{ (clase.get('titulo')?.value | slice:0:15) || 'Sin Título' }}{{ (clase.get('titulo')?.value?.length > 15) ? '...' : '' }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Class Builder (Tab Content) -->
+                <div [formGroup]="mallaForm" class="builder-stage">
+                    <div formArrayName="clases">
+                        <div *ngFor="let claseGroup of clases.controls; let i = index" [formGroupName]="i">
+                            <div class="clase-main-card card-pm" *ngIf="selectedClaseIndex === i || isPreviewMode">
+                                
+                                <!-- Internal Header -->
+                                <div class="clase-sub-header mb-4">
+                                    <div class="badge-lime">DETALLE CLASE {{ i + 1 }}</div>
+                                    <div class="move-controls" *ngIf="!isPreviewMode">
+                                        <button class="btn-ctrl" (click)="moverClase(i, -1)" [disabled]="i === 0">ANTERIOR</button>
+                                        <button class="btn-ctrl" (click)="moverClase(i, 1)" [disabled]="i === clases.length - 1">SIGUIENTE</button>
+                                    </div>
+                                </div>
+
+                                <div class="edit-mode" *ngIf="!isPreviewMode">
+                                    <div class="form-stack">
+                                        <div class="form-group full-width mb-3">
+                                            <label>Título Detallado de la Clase</label>
+                                            <input type="text" formControlName="titulo" class="input-lg" placeholder="Ej: Control de Rebote y Lectura">
+                                        </div>
+                                        <div class="form-group full-width mb-4">
+                                            <label>Objetivo de Aprendizaje</label>
+                                            <textarea formControlName="objetivo" rows="3" placeholder="Define qué quieres que el alumno logre en esta sesión específica..."></textarea>
+                                        </div>
+
+                                        <div class="divider"><span>CONTENIDO TÉCNICO</span></div>
+                                        
+                                        <div class="session-blocks" formGroupName="contenido">
+                                            <div class="block b-lime">
+                                                <div class="block-head"><i class="fas fa-fire"></i> CALENTAMIENTO</div>
+                                                <textarea formControlName="calentamiento" placeholder="Movilidad, sombras, activación..."></textarea>
+                                            </div>
+                                            <div class="block b-black">
+                                                <div class="block-head"><i class="fas fa-bullseye"></i> TEMA PRINCIPAL</div>
+                                                <textarea formControlName="parteTecnica" placeholder="Puntos clave del golpe, armado..."></textarea>
+                                            </div>
+                                            <div class="block b-gray">
+                                                <div class="block-head"><i class="fas fa-dumbbell"></i> PRÁCTICA TEMA PRINCIPAL</div>
+                                                <textarea formControlName="drills" placeholder="Series, repeticiones, rotaciones..."></textarea>
+                                            </div>
+                                            <div class="block b-outline">
+                                                <div class="block-head"><i class="fas fa-trophy"></i> VUELTA A LA CALMA</div>
+                                                <textarea formControlName="juego" placeholder="Simulaciones de punto, estrategia..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group full-width mt-4">
+                                            <label>Recursos Multi-media / Notas del Coach</label>
+                                            <div class="input-with-icon">
+                                                <span class="icon">🔗</span>
+                                                <input type="text" formControlName="recursos" placeholder="Pega aquí un link de YouTube o una breve nota personal">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Preview Mode -->
+                                <div class="preview-mode" *ngIf="isPreviewMode">
+                                    <div class="preview-header mb-4">
+                                        <h2 class="preview-title">{{ claseGroup.get('titulo')?.value }}</h2>
+                                        <p class="preview-desc">{{ claseGroup.get('objetivo')?.value }}</p>
+                                    </div>
+                                    <div class="preview-grid">
+                                        <div class="p-block" *ngIf="claseGroup.get('contenido.calentamiento')?.value">
+                                            <div class="p-label text-lime">● CALENTAMIENTO</div>
+                                            <div class="p-content">{{ claseGroup.get('contenido.calentamiento')?.value }}</div>
+                                        </div>
+                                        <div class="p-block" *ngIf="claseGroup.get('contenido.parteTecnica')?.value">
+                                            <div class="p-label text-black">● TEMA PRINCIPAL</div>
+                                            <div class="p-content">{{ claseGroup.get('contenido.parteTecnica')?.value }}</div>
+                                        </div>
+                                        <div class="p-block" *ngIf="claseGroup.get('contenido.drills')?.value">
+                                            <div class="p-label text-gray">● PRÁCTICA TEMA</div>
+                                            <div class="p-content">{{ claseGroup.get('contenido.drills')?.value }}</div>
+                                        </div>
+                                        <div class="p-block" *ngIf="claseGroup.get('contenido.juego')?.value">
+                                            <div class="p-label text-black">● VUELTA CALMA</div>
+                                            <div class="p-content">{{ claseGroup.get('contenido.juego')?.value }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="p-link mt-3" *ngIf="claseGroup.get('recursos')?.value">
+                                        <i class="fas fa-paperclip"></i> <b>Nota/Link:</b> {{ claseGroup.get('recursos')?.value }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-actions card-pm mt-5">
+                    <div class="footer-info">
+                        <p><b>{{ mallaForm.get('nombreMalla')?.value || 'Nueva Malla' }}</b></p>
+                        <p class="meta">{{ mallaForm.get('nivel')?.value }} | {{ mallaForm.get('publico')?.value }} | {{ clases.length }} Clases</p>
+                    </div>
+                    <div class="footer-btns">
+                        <button class="btn-cancel" (click)="guardarMalla()">Guardar para después</button>
+                        <button class="btn-save btn-glow" (click)="guardarMalla()">{{ currentMallaId ? 'ACTUALIZAR PLAN' : 'FINALIZAR Y PUBLICAR' }}</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>

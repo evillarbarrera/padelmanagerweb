@@ -8,13 +8,12 @@ import { environment } from '../../environments/environment';
 })
 export class ClubesService {
     private apiUrl = environment.apiUrl;
-    private authToken = 'Bearer ' + btoa('1|padel_academy');
-
     constructor(private http: HttpClient) { }
 
     private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('token');
         return new HttpHeaders({
-            'Authorization': this.authToken,
+            'Authorization': token ? `Bearer ${token}` : '',
             'Content-Type': 'application/json'
         });
     }

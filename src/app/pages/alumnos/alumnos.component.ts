@@ -26,6 +26,10 @@ export class AlumnosComponent implements OnInit {
   coachFoto: string | null = null;
   loadingMessage = 'Cargando alumnos...';
 
+  // Creación de Alumno
+  nuevoAlumno = { nombre: '', email: '' };
+  isCreatingAlumno = false;
+
   // Paginación y Ordenamiento
   currentPage = 1;
   itemsPerPage = 6;
@@ -38,21 +42,14 @@ export class AlumnosComponent implements OnInit {
   }
 
   private calcularItemsPerPage() {
-    if (window.innerWidth >= 768) {
-      this.itemsPerPage = 9999;
-      this.updatePagedAlumnos();
-      return;
+    if (window.innerWidth >= 1200) {
+      this.itemsPerPage = 9; // 3 rows, 3 columns
+    } else if (window.innerWidth >= 768) {
+      this.itemsPerPage = 6; // iPad/Tablet
+    } else {
+      this.itemsPerPage = 4; // Mobile
     }
-    // En web usamos un grid de 3 columnas (aprox 350px de alto por card)
-    // Restamos aprox 250px de cabecera/filtros
-    const alturaDisponible = window.innerHeight - 250;
-    const filas = Math.max(2, Math.floor(alturaDisponible / 350));
-
-    // Asumimos 3 columnas en desktop (> 1200), 2 en medianos (> 768), 1 en móvil
-    let columnas = 1;
-    this.itemsPerPage = filas * columnas;
     this.updatePagedAlumnos();
-    console.log(`Paginación Web dinámica: ${this.itemsPerPage} items (${filas}x${columnas})`);
   }
 
   constructor(
@@ -189,7 +186,51 @@ export class AlumnosComponent implements OnInit {
     this.router.navigate(['/evaluar', alumno.jugador_id]);
   }
 
+  verClases(alumno: any): void {
+    this.router.navigate(['/clases', alumno.jugador_id]);
+  }
+
   verProgreso(alumno: any): void {
     this.router.navigate(['/progreso', alumno.jugador_id]);
+  }
+
+  mostrarModalCrear(): void {
+    this.isCreatingAlumno = true;
+    this.nuevoAlumno = { nombre: '', email: '' }; // Reset
+  }
+
+  cerrarModalCrear(): void {
+    this.isCreatingAlumno = false;
+  }
+
+  crearAlumno(): void {
+    if (!this.nuevoAlumno.nombre || !this.nuevoAlumno.email) {
+      this.popupService.error('Campos incompletos', 'Por favor completa todos los campos');
+      return;
+    }
+
+    if (!this.userId) return;
+
+    this.isLoading = true;
+    this.loadingMessage = 'Registrando alumno y enviando correo...';
+    
+    this.alumnoService.crearAlumno({
+      ...this.nuevoAlumno,
+      entrenador_id: this.userId
+    }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          const mailMsg = res.mail_sent ? 'y se ha enviado el correo de bienvenida.' : 'pero ha fallado el envío del correo (revisar configuración).';
+          this.popupService.success('Alumno Creado', `El alumno se registró con éxito ${mailMsg}`);
+          this.cerrarModalCrear();
+          this.loadAlumnos(); // Refrescar lista
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        const msg = err.error?.error || 'Error al crear alumno';
+        this.popupService.error('Error', msg);
+      }
+    });
   }
 }

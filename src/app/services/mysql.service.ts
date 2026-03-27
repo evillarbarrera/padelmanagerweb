@@ -9,18 +9,24 @@ import { environment } from '../../environments/environment';
 })
 export class MysqlService {
   private apiUrl = environment.apiUrl;
-  private token = btoa('1|padel_academy');
-
-  private headers = new HttpHeaders({
-    'Authorization': `Bearer ${this.token}`,
-    'Content-Type': 'application/json'
-  });
+  private getHeaders(isMultipart: boolean = false): HttpHeaders {
+    const token = localStorage.getItem('token');
+    const authValue = token ? `Bearer ${token}` : '';
+    const headers: any = {
+      'Authorization': authValue,
+      'X-Authorization': authValue
+    };
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return new HttpHeaders(headers);
+  }
 
   constructor(private http: HttpClient) { }
 
   getPerfil(usuarioId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/user/get_perfil.php?user_id=${usuarioId}`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
@@ -28,64 +34,66 @@ export class MysqlService {
     return this.http.post(`${this.apiUrl}/user/update_perfil.php`, {
       user_id: usuarioId,
       ...data
-    }, { headers: this.headers });
+    }, { headers: this.getHeaders() });
   }
 
   getHomeStats(usuarioId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/alumno/get_home_stats.php?jugador_id=${usuarioId}`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
   checkPendientesEntrenador(jugadorId: number, entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/alumno/check_pendientes_entrenador.php?jugador_id=${jugadorId}&entrenador_id=${entrenadorId}`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
   getEntrenadorStats(entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/entrenador/get_agenda.php?entrenador_id=${entrenadorId}`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
   getDashboardStats(entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/entrenador/get_dashboard_stats.php?entrenador_id=${entrenadorId}`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
   getEstadisticasEntrenador(entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/entrenador/get_packs_grupales.php?entrenador_id=${entrenadorId}`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
-  getReservasJugador(usuarioId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/alumno/get_reservas.php?jugador_id=${usuarioId}`, {
-      headers: this.headers
-    });
+  getReservasJugador(usuarioId: number, entrenadorId?: number): Observable<any[]> {
+    let url = `${this.apiUrl}/alumno/get_reservas.php?jugador_id=${usuarioId}`;
+    if (entrenadorId) {
+      url += `&entrenador_id=${entrenadorId}`;
+    }
+    return this.http.get<any[]>(url, { headers: this.getHeaders() });
   }
 
   cancelarReserva(reservaId: number, jugadorId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/alumno/cancelar_reserva.php`, {
       reserva_id: reservaId,
       jugador_id: jugadorId
-    }, { headers: this.headers });
+    }, { headers: this.getHeaders() });
   }
 
   cancelarInscripcionGrupal(inscripcionId: number, jugadorId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/alumno/cancelar_inscripcion_grupal.php`, {
       inscripcion_id: inscripcionId,
       jugador_id: jugadorId
-    }, { headers: this.headers });
+    }, { headers: this.getHeaders() });
   }
 
   cancelarReservaEntrenador(reservaId: number, entrenadorId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/entrenador/cancelar_reserva.php`, {
       reserva_id: reservaId,
       entrenador_id: entrenadorId
-    }, { headers: this.headers });
+    }, { headers: this.getHeaders() });
   }
 
   subirFoto(usuarioId: number, file: File): Observable<any> {
@@ -93,24 +101,20 @@ export class MysqlService {
     formData.append('user_id', usuarioId.toString());
     formData.append('foto', file);
 
-    const uploadHeaders = new HttpHeaders({
-      'Authorization': `Bearer ${this.token}`
-    });
-
     return this.http.post(`${this.apiUrl}/user/subir_foto.php`, formData, {
-      headers: uploadHeaders
+      headers: this.getHeaders(true)
     });
   }
 
   getPacks(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/packs/get_packs.php`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
   getEntrenadores(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/user/get_users.php?rol=entrenador`, {
-      headers: this.headers
+      headers: this.getHeaders()
     });
   }
 
@@ -119,13 +123,25 @@ export class MysqlService {
     if (entrenadorId) {
       url += `?entrenador_id=${entrenadorId}`;
     }
-    return this.http.get<any[]>(url, { headers: this.headers });
+    return this.http.get<any[]>(url, { headers: this.getHeaders() });
   }
 
   searchAlumnos(term: string): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.apiUrl}/user/get_users.php?rol=jugador&search=${term}&limit=10`,
-      { headers: this.headers }
+      { headers: this.getHeaders() }
     );
+  }
+
+  getMisPacksAlumno(jugadorId: number, entrenadorId?: number): Observable<any> {
+    let url = `${this.apiUrl}/alumno/get_mis_packs_alumno.php?jugador_id=${jugadorId}`;
+    if (entrenadorId) {
+      url += `&entrenador_id=${entrenadorId}`;
+    }
+    return this.http.get(url, { headers: this.getHeaders() });
+  }
+
+  getMallaById(id: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/mallas/get_mallas.php?id=${id}`, { headers: this.getHeaders() });
   }
 }

@@ -1,10 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvaluacionService } from '../../services/evaluacion.service';
 import { MysqlService } from '../../services/mysql.service';
 import { AlumnoService } from '../../services/alumno.service';
+import { EntrenamientoService } from '../../services/entrenamientos.service';
 import { PopupService } from '../../services/popup.service';
 import { Chart, registerables } from 'chart.js';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
@@ -15,7 +17,7 @@ Chart.register(...registerables);
 @Component({
     selector: 'app-alumno-progreso',
     standalone: true,
-    imports: [CommonModule, SidebarComponent],
+    imports: [CommonModule, FormsModule, SidebarComponent],
     templateUrl: './alumno-progreso.component.html',
     styleUrls: ['./alumno-progreso.component.scss']
 })
@@ -26,6 +28,17 @@ export class AlumnoProgresoComponent implements OnInit {
 
     alumnoNombre: string = '';
     alumnoFoto: string | null = null;
+    activeTab: string = 'gráficos';
+
+    setActiveTab(tab: string) {
+        this.activeTab = tab;
+        if (tab === 'gráficos') {
+            setTimeout(() => {
+                this.renderRadarChart();
+                this.renderLineChart();
+            }, 100);
+        }
+    }
     coachFoto: string | null = null;
 
     isLoading = true;
@@ -74,52 +87,9 @@ export class AlumnoProgresoComponent implements OnInit {
         private http: HttpClient
     ) { }
 
-    verDetalleGolpe(golpe: string) {
-        const detail = this.detailedScores ? this.detailedScores[golpe] : null;
-
-        if (!detail) {
-            this.popupService.info(golpe, 'Este golpe aún no ha sido evaluado en la última sesión de este alumno.');
-            return;
-        }
-
-        let message = `
-            <div style="text-align: left; font-family: 'Inter', sans-serif;">
-                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid #ccff00; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 8px 0; color: #111; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">💡 Feedback del Coach</h4>
-                    <p style="margin: 0; color: #444; font-style: italic; line-height: 1.5;">
-                        ${detail.comentario ? `"${detail.comentario}"` : 'Sin comentarios específicos para este golpe.'}
-                    </p>
-                </div>
-                
-                <h4 style="margin: 0 0 12px 0; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">📊 Desglose de Puntos</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Técnica:</b> ${detail.tecnica || 0}/10</div>
-                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Control:</b> ${detail.control || 0}/10</div>
-                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Dirección:</b> ${detail.direccion || 0}/10</div>
-                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Decisión:</b> ${detail.decision || 0}/10</div>
-                </div>
-            </div>
-        `;
-
-        this.popupService.open({
-            title: `${golpe}`,
-            message: message,
-            icon: 'info',
-            buttons: [{ text: 'Entendido', value: true, type: 'primary' }]
-        });
-    }
-
     ngOnInit() {
         this.userId = Number(localStorage.getItem('userId'));
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        if (user) {
-            this.coachNombre = user.nombre || 'Entrenador';
-            let foto = user.foto_perfil || user.link_foto || user.foto || null;
-            if (foto && !foto.startsWith('http')) {
-                foto = `https://api.padelmanager.cl/${foto}`;
-            }
-            this.coachFoto = foto;
-        }
+        this.loadProfile();
 
         this.route.paramMap.subscribe(params => {
             const id = params.get('id');
@@ -132,12 +102,25 @@ export class AlumnoProgresoComponent implements OnInit {
         });
     }
 
+    loadProfile(): void {
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (user) {
+            this.coachNombre = user.nombre || 'Entrenador';
+            let foto = user.foto_perfil || user.link_foto || user.foto || null;
+            if (foto && !foto.startsWith('http')) {
+                foto = `https://api.padelmanager.cl/${foto}`;
+            }
+            this.coachFoto = foto;
+        }
+    }
+
     loadAlumnoPerfil() {
         if (!this.alumnoId) return;
         this.mysqlService.getPerfil(this.alumnoId).subscribe({
             next: (res) => {
                 if (res && res.user) {
-                    this.alumnoNombre = res.user.nombre;
+                    const u = res.user;
+                    this.alumnoNombre = `${u.nombre || ''} ${u.apellido || ''}`.trim();
                     let foto = res.user.foto_perfil || res.user.foto || null;
                     if (foto && !foto.startsWith('http')) {
                         foto = `https://api.padelmanager.cl/${foto}`;
@@ -149,58 +132,49 @@ export class AlumnoProgresoComponent implements OnInit {
         });
     }
 
+    // --- EVALUACIONES ---
+
     loadEvaluaciones() {
         if (!this.alumnoId) return;
-
+        this.isLoading = true;
         this.evaluacionService.getEvaluaciones(this.alumnoId).subscribe({
             next: (data) => {
+                console.log('Evaluaciones recibidas:', data);
                 if (data && data.length > 0) {
-                    // Sort by date ascending
                     const sorted = data.sort((a: any, b: any) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
-
-                    // Store Line Data - UNIQUE labels for sessions
+                    
                     this.storedLineLabels = sorted.map((e: any, idx: number) => {
                         const d = new Date(e.fecha);
                         return `S${idx + 1} (${d.getDate()}/${d.getMonth() + 1})`;
                     });
-                    this.storedLineData = sorted.map((e: any) => Number(e.promedio_general));
+                    this.storedLineData = sorted.map((e: any) => Number(e.promedio_general || 0));
 
-                    // Store Radar Data
                     const latest = sorted[sorted.length - 1];
-                    if (latest && latest.scores) {
-                        let scores = latest.scores;
+                    if (latest) {
+                        let scores = latest.scores || latest.resultado_ia || latest.detalles || {};
                         if (typeof scores === 'string') {
-                            try {
-                                scores = JSON.parse(scores);
-                            } catch (e) {
-                                console.error('Error parsing scores:', e);
-                                scores = {};
-                            }
+                            try { scores = JSON.parse(scores); } catch (e) { scores = {}; }
                         }
                         this.detailedScores = scores;
-
-                        // Standardize strokes list
-                        const golpesList = [
-                            'Derecha', 'Reves', 'Volea de Derecha', 'Volea de Reves', 'Bandeja', 'Vibora',
-                            'Rulo', 'Remate', 'Salida de Pared', 'Globo', 'Saque', 'Resto'
-                        ];
-
+                        
+                        const golpesList = ['Derecha', 'Reves', 'Volea de Derecha', 'Volea de Reves', 'Bandeja', 'Vibora', 'Rulo', 'Remate', 'Salida de Pared', 'Globo', 'Saque', 'Resto'];
                         this.storedRadarLabels = golpesList;
                         this.storedRadarData = golpesList.map(key => {
-                            const s = scores[key];
-                            if (s && typeof s === 'object') {
-                                return (Number(s.tecnica) + Number(s.control) + Number(s.direccion) + Number(s.decision)) / 4;
+                            const val = scores[key] || scores[key.toLowerCase()] || scores[key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()];
+                            if (val && typeof val === 'object') {
+                                return (Number(val.tecnica || 0) + Number(val.control || 0) + Number(val.direccion || 0) + Number(val.decision || 0)) / 4;
+                            } else if (typeof val === 'number') {
+                                return val;
                             }
                             return 0;
                         });
 
                         this.hasData = true;
                         this.cdr.detectChanges();
-
                         setTimeout(() => {
                             this.renderRadarChart();
                             this.renderLineChart();
-                        }, 200);
+                        }, 300);
                     }
                 } else {
                     this.hasData = false;
@@ -210,6 +184,7 @@ export class AlumnoProgresoComponent implements OnInit {
             error: (err) => {
                 console.error('Error cargando evaluaciones:', err);
                 this.isLoading = false;
+                this.hasData = false;
             }
         });
     }
@@ -218,7 +193,6 @@ export class AlumnoProgresoComponent implements OnInit {
         const ctx = document.getElementById('webRadarChart') as HTMLCanvasElement;
         if (!ctx) return;
         if (this.radarChart) this.radarChart.destroy();
-
         this.radarChart = new Chart(ctx, {
             type: 'radar',
             data: {
@@ -238,7 +212,6 @@ export class AlumnoProgresoComponent implements OnInit {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                elements: { line: { borderWidth: 3 } },
                 scales: {
                     r: {
                         angleLines: { color: '#eee' },
@@ -262,7 +235,6 @@ export class AlumnoProgresoComponent implements OnInit {
         const ctx = document.getElementById('webLineChart') as HTMLCanvasElement;
         if (!ctx) return;
         if (this.lineChart) this.lineChart.destroy();
-
         this.lineChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -300,6 +272,39 @@ export class AlumnoProgresoComponent implements OnInit {
         });
     }
 
+    verDetalleGolpe(golpe: string) {
+        const detail = this.detailedScores ? this.detailedScores[golpe] : null;
+        if (!detail) {
+            this.popupService.info(golpe, 'Este golpe aún no ha sido evaluado en la última sesión de este alumno.');
+            return;
+        }
+        let message = `
+            <div style="text-align: left; font-family: 'Inter', sans-serif;">
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid #ccff00; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 8px 0; color: #111; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">💡 Feedback del Coach</h4>
+                    <p style="margin: 0; color: #444; font-style: italic; line-height: 1.5;">
+                        ${detail.comentario ? `"${detail.comentario}"` : 'Sin comentarios específicos para este golpe.'}
+                    </p>
+                </div>
+                <h4 style="margin: 0 0 12px 0; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">📊 Desglose de Puntos</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Técnica:</b> ${detail.tecnica || 0}/10</div>
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Control:</b> ${detail.control || 0}/10</div>
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Dirección:</b> ${detail.direccion || 0}/10</div>
+                    <div style="padding: 8px; background: #fafafa; border-radius: 8px;"><b>Decisión:</b> ${detail.decision || 0}/10</div>
+                </div>
+            </div>
+        `;
+        this.popupService.open({
+            title: `${golpe}`,
+            message: message,
+            icon: 'info',
+            buttons: [{ text: 'Entendido', value: true, type: 'primary' }]
+        });
+    }
+
+    // --- VIDEOS ---
+
     loadVideos() {
         if (!this.alumnoId) return;
         this.alumnoService.getVideos(this.alumnoId).subscribe({
@@ -310,7 +315,6 @@ export class AlumnoProgresoComponent implements OnInit {
                         const cleanPath = url.startsWith('/') ? url.substring(1) : url;
                         url = `https://api.padelmanager.cl/${cleanPath}`;
                     }
-
                     if (v.ai_report) {
                         try {
                             const parsed = typeof v.ai_report === 'string' ? JSON.parse(v.ai_report) : v.ai_report;
@@ -322,7 +326,6 @@ export class AlumnoProgresoComponent implements OnInit {
                         const saved = localStorage.getItem(`ai_report_${v.id}`);
                         if (saved) this.aiResults[v.id] = JSON.parse(saved);
                     }
-
                     return { ...v, video_url: url, categoria: v.categoria || 'General' };
                 });
 
@@ -330,52 +333,43 @@ export class AlumnoProgresoComponent implements OnInit {
                 this.videosCoach = processedVideos.filter((v: any) => v.entrenador_id && Number(v.entrenador_id) > 0);
                 this.videosPersonales = processedVideos.filter((v: any) => !v.entrenador_id || Number(v.entrenador_id) === 0);
 
-                // Grouping only coach videos
                 this.groupedVideos = {};
                 const catsWithContent = new Set<string>(['Todos']);
-
                 this.videosCoach.forEach((v: any) => {
                     const cat = v.categoria || 'General';
                     catsWithContent.add(cat);
                     if (!this.groupedVideos[cat]) this.groupedVideos[cat] = [];
                     this.groupedVideos[cat].push(v);
                 });
-
                 this.availableCategories = Array.from(catsWithContent);
-
-                // Sort categories based on golpesList order + Todos
                 this.availableCategories.sort((a, b) => {
                     if (a === 'Todos') return -1;
                     if (b === 'Todos') return 1;
                     return this.golpesList.indexOf(a) - this.golpesList.indexOf(b);
                 });
-
-                // Keep active category if it still exists
-                if (!this.availableCategories.includes(this.activeCategory)) {
-                    this.activeCategory = 'Todos';
-                }
+                if (!this.availableCategories.includes(this.activeCategory)) this.activeCategory = 'Todos';
             },
             error: (err) => console.error('Error al cargar videos:', err)
         });
     }
 
+    get filteredVideos() {
+        return this.activeCategory === 'Todos' ? this.videosCoach : (this.groupedVideos[this.activeCategory] || []);
+    }
+
     async triggerVideoUpload() {
         if (!this.alumnoId) return;
-
         const { value: formValues } = await Swal.fire({
             title: 'Subir Video de Entrenamiento',
             html: `
             <div style="text-align: left; font-family: 'Inter', sans-serif;">
                 <p style="margin-bottom: 20px; color: #666; font-size: 14px;">Ingresa los detalles técnicos antes de seleccionar el video.</p>
-                
                 <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #111;">Título del Clip</label>
                 <input id="swal-input-title" class="swal2-input" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box; border-radius: 8px; height: 45px;" placeholder="Ej: Análisis de Saque">
-                
                 <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #111;">¿A qué golpe corresponde?</label>
                 <select id="swal-input-category" class="swal2-select" style="margin: 0 0 20px 0; width: 100%; box-sizing: border-box; display: block; border-radius: 8px; background: #f8fafc; height: 45px;">
                     ${this.golpesList.map(g => `<option value="${g}">${g}</option>`).join('')}
                 </select>
-    
                 <label style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #111;">Observaciones para el Alumno</label>
                 <textarea id="swal-input-comment" class="swal2-textarea" style="margin: 0; width: 100%; box-sizing: border-box; border-radius: 8px; min-height: 100px;" placeholder="Detalles técnicos a mejorar..."></textarea>
             </div>
@@ -384,16 +378,11 @@ export class AlumnoProgresoComponent implements OnInit {
             confirmButtonText: 'Seleccionar Video',
             confirmButtonColor: '#ccff00',
             cancelButtonText: 'Cancelar',
-            focusConfirm: false,
             preConfirm: () => {
                 const titulo = (document.getElementById('swal-input-title') as HTMLInputElement).value;
                 const categoria = (document.getElementById('swal-input-category') as HTMLSelectElement).value;
                 const comentario = (document.getElementById('swal-input-comment') as HTMLTextAreaElement).value;
-
-                if (!titulo) {
-                    Swal.showValidationMessage('El título es obligatorio');
-                    return false;
-                }
+                if (!titulo) { Swal.showValidationMessage('El título es obligatorio'); return false; }
                 return { titulo, categoria, comentario };
             }
         });
@@ -422,7 +411,7 @@ export class AlumnoProgresoComponent implements OnInit {
 
         this.isLoading = true;
         this.alumnoService.uploadVideo(formData).subscribe({
-            next: (ev: any) => {
+            next: () => {
                 this.isLoading = false;
                 this.popupService.success('¡Éxito!', 'Video subido correctamente.');
                 this.loadVideos();
@@ -435,26 +424,12 @@ export class AlumnoProgresoComponent implements OnInit {
         });
     }
 
-    // Explicitly removed old methods to avoid confusion
-    // onVideoSelected removed because now handled inside triggerVideoUpload
-
-    setCategory(cat: string) {
-        this.activeCategory = cat;
-    }
-
-    setOrigin(origin: 'todos' | 'coach' | 'personal') {
-        this.activeOrigin = origin;
-    }
-
-    get filteredVideos() {
-        return this.activeCategory === 'Todos' ? this.videosCoach : (this.groupedVideos[this.activeCategory] || []);
-    }
+    setCategory(cat: string) { this.activeCategory = cat; }
+    setOrigin(origin: 'todos' | 'coach' | 'personal') { this.activeOrigin = origin; }
 
     toggleComparisonMode() {
         this.isComparisonMode = !this.isComparisonMode;
-        if (!this.isComparisonMode) {
-            this.selectedVideos = [];
-        }
+        if (!this.isComparisonMode) this.selectedVideos = [];
     }
 
     selectVideoToCompare(vid: any) {
@@ -471,29 +446,17 @@ export class AlumnoProgresoComponent implements OnInit {
     }
 
     openComparison() {
-        if (this.selectedVideos.length === 2) {
-            this.showComparison = true;
-        } else {
-            this.popupService.info('Selecciona 2 videos', 'Debes elegir exactamente dos videos para comparar.');
-        }
+        if (this.selectedVideos.length === 2) this.showComparison = true;
+        else this.popupService.info('Selecciona 2 videos', 'Debes elegir exactamente dos videos para comparar.');
     }
 
-    closeComparison() {
-        this.showComparison = false;
-    }
+    closeComparison() { this.showComparison = false; }
 
     togglePlayBoth() {
         const videos = document.querySelectorAll('.comp-vid-wrapper video') as NodeListOf<HTMLVideoElement>;
         let anyPaused = false;
         videos.forEach(v => { if (v.paused) anyPaused = true; });
-
-        videos.forEach(v => {
-            if (anyPaused) {
-                v.play();
-            } else {
-                v.pause();
-            }
-        });
+        videos.forEach(v => { if (anyPaused) v.play(); else v.pause(); });
     }
 
     isVideoSelected(vid: any): boolean {
@@ -503,7 +466,6 @@ export class AlumnoProgresoComponent implements OnInit {
     async analizarVideo(vid: any) {
         this.isAnalyzing[vid.id] = true;
         this.cdr.detectChanges();
-
         const formData = new FormData();
         formData.append('video_id', vid.id);
         formData.append('video_url', vid.video_url);
@@ -528,34 +490,27 @@ export class AlumnoProgresoComponent implements OnInit {
             });
     }
 
-    verReporte(vid: any) {
-        this.aiActiveResult = this.aiResults[vid.id];
-    }
+    verReporte(vid: any) { this.aiActiveResult = this.aiResults[vid.id]; }
 
     confirmDeleteVideo(video: any) {
-        this.popupService.confirm(
-            '¿Eliminar video?',
-            'Esta acción no se puede deshacer.'
-        ).then((result) => {
-            if (result === true) {
-                this.isLoading = true;
-                this.alumnoService.deleteVideo(video.id).subscribe({
-                    next: (res) => {
-                        this.isLoading = false;
-                        this.popupService.success('Eliminado', 'El video ha sido eliminado.');
-                        this.loadVideos();
-                    },
-                    error: (err) => {
-                        this.isLoading = false;
-                        console.error('Error deleting video:', err);
-                        this.popupService.error('Error', 'No se pudo eliminar el video.');
-                    }
-                });
-            }
-        });
+        this.popupService.confirm('¿Eliminar video?', 'Esta acción no se puede deshacer.')
+            .then((result) => {
+                if (result === true) {
+                    this.isLoading = true;
+                    this.alumnoService.deleteVideo(video.id).subscribe({
+                        next: () => {
+                            this.isLoading = false;
+                            this.popupService.success('Eliminado', 'El video ha sido eliminado.');
+                            this.loadVideos();
+                        },
+                        error: (err) => {
+                            this.isLoading = false;
+                            this.popupService.error('Error', 'No se pudo eliminar el video.');
+                        }
+                    });
+                }
+            });
     }
 
-    volver() {
-        this.router.navigate(['/alumnos']);
-    }
+    volver() { this.router.navigate(['/alumnos']); }
 }

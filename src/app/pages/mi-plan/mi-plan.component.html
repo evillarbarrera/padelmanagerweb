@@ -1,0 +1,175 @@
+<div class="admin-layout">
+  <app-sidebar 
+    [userId]="coachId" 
+    [jugadorNombre]="coachNombre" 
+    [jugadorFoto]="coachFoto" 
+    [role]="'entrenador'"
+    [activePage]="'mi-plan'"
+  ></app-sidebar>
+
+  <main class="main-content">
+    <div class="dashboard-grid">
+      
+      <!-- Page Header -->
+      <div class="page-header-flex">
+        <div>
+          <h1 class="section-title">Mi Plan y Facturación</h1>
+          <p class="section-subtitle">Gestión centralizada de tu academia <b>PadelManager</b></p>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-overlay" *ngIf="isLoading">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- NO ACTIVE PLAN STATE (Selection) -->
+      <section class="plan-selection animate-up" *ngIf="!isLoading && (!sub || sub.status === 'inactive')">
+        <div class="empty-state card-pm plan-selection-header mb-5">
+          <div class="icon-box">💎</div>
+          <div class="txt">
+            <h3>Activa tu Periodo de Prueba</h3>
+            <p>Selecciona tu plan para empezar tus <b>3 meses de regalo ($0 CLP)</b>.</p>
+          </div>
+        </div>
+        
+        <div class="plans-grid">
+          <div class="plan-card card-pm" *ngFor="let p of plans">
+            <span class="badge-promo">PROMO LANZAMIENTO</span>
+            <div class="plan-type">{{ p.type === 'commission' ? 'Variable' : 'Tarifa Fija Mensual' }}</div>
+            <h3>{{ p.name }}</h3>
+            <div class="price">
+              <span class="amount">${{ p.price_clp | number:'1.0-0' }}</span>
+              <span class="period">/ mes</span>
+            </div>
+            <p class="desc">{{ p.description }}</p>
+            <div class="plan-features">
+                <div class="feat">3 Meses Gratis ($0 CLP)</div>
+                <div class="feat" *ngIf="p.type === 'commission'">3.5% comisión por venta (Facturada mensualmente)</div>
+                <div class="feat" *ngIf="p.type !== 'commission'">0% comisión por recaudación</div>
+            </div>
+            <button class="btn-save btn-glow mt-4" (click)="cambiarPlan(p.id)">Empieza Gratis ahora</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ACTIVE SUBSCRIPTION VIEW -->
+      <div class="billing-content animate-up" *ngIf="!isLoading && sub && sub.status !== 'inactive'">
+        
+        <!-- Stats Widgets -->
+        <div class="overview-row">
+            <div class="stat-widget card-pm">
+                <div class="widget-icon" style="color: #ffb400;">📈</div>
+                <div class="widget-data">
+                    <div class="widget-val">${{ sub.pending_commission | number:'1.0-0' }}</div>
+                    <div class="widget-label">Comisión Mes (Por Cobrar)</div>
+                </div>
+            </div>
+            <div class="stat-widget card-pm">
+                <div class="widget-icon">💎</div>
+                <div class="widget-data">
+                    <div class="widget-val">${{ sub.price_clp | number:'1.0-0' }}</div>
+                    <div class="widget-label">Costo Plan</div>
+                </div>
+            </div>
+            <div class="stat-widget card-pm">
+                <div class="widget-icon">📅</div>
+                <div class="widget-data">
+                    <div class="widget-val">{{ sub.next_billing_date | date:'dd MMM' }}</div>
+                    <div class="widget-label">Próximo Cobro Consolidad</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="billing-main-grid">
+          
+          <!-- Column 1: Plan & Trial -->
+          <div class="billing-col">
+            <div class="billing-card trial-card card-pm" [class.no-trial]="sub.days_remaining === 0">
+                <span class="card-label">Días Disponibles Gratis</span>
+                <div class="countdown-row">
+                  <span class="num">{{ sub.days_remaining }}</span>
+                  <span class="txt">DÍAS RESTANTES</span>
+                </div>
+                <div class="progress-box">
+                  <div class="bar-bg">
+                    <div class="bar-fill" [style.width.%]="(sub.days_remaining / 90) * 100"></div>
+                  </div>
+                </div>
+                <p class="footer-note">Al terminar, se cobrará el plan + comisiones acumuladas del mes.</p>
+            </div>
+
+            <div class="billing-card plan-info-card card-pm">
+                <span class="card-label">Configuración de Recaudación</span>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                  <div>
+                    <h3 style="margin: 0; font-size: 16px;">Recaudar con Mercado Pago</h3>
+                    <p style="font-size: 12px; color: #888;">Si se desactiva, los pagos se sumarán como saldo pendiente.</p>
+                  </div>
+                  <div class="toggle-switch-pm" [class.active]="sub.recaudo_mp_activo" (click)="sub.recaudo_mp_activo = !sub.recaudo_mp_activo">
+                    <div class="thumb"></div>
+                  </div>
+                </div>
+                
+                <hr style="opacity: 0.1; margin: 20px 0;">
+
+                <div class="plan-status-row">
+                  <div class="plan-meta">
+                    <h3 class="plan-title">{{ sub.plan_name }}</h3>
+                    <div class="status-indicator">
+                      <span class="dot"></span>
+                      <span class="status-txt">Suscripción Activa</span>
+                    </div>
+                  </div>
+                  <button class="btn-outline-pm" (click)="loadPlans()">Gestionar Plan</button>
+                </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Payment & History -->
+          <div class="billing-col">
+            <div class="billing-card payment-card card-pm">
+                <span class="card-label">Tarjeta para Pago de Comisiones</span>
+                <div class="payment-method-box">
+                  <div class="card-brand"><i class="fab fa-cc-visa"></i></div>
+                  <div class="card-info">
+                    <b>Visa para Facturación Interna</b>
+                    <span *ngIf="sub.card_last_four">Finalizada en **** {{ sub.card_last_four }}</span>
+                    <span *ngIf="!sub.card_last_four" style="color: #ff4d4d; font-weight: 700;">Sin tarjeta registrada</span>
+                  </div>
+                </div>
+                <button class="btn-save btn-glow full-width mt-4" (click)="cambiarTarjeta()">
+                   REGISTRAR TARJETA SEGURA
+                </button>
+            </div>
+
+            <section class="history-section card-pm">
+                <span class="card-label">Últimas Facturas Consolidadas</span>
+                <div class="table-responsive">
+                  <table class="pm-table">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Concepto</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let h of sub.billing_history">
+                        <td>{{ h.date | date:'dd/MM/yy' }}</td>
+                        <td>Pack/Suscripción</td>
+                        <td><span class="status-tag success">OK</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+            </section>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>

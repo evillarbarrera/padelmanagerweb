@@ -18,7 +18,6 @@
         </div>
         <div class="menu">
           <a href="#features" class="nav-link">Características</a>
-          <a href="#trainers" class="nav-link">Entrenadores</a>
           <a href="#technology" class="nav-link">Tecnología IA</a>
           <a href="#pricing" class="nav-link">Precios</a>
         </div>
@@ -154,30 +153,6 @@
     </div>
   </section>
 
-  <!-- TRAINERS SECTION -->
-  <section id="trainers" class="nike-trainers reveal fade-in">
-    <div class="container">
-      <div class="section-header">
-        <span class="overline">EQUIPO DE ÉLITE</span>
-        <h2>STAFF <span class="text-gradient">TÉCNICO</span></h2>
-        <p class="subtitle">Entrenadores internacionales listos para corregir cada detalle de tu juego.</p>
-      </div>
-
-      <div class="trainers-grid">
-        <div class="trainer-card reveal slide-up" *ngFor="let trainer of trainers; let i = index"
-          [style.--d]="(i * 0.15) + 's'">
-          <div class="trainer-image">
-            <img [src]="trainer.foto" [alt]="trainer.nombre">
-          </div>
-          <div class="trainer-info">
-            <h3>{{trainer.nombre}}</h3>
-            <span class="specialty">{{trainer.especialidad}}</span>
-            <p class="curriculum">{{trainer.curriculum}}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- TECH & AI SECTION -->
   <section id="technology" class="nike-tech reveal fade-in">
@@ -254,7 +229,7 @@
 
         <div class="testimonial-card highlight reveal slide-up" style="--d: 0.2s">
           <div class="quote-icon">❝</div>
-          <p class="quote">"Imprescindible para cualquier entrenador. Gestiono a mis 50 alumnos sin perder tiempo
+          <p class="quote">"Imprescindible para cualquier entrenador. Gestiono a todos mis alumnos sin perder tiempo
             administrativo."</p>
           <div class="author">
             <div class="avatar">ML</div>
@@ -284,34 +259,89 @@
   <!-- PRICING SECTION -->
   <section id="pricing" class="nike-pricing reveal fade-in">
     <div class="container">
-      <div class="section-header">
+      <div class="section-header text-center">
         <span class="overline">EL MODELO JUSTO</span>
-        <h2>COMIENZA A <span class="text-gradient">ESCALAR</span></h2>
-        <p class="subtitle">Sin cuotas mensuales obligatorias. Sin riesgos.</p>
+        <h2>ELIGE CÓMO <span class="text-gradient">CRECER</span></h2>
+        <p class="subtitle">Estructuras pensadas para cada etapa de tu academia. Prueba 90 días GRATIS.</p>
       </div>
 
-      <div class="pricing-card reveal scale-in">
-        <div class="pricing-content">
-          <div class="price-item">
-            <span class="label">Licencia App</span>
-            <span class="amount">$0</span>
-          </div>
-          <div class="divider"></div>
-          <div class="price-item highlight">
-            <span class="label">Fee de Servicio</span>
-            <div class="amount-group">
-              <span class="amount">3.5%</span>
-              <span class="promo-badge">¡3 MESES GRATIS!</span>
+      <div class="pricing-grid">
+        <!-- PLAN EMPRENDEDOR -->
+        <div class="p-card reveal slide-up" style="--d: 0.1s">
+          <div class="p-header">
+            <span class="p-name">EMPRENDEDOR</span>
+            <div class="p-price">
+              <span class="currency">$</span>
+              <span class="amount">0</span>
+              <span class="period">/mes</span>
             </div>
-            <span class="desc">por Pack Vendido</span>
           </div>
-          <div class="divider"></div>
-          <div class="price-item">
-            <span class="label">IA Analysis</span>
-            <span class="amount">FREE</span>
+          <div class="p-features">
+            <div class="f-item"><span>✓</span> IA Analysis Free</div>
+            <div class="f-item"><span>✓</span> Comisión Venta <b>3.5%</b></div>
+            <div class="f-item promo">💎 <b>3 Meses: 0% Comisión</b></div>
           </div>
+          <button class="btn-p-card" (click)="irALogin()">EMPEZAR GRATIS</button>
         </div>
-        <p class="disclaimer">Nos enfocamos en tu crecimiento. Solo cobramos cuando generas ingresos.</p>
+
+        <!-- PLAN INICIAL 20 -->
+        <div class="p-card featured reveal slide-up" style="--d: 0.2s">
+          <div class="badge-best">PARA EMPEZAR</div>
+          <div class="p-header">
+            <span class="p-name">INICIAL 20</span>
+            <div class="p-price">
+              <span class="currency">$</span>
+              <span class="amount">19.990</span>
+              <span class="period">/mes</span>
+            </div>
+          </div>
+          <div class="p-features">
+            <div class="f-item"><span>✓</span> Hasta 20 Alumnos</div>
+            <div class="f-item"><span>✓</span> IA Premium</div>
+            <div class="f-item"><span>✓</span> <b>0%</b> Comisión Venta</div>
+            <div class="f-item promo">💎 <b>90 Días Gratis</b></div>
+          </div>
+          <button class="btn-p-card active" (click)="irALogin()">PRUEBA GRATUITA</button>
+        </div>
+
+        <!-- PLAN PRO 40 -->
+        <div class="p-card featured reveal slide-up" style="--d: 0.3s">
+          <div class="badge-best" style="background: #fff; color: #111;">MÁS POPULAR</div>
+          <div class="p-header">
+            <span class="p-name">PRO 40</span>
+            <div class="p-price">
+              <span class="currency">$</span>
+              <span class="amount">29.990</span>
+              <span class="period">/mes</span>
+            </div>
+          </div>
+          <div class="p-features">
+            <div class="f-item"><span>✓</span> Hasta 40 Alumnos</div>
+            <div class="f-item"><span>✓</span> IA Premium Plus</div>
+            <div class="f-item"><span>✓</span> <b>0%</b> Comisión Venta</div>
+            <div class="f-item promo">💎 <b>90 Días Gratis</b></div>
+          </div>
+          <button class="btn-p-card active" (click)="irALogin()">PRUEBA GRATUITA</button>
+        </div>
+
+        <!-- PLAN ELITE ILIMITADO -->
+        <div class="p-card reveal slide-up" style="--d: 0.4s">
+          <div class="p-header">
+            <span class="p-name">ELITE ILIMITADO</span>
+            <div class="p-price">
+              <span class="currency">$</span>
+              <span class="amount">49.990</span>
+              <span class="period">/mes</span>
+            </div>
+          </div>
+          <div class="p-features">
+            <div class="f-item"><span>✓</span> Alumnos Ilimitados</div>
+            <div class="f-item"><span>✓</span> Marca Blanca</div>
+            <div class="f-item"><span>✓</span> Soporte VIP 24/7</div>
+            <div class="f-item promo">💎 <b>90 Días Gratis</b></div>
+          </div>
+          <button class="btn-p-card" (click)="irALogin()">COMIENZA AHORA</button>
+        </div>
       </div>
     </div>
   </section>

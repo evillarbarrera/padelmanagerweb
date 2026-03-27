@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
+import { HardGateComponent } from '../../components/hard-gate/hard-gate.component';
 
 @Component({
   selector: 'app-entrenador-home',
   standalone: true,
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, SidebarComponent, HardGateComponent],
   templateUrl: './entrenador-home.component.html',
   styleUrls: ['./entrenador-home.component.scss']
 })

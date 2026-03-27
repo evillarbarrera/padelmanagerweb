@@ -845,81 +845,134 @@ body {
 }
 
 // ===== PRICING =====
-.nike-pricing .pricing-card {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 5rem 3.5rem;
-  border-radius: 48px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  max-width: 1100px;
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1400px;
   margin: 0 auto;
 
-  .pricing-content {
+  .p-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 40px;
+    padding: 3rem 1.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin-bottom: 3rem;
+    flex-direction: column;
+    position: relative;
+    transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 
-    .price-item {
+    &.featured {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: $gold;
+      transform: scale(1.05);
+      z-index: 10;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+
+      .badge-best {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: $gold;
+        color: black;
+        padding: 6px 18px;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 950;
+      }
+    }
+
+    .p-header {
+      margin-bottom: 2.5rem;
       text-align: center;
 
-      .label {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.5);
+      .p-name {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.4);
+        margin-bottom: 1.2rem;
         text-transform: uppercase;
-        font-weight: 800;
-        display: block;
-        margin-bottom: 1rem;
       }
 
-      .amount-group {
+      .p-price {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-        position: relative;
+        align-items: baseline;
+        justify-content: center;
+        margin-bottom: 1rem;
 
-        .amount {
-          font-size: 4.5rem;
-          font-weight: 950;
-        }
-
-        .promo-badge {
-          background: $gold;
-          color: black;
-          padding: 4px 12px;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 900;
-          text-transform: uppercase;
-          display: inline-block;
-          animation: pulse 2s infinite ease-in-out;
-          box-shadow: 0 0 15px rgba($gold, 0.4);
-        }
+        .currency { font-size: 1.5rem; font-weight: 800; margin-right: 4px; }
+        .amount { font-size: 4rem; font-weight: 950; line-height: 1; }
+        .period { font-size: 1rem; color: rgba(255,255,255,0.4); margin-left: 6px; }
       }
 
-      &.highlight .amount {
-        color: $gold;
-      }
-
-      .desc {
-        font-size: 0.9rem;
-        opacity: 0.5;
-        margin-top: 0.5rem;
-        display: block;
+      .p-desc {
+        color: rgba(255,255,255,0.5);
+        font-size: 0.95rem;
+        line-height: 1.5;
       }
     }
 
-    .divider {
-      width: 1px;
-      height: 100px;
-      background: rgba(255, 255, 255, 0.1);
+    .p-features {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-bottom: 3rem;
+
+      .f-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.8);
+
+        span { color: $gold; }
+        &.promo { color: $gold; }
+      }
+    }
+
+    .btn-p-card {
+      width: 100%;
+      padding: 1.25rem;
+      border-radius: 50px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: transparent;
+      color: white;
+      font-weight: 950;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.3s;
+
+      &:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: white;
+      }
+
+      &.active {
+        background: $gold;
+        color: black;
+        border: none;
+        &:hover { transform: scale(1.05); }
+      }
+    }
+
+    &:hover:not(.featured) {
+      transform: translateY(-10px);
+      border-color: rgba(255,255,255,0.2);
     }
   }
+}
 
-  .disclaimer {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.3);
-    font-weight: 600;
+@media (max-width: $tablet) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+    padding: 0 1rem;
+    .p-card.featured { transform: scale(1); }
   }
 }
 

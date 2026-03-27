@@ -1,280 +1,152 @@
 <div class="admin-layout">
-    <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'"
-        activePage="alumnos">
+    <app-sidebar [userId]="userId" [jugadorNombre]="coachNombre" [jugadorFoto]="coachFoto" [role]="'entrenador'" activePage="alumnos">
     </app-sidebar>
 
     <main class="main-content">
-
-        <div class="dashboard-grid fade-in">
-
-            <!-- Student Header -->
-            <div class="student-header-card">
-                <div class="student-info">
-                    <div class="avatar-large">
-                        <img [src]="alumnoFoto || 'assets/images/placeholder_avatar.png'" style="object-fit: cover;" />
-                    </div>
-                    <div>
-                        <h1>{{ alumnoNombre }}</h1>
-                        <p>Análisis de Rendimiento y Evolución</p>
-                    </div>
+        <!-- Student Header -->
+        <div class="student-header-card fade-in">
+            <div class="student-info">
+                <div class="avatar-large">
+                    <img [src]="alumnoFoto || 'https://ui-avatars.com/api/?name='+alumnoNombre+'&background=ccff00&color=000'" alt="Alumno">
+                </div>
+                <div>
+                    <h1>{{ alumnoNombre }}</h1>
+                    <p>Análisis de Rendimiento y Evolución</p>
                 </div>
             </div>
+            <button class="back-btn" (click)="volver()">
+                ← Volver a Alumnos
+            </button>
+        </div>
 
-            <!-- Charts Grid -->
-            <div class="charts-container" *ngIf="!isLoading && hasData">
+        <!-- Tab Navigation -->
+        <div class="tabs-navigation fade-in">
+            <button class="tab-btn" [class.active]="activeTab === 'gráficos'" (click)="setActiveTab('gráficos')">
+                📊 Gráficos
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'detalle'" (click)="setActiveTab('detalle')">
+                📝 Detalle por Golpe
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'videos'" (click)="setActiveTab('videos')">
+                🎥 Videos
+            </button>
+        </div>
 
-                <!-- Radar Chart -->
+        <div *ngIf="isLoading" class="loading-state">
+            <p>Cargando datos del alumno...</p>
+        </div>
+
+        <!-- Evaluation State: NO DATA -->
+        <div class="card empty-state fade-in" *ngIf="!isLoading && !hasData && (activeTab === 'gráficos' || activeTab === 'detalle')">
+            <span class="empty-icon">📊</span>
+            <h3>Sin datos de evaluación</h3>
+            <p>Este alumno aún no ha sido evaluado técnica o tácticamente.</p>
+            <button class="volver-btn" (click)="volver()">
+                Volver a Alumnos
+            </button>
+        </div>
+
+        <!-- TAB: GRAFICOS -->
+        <div *ngIf="activeTab === 'gráficos' && hasData && !isLoading" class="fade-in">
+            <div class="charts-container">
                 <div class="chart-card">
-                    <div class="card-header">
-                        <h3>Mapa de Habilidades</h3>
-                        <p>Distribución técnica actual</p>
-                    </div>
+                    <h3>Mapa de Habilidades</h3>
+                    <p>Distribución técnica actual</p>
                     <div class="canvas-wrapper">
                         <canvas id="webRadarChart"></canvas>
                     </div>
                 </div>
-
-                <!-- Line Chart -->
                 <div class="chart-card">
-                    <div class="card-header">
-                        <h3>Evolución General</h3>
-                        <p>Progreso sesión a sesión</p>
-                    </div>
+                    <h3>Evolución General</h3>
+                    <p>Progreso sesión a sesión</p>
                     <div class="canvas-wrapper">
                         <canvas id="webLineChart"></canvas>
                     </div>
                 </div>
-
             </div>
+        </div>
 
-            <!-- Detailed Analysis Table -->
-            <div class="card analysis-card" *ngIf="!isLoading && hasData">
-                <div class="card-title">Detalle por Golpe</div>
-                <div class="analysis-table-container">
-                    <table class="analysis-table">
+        <!-- TAB: DETALLE -->
+        <div *ngIf="activeTab === 'detalle' && hasData && !isLoading" class="fade-in">
+            <div class="card">
+                <div style="font-size: 18px; font-weight: 800; color: #111; margin-bottom: 24px;">Detalle por Golpe</div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
                         <thead>
-                            <tr>
-                                <th>Golpe</th>
-                                <th>Promedio</th>
-                                <th>Detalle</th>
+                            <tr style="border-bottom: 2px solid #f0f0f0; color: #888; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+                                <th style="padding: 16px 0; text-align: left;">Golpe</th>
+                                <th style="padding: 16px; text-align: center;">Promedio</th>
+                                <th style="padding: 16px; text-align: right;">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let label of storedRadarLabels; let i = index">
-                                <td class="hit-name">{{ label }}</td>
-                                <td>
-                                    <span class="score-badge" [class.high]="storedRadarData[i] >= 8"
-                                        [class.mid]="storedRadarData[i] >= 5" [class.low]="storedRadarData[i] < 5">
+                            <tr *ngFor="let label of storedRadarLabels; let i = index" style="border-bottom: 1px solid #f0f0f0;">
+                                <td style="padding: 20px 0; font-weight: 700; color: #111;">{{ label }}</td>
+                                <td style="padding: 20px; text-align: center;">
+                                    <span style="background: #111; color: #ccff00; padding: 6px 14px; border-radius: 10px; font-weight: 800; font-size: 13px;">
                                         {{ storedRadarData[i] | number:'1.1-1' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <button class="info-btn" (click)="verDetalleGolpe(label)">
-                                        ℹ️
-                                    </button>
+                                <td style="padding: 20px; text-align: right;">
+                                    <button (click)="verDetalleGolpe(label)" style="background: none; border: none; cursor: pointer; color: #888; font-size: 14px; font-weight: 600;">ℹ️ Detalle</button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
 
-            <!-- Loading State -->
-            <div *ngIf="isLoading" class="loading-state">
-                <div class="spinner"></div>
-                <p>Cargando datos del alumno...</p>
-            </div>
-
-            <!-- Empty State -->
-            <div *ngIf="!isLoading && !hasData" class="empty-state">
-                <div class="empty-icon">📊</div>
-                <h3>Sin datos de evaluación</h3>
-                <p>Este alumno aún no ha sido evaluado.</p>
-                <button class="create-eval-btn" (click)="volver()">Volver a Alumnos</button>
-            </div>
-
-            <!-- Training Videos Section -->
-            <div class="videos-section" *ngIf="!isLoading">
+        <!-- TAB: VIDEOS -->
+        <div *ngIf="activeTab === 'videos' && !isLoading" class="fade-in">
+            <div class="videos-section">
                 <div class="section-header">
-                    <div class="header-left">
+                    <div>
                         <h2>🎥 Librería de Videos</h2>
-                        <p>Organizados por golpe y evolución</p>
+                        <p>Análisis técnico por categoría</p>
                     </div>
-
                     <div class="header-actions">
                         <button class="upload-video-btn" (click)="triggerVideoUpload()">
-                            ➕ Subir Video
+                            <span style="font-size: 18px;">+</span> Subir Video
                         </button>
-
-                        <button class="compare-mode-btn" [class.active]="isComparisonMode"
-                            (click)="toggleComparisonMode()">
-                            {{ isComparisonMode ? 'Cancelar Comparación' : '⚖️ Comparar Videos' }}
+                        <button class="compare-mode-btn" [class.active]="isComparisonMode" (click)="toggleComparisonMode()">
+                            <span style="font-size: 18px;">⚖️</span> Comparar
                         </button>
                     </div>
                 </div>
 
-                <!-- Category Filter Pills -->
                 <div class="category-pills">
-                    <button *ngFor="let cat of availableCategories" class="pill" [class.active]="activeCategory === cat"
-                        (click)="setCategory(cat)">
-                        {{ cat }}
-                        <span class="count" *ngIf="cat !== 'Todos'">{{ groupedVideos[cat]?.length }}</span>
-                        <span class="count" *ngIf="cat === 'Todos'">{{ videosCoach.length }}</span>
+                    <button *ngFor="let cat of availableCategories" 
+                            class="pill" 
+                            [class.active]="activeCategory === cat" 
+                            (click)="setCategory(cat)">
+                        {{ cat }} 
+                        <span class="count">{{ cat === 'Todos' ? videosCoach.length : (groupedVideos[cat]?.length || 0) }}</span>
                     </button>
                 </div>
 
-                <!-- Comparison Selection Bar -->
-                <div class="comparison-bar shadow-lg" *ngIf="isComparisonMode && selectedVideos.length > 0">
-                    <div class="selected-vids">
-                        <div class="selected-item" *ngFor="let sv of selectedVideos">
-                            <span class="dot"></span>
-                            {{ sv.titulo }}
-                        </div>
-                        <div class="placeholder" *ngIf="selectedVideos.length < 2">
-                            Selecciona otro video para comparar...
-                        </div>
-                    </div>
-                    <button class="launch-compare-btn" [disabled]="selectedVideos.length < 2"
-                        (click)="openComparison()">
-                        Ver En Paralelo
-                    </button>
-                </div>
-
-                <!-- Videos Grid -->
                 <div class="videos-grid" *ngIf="filteredVideos.length > 0; else noVideos">
                     <div class="video-card" *ngFor="let vid of filteredVideos"
-                        [class.selected-for-compare]="isVideoSelected(vid)" [class.selectable]="isComparisonMode"
+                        [class.selected-for-compare]="isVideoSelected(vid)" 
+                        [class.selectable]="isComparisonMode"
                         (click)="isComparisonMode ? selectVideoToCompare(vid) : null">
-
-                        <div class="selection-overlay" *ngIf="isComparisonMode">
-                            <div class="check-circle">
-                                <span *ngIf="isVideoSelected(vid)">✓</span>
-                            </div>
-                        </div>
-
                         <div class="video-wrapper">
-                            <video [src]="vid.video_url" [controls]="!isComparisonMode" preload="metadata"
-                                playsinline></video>
+                            <video [src]="vid.video_url" [controls]="!isComparisonMode" playsinline></video>
                         </div>
                         <div class="video-info">
-                            <div class="vid-header-row">
-                                <div class="title-group">
-                                    <span class="cat-tag">{{ vid.categoria }}</span>
-                                    <h4>{{ vid.titulo || 'Sin título' }}</h4>
-                                </div>
-                                <button class="delete-vid-btn"
-                                    (click)="confirmDeleteVideo(vid); $event.stopPropagation()">
-                                    🗑️
-                                </button>
-                            </div>
-                            <p class="date">{{ vid.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
-                            <p class="comment" *ngIf="vid.comentario">{{ vid.comentario }}</p>
-
-                            <div class="ai-video-actions">
-                                <button class="ai-btn-analyze" *ngIf="!aiResults[vid.id]"
-                                    (click)="analizarVideo(vid); $event.stopPropagation()"
-                                    [disabled]="isAnalyzing[vid.id]">
-                                    {{ isAnalyzing[vid.id] ? 'ANALIZANDO...' : 'ANALIZAR CON IA' }}
-                                </button>
-                                <button class="ai-btn-report" *ngIf="aiResults[vid.id]"
-                                    (click)="verReporte(vid); $event.stopPropagation()">
-                                    VER REPORTE AI
-                                </button>
-                            </div>
+                            <span class="cat-tag">{{ vid.categoria }}</span>
+                            <h4>{{ vid.titulo || 'Sin título' }}</h4>
+                            <p class="comment">{{ vid.comentario }}</p>
                         </div>
                     </div>
                 </div>
 
                 <ng-template #noVideos>
-                    <div class="empty-videos">
-                        <div class="empty-icon">📂</div>
-                        <h3>No hay videos en esta categoría</h3>
-                        <p>Sube videos desde el panel de alumnos para ver el progreso aquí.</p>
+                    <div class="card" style="text-align: center; padding: 60px;">
+                        <p style="color: #888;">No hay videos registrados en esta categoría.</p>
                     </div>
                 </ng-template>
             </div>
-
         </div>
     </main>
-
-    <!-- Gemini Analysis Results Modal (Web Overlay) -->
-    <div class="ai-results-overlay" *ngIf="aiActiveResult" [class.show]="aiActiveResult">
-        <div class="ai-results-card fade-in">
-            <div class="results-header">
-                <div class="header-main">
-                    <h3>GEMINI IA: {{ aiActiveResult.title }}</h3>
-                </div>
-                <button class="close-btn" (click)="aiActiveResult = null">×</button>
-            </div>
-
-            <div class="results-body">
-                <div class="ai-badge-header">POWERED BY GOOGLE AI STUDIO</div>
-
-                <div class="score-section">
-                    <div class="score-circle">
-                        <span class="score-val">{{ aiActiveResult.score }}</span>
-                        <span class="score-pct">%</span>
-                    </div>
-                    <p class="score-label">MATCH TÉCNICO</p>
-                </div>
-
-                <div class="feedback-text">
-                    <p>{{ aiActiveResult.feedback }}</p>
-                </div>
-
-                <div class="metrics-grid">
-                    <div class="metric-progress" *ngFor="let m of aiActiveResult.metrics">
-                        <div class="metric-info">
-                            <span>{{ m.label }}</span>
-                            <span>{{ m.value }}/10</span>
-                        </div>
-                        <div class="progress-bg">
-                            <div class="progress-fill" [style.width]="(m.value * 10) + '%'"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tips-section">
-                    <h4>TIPS DE MEJORA</h4>
-                    <ul>
-                        <li *ngFor="let tip of aiActiveResult.tips">{{ tip }}</li>
-                    </ul>
-                </div>
-
-                <button class="understand-btn" (click)="aiActiveResult = null">
-                    ENTENDIDO
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Video Comparison Overlay -->
-    <div class="comparison-overlay" *ngIf="showComparison" [class.show]="showComparison">
-        <div class="comparison-container fade-in">
-            <header class="comp-header">
-                <h3>⚖️ Comparativa de Técnica</h3>
-                <div class="header-actions">
-                    <button class="play-both-btn" (click)="togglePlayBoth()">▶️ Reproducir Ambos</button>
-                    <button class="close-comp-btn" (click)="closeComparison()">Cerrar</button>
-                </div>
-            </header>
-
-            <div class="comp-vids-grid">
-                <div class="comp-vid-item" *ngFor="let vid of selectedVideos">
-                    <div class="comp-vid-wrapper shadow-lg">
-                        <video [src]="vid.video_url" controls loop playsinline></video>
-                    </div>
-                    <div class="comp-vid-info">
-                        <span class="badge">{{ vid.categoria }}</span>
-                        <h4>{{ vid.titulo }}</h4>
-                        <p>{{ vid.fecha | date:'dd/MM/yyyy' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <footer class="comp-footer">
-                <p>💡 Tip: Reproduce ambos videos para comparar el gesto técnico en diferentes momentos.</p>
-            </footer>
-        </div>
-    </div>
 </div>

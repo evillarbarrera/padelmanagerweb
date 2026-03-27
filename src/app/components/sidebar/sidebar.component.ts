@@ -5,6 +5,8 @@ import { AuthService } from '../../services/auth.service';
 import { ClubesService } from '../../services/clubes.service';
 import Swal from 'sweetalert2';
 
+import { SidebarService } from '../../services/sidebar.service';
+
 @Component({
     selector: 'app-sidebar',
     templateUrl: './sidebar.component.html',
@@ -16,7 +18,7 @@ export class SidebarComponent implements OnInit {
     @Input() userId: number | null = null;
     @Input() jugadorNombre: string = 'Usuario';
     @Input() activePage: string = '';
-    @Input() role: 'jugador' | 'entrenador' | 'administrador_club' = 'jugador';
+    @Input() role: 'jugador' | 'entrenador' | 'administrador_club' | 'administrador' = 'jugador';
 
     private _jugadorFoto: string | null = null;
     @Input() set jugadorFoto(val: string | null) {
@@ -31,53 +33,63 @@ export class SidebarComponent implements OnInit {
     }
 
     isOpen = false; // Mobile menu state
-    showSwitchMenu = false; // Profile switcher state
+    isCollapsed = false; // Desktop collapse state
+    showSwitchMenu = false; 
+
     availableProfiles: any[] = [];
 
     constructor(
         private router: Router,
         private authService: AuthService,
-        private clubesService: ClubesService
+        private clubesService: ClubesService,
+        public sidebarService: SidebarService
     ) { }
 
     get computedRole(): string {
         let r = (this.role || '').toLowerCase();
+        
+        // Priority for admin
+        if (r === 'administrador') return 'administrador';
+
         // Fallback to localStorage if role is not provided or is default
         if (r === 'jugador' || !r) {
             const storedRole = localStorage.getItem('userRole');
             if (storedRole) r = storedRole.toLowerCase();
         }
 
+        if (r === 'administrador' || r === 'superadmin') return 'administrador';
         if (r.includes('admin')) return 'administrador_club';
         if (r.includes('entrenador')) return 'entrenador';
         return 'jugador';
     }
 
     ngOnInit() {
-        // Initial load from local storage
-        this.availableProfiles = this.authService.getProfiles().filter(p => p.rol !== 'administrador_club');
+        this.sidebarService.collapsed$.subscribe(v => {
+            this.isCollapsed = v;
+            if (v) document.body.classList.add('sidebar-collapsed');
+            else document.body.classList.remove('sidebar-collapsed');
+        });
 
-        // Subscribe to user changes for real-time updates (photo, name, etc)
+        // Initial load from local storage
+        this.availableProfiles = this.authService.getProfiles().filter(p => !['administrador_club', 'administrador'].includes(p.rol));
+
+        // Subscribe to user changes
         this.authService.currentUser$.subscribe(currentUser => {
             if (currentUser) {
                 if (!this.userId) this.userId = currentUser.id;
-
-                // Only update if not explicitly provided by parent or is default
                 if (!this.jugadorNombre || this.jugadorNombre === 'Usuario') {
                     this.jugadorNombre = currentUser.nombre || 'Usuario';
                 }
-
-                // Always try to refresh photo from user object if it changes
                 this.applyFallbackFoto(currentUser);
             }
         });
 
-        // Force refresh from server to ensure we have the latest roles (Global, etc.)
+        // Force refresh from server
         const currentUser = this.authService.getCurrentUser();
         const currentUserId = this.userId || currentUser?.id;
         if (currentUserId) {
             this.authService.refreshSession(currentUserId).subscribe(() => {
-                this.availableProfiles = this.authService.getProfiles().filter(p => p.rol !== 'administrador_club');
+                this.availableProfiles = this.authService.getProfiles().filter(p => !['administrador_club', 'administrador'].includes(p.rol));
             });
         }
     }
@@ -107,7 +119,6 @@ export class SidebarComponent implements OnInit {
         this.isOpen = false;
     }
 
-    // NEW: Profile Switcher
     toggleSwitchMenu() {
         this.showSwitchMenu = !this.showSwitchMenu;
     }
@@ -128,89 +139,15 @@ export class SidebarComponent implements OnInit {
                         <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: #111;">Entrenador</h3>
                         <p style="font-size: 11px; color: #666; margin: 5px 0 0 0;">Quiero ofrecer clases</p>
                     </div>
-
-                    <!-- <div id="btn-admin" style="cursor: pointer; border: 2px solid #eee; border-radius: 12px; padding: 20px; width: 140px; transition: all 0.2s;"
-                        onmouseover="this.style.borderColor='#ccff00'; this.style.background='#f9f9f9'"
-                        onmouseout="this.style.borderColor='#eee'; this.style.background='transparent'">
-                        <div style="font-size: 40px; margin-bottom: 10px;">🏢</div>
-                        <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: #111;">Encargado Club</h3>
-                        <p style="font-size: 11px; color: #666; margin: 5px 0 0 0;">Gestionar mi club</p>
-                    </div> -->
                 </div>
             `,
             showConfirmButton: false,
             showCloseButton: true,
             didOpen: () => {
                 const btnEntrenador = document.getElementById('btn-entrenador');
-                const btnAdmin = document.getElementById('btn-admin');
-
                 btnEntrenador?.addEventListener('click', () => {
                     Swal.close();
                     this.flowEntrenador();
-                });
-
-                btnAdmin?.addEventListener('click', () => {
-                    Swal.close();
-                    this.flowAdmin();
-                });
-            }
-        });
-    }
-
-    flowAdmin() {
-        Swal.fire({
-            title: 'Crear Nuevo Club',
-            text: 'Ingresa el nombre de tu club para comenzar',
-            input: 'text',
-            inputPlaceholder: 'Ej: Padel Center Santiago',
-            showCancelButton: true,
-            confirmButtonText: 'Crear Club',
-            confirmButtonColor: '#111',
-            showLoaderOnConfirm: true,
-            preConfirm: (nombre) => {
-                if (!nombre) return Swal.showValidationMessage('El nombre es requerido');
-
-                const payload = {
-                    nombre: nombre,
-                    direccion: '',
-                    telefono: '',
-                    instagram: '',
-                    email: '',
-                    admin_id: this.userId
-                };
-
-                return this.clubesService.addClub(payload).toPromise()
-                    .then(response => {
-                        if (!response.success && !response.id) {
-                            throw new Error(response.message || 'Error al crear');
-                        }
-                        return this.authService.refreshSession(this.userId!).toPromise();
-                    })
-                    .catch(error => {
-                        Swal.showValidationMessage(`Error: ${error.message}`);
-                    });
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Auto-switch to the new Admin profile
-                const profiles = this.authService.getProfiles();
-                // Find the newest admin profile (or just the first one found, logically unique per club usually, but user could be admin of multiple)
-                // Since we just refreshed, it should be there. 
-                // We don't have the new club ID easily accessible unless we parse it from response, but simple search is enough for UX improvement.
-                const newProfile = profiles.find(p => p.rol === 'administrador_club');
-
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Club Creado!',
-                    text: 'Cambiando a tu perfil de administrador...',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    if (newProfile) {
-                        this.authService.switchProfile(newProfile);
-                    } else {
-                        window.location.reload();
-                    }
                 });
             }
         });
@@ -220,15 +157,11 @@ export class SidebarComponent implements OnInit {
         Swal.showLoading();
         this.clubesService.getClubes().subscribe(clubes => {
             Swal.close();
-
             const options: any = {};
             clubes.forEach(c => options[c.id] = c.nombre);
-
             let chosenClubId: number = 0;
-
             Swal.fire({
                 title: 'Selecciona tu Club',
-                text: '¿En qué club realizarás las clases?',
                 input: 'select',
                 inputOptions: options,
                 inputPlaceholder: 'Selecciona un club',
@@ -239,7 +172,6 @@ export class SidebarComponent implements OnInit {
                 preConfirm: (clubId) => {
                     if (!clubId) return Swal.showValidationMessage('Debes seleccionar un club');
                     chosenClubId = parseInt(clubId);
-
                     return this.authService.addProfile(this.userId!, chosenClubId, 'entrenador').toPromise()
                         .then(res => {
                             if (!res.success) throw new Error(res.message);
@@ -249,35 +181,16 @@ export class SidebarComponent implements OnInit {
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Auto-switch to the new Trainer profile
                     const profiles = this.authService.getProfiles();
                     const newProfile = profiles.find(p => p.rol === 'entrenador' && p.club_id == chosenClubId);
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Listo!',
-                        text: 'Cambiando a tu perfil de entrenador...',
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        if (newProfile) {
-                            this.authService.switchProfile(newProfile);
-                        } else {
-                            window.location.reload();
-                        }
-                    });
+                    if (newProfile) this.authService.switchProfile(newProfile);
                 }
             });
         });
     }
 
-    addProfileRemote(role: string, clubId: number) {
-        // Deprecated by new flows
-    }
-
-    // Navigation Helper
     navigate(path: string) {
-        this.closeSidebar(); // Close on navigation
+        this.closeSidebar(); 
         if (path === 'create-profile') {
             this.createNewProfile();
         } else {

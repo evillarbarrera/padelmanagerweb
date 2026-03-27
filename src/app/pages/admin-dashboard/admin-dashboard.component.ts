@@ -45,11 +45,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     ];
 
     private apiUrl = environment.apiUrl;
-    private token = btoa('1|padel_academy');
-    private headers = new HttpHeaders({
-        'Authorization': `Bearer ${this.token}`,
-        'Content-Type': 'application/json'
-    });
+    private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('token');
+        return new HttpHeaders({
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+        });
+    }
 
     constructor(private http: HttpClient, private router: Router) { }
 
@@ -78,7 +80,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     // ===== STATS =====
     loadStats() {
         this.isLoading = true;
-        this.http.get<any>(`${this.apiUrl}/admin/dashboard_stats.php?year=${this.selectedYear}&month=${this.selectedMonth}`, { headers: this.headers }).subscribe({
+        this.http.get<any>(`${this.apiUrl}/admin/dashboard_stats.php?year=${this.selectedYear}&month=${this.selectedMonth}`, { headers: this.getHeaders() }).subscribe({
             next: (res) => {
                 if (res.success) {
                     this.stats = res.data;
@@ -97,7 +99,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     // ===== CHARTS =====
     loadChartData() {
         this.isLoading = true;
-        this.http.get<any>(`${this.apiUrl}/admin/dashboard_chart.php?year=${this.selectedYear}&month=${this.selectedMonth}`, { headers: this.headers }).subscribe({
+        this.http.get<any>(`${this.apiUrl}/admin/dashboard_chart.php?year=${this.selectedYear}&month=${this.selectedMonth}`, { headers: this.getHeaders() }).subscribe({
             next: (res) => {
                 this.isLoading = false;
                 if (res.success) {
@@ -176,7 +178,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     loadEntrenadores() {
         if (this.entrenadores.length > 0) return; // already loaded
         this.loadingEntrenadores = true;
-        this.http.get<any>(`${this.apiUrl}/admin/get_entrenadores.php`, { headers: this.headers }).subscribe({
+        this.http.get<any>(`${this.apiUrl}/admin/get_entrenadores.php`, { headers: this.getHeaders() }).subscribe({
             next: (res) => {
                 this.loadingEntrenadores = false;
                 if (res.success) {
@@ -220,7 +222,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
             comision_activa: e.comision_activa,
             comision_porcentaje: e.comision_porcentaje,
             mp_collector_id: e.mp_collector_id
-        }, { headers: this.headers }).subscribe({
+        }, { headers: this.getHeaders() }).subscribe({
 
             next: () => { },
             error: (err) => console.error('Error updating config', err)

@@ -51,9 +51,21 @@ export const routes: Routes = [
   { path: 'entrenador-packs', component: EntrenadorPacksComponent },
   { path: 'entrenador-cupones', component: EntrenadorCuponesComponent },
   { path: 'disponibilidad-entrenador', component: DisponibilidadEntrenadorComponent },
+  {
+    path: 'planificacion-mallas',
+    loadComponent: () => import('./pages/planificacion-mallas/planificacion-mallas.component').then(m => m.PlanificacionMallasComponent)
+  },
   { path: 'admin-club', component: ClubAdminComponent },
   { path: 'crear-americano', component: TorneoAmericanoComponent },
   { path: 'torneos', component: TorneoGestionComponent },
+  {
+    path: 'mi-plan',
+    loadComponent: () => import('./pages/mi-plan/mi-plan.component').then(m => m.MiPlanComponent)
+  },
+  {
+    path: 'pizarra-tactica',
+    loadComponent: () => import('./pages/pizarra-tactica/pizarra-tactica.component').then(m => m.PizarraTacticaComponent)
+  },
 
   // Shared Routes
   { path: 'perfil', component: PerfilComponent },
@@ -64,6 +76,10 @@ export const routes: Routes = [
   {
     path: 'progreso/:id',
     loadComponent: () => import('./pages/alumno-progreso/alumno-progreso.component').then(m => m.AlumnoProgresoComponent)
+  },
+  {
+    path: 'clases/:id',
+    loadComponent: () => import('./pages/alumno-clases/alumno-clases.component').then(m => m.AlumnoClasesComponent)
   },
   {
     path: 'mis-packs-activos',
