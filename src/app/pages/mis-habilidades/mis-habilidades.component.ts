@@ -35,6 +35,10 @@ export class MisHabilidadesComponent implements OnInit {
     storedLineData: number[] = [];
     storedRadarLabels: string[] = [];
     storedRadarData: number[] = [];
+    storedTacticoLabels1: string[] = [];
+    storedTacticoData1: number[] = [];
+    storedTacticoLabels2: string[] = [];
+    storedTacticoData2: number[] = [];
     storedTacticoLabels: string[] = [];
     storedTacticoData: number[] = [];
     storedFisicoLabels: string[] = [];
@@ -84,7 +88,8 @@ export class MisHabilidadesComponent implements OnInit {
     trainers: any[] = [];
     selectedTrainerId: number | null = null;
 
-    tacticoChart: any;
+    tacticoChart1: any;
+    tacticoChart2: any;
     fisicoChart: any;
     mentalChart: any;
 
@@ -259,9 +264,26 @@ export class MisHabilidadesComponent implements OnInit {
                 });
 
                 // DATA TÁCTICA
-                this.storedTacticoLabels = Object.keys(tactico);
-                if (this.storedTacticoLabels.length === 0) this.storedTacticoLabels = this.tacticas;
-                this.storedTacticoData = this.storedTacticoLabels.map(l => (tactico[l]?.valor || 0));
+                let rawTacticoLabels = Object.keys(tactico);
+                if (rawTacticoLabels.length === 0) rawTacticoLabels = this.tacticas;
+                
+                if (rawTacticoLabels.length > 5) {
+                    const half = Math.ceil(rawTacticoLabels.length / 2);
+                    this.storedTacticoLabels1 = rawTacticoLabels.slice(0, half);
+                    this.storedTacticoData1 = this.storedTacticoLabels1.map(l => (tactico[l]?.valor || 0));
+                    
+                    this.storedTacticoLabels2 = rawTacticoLabels.slice(half);
+                    this.storedTacticoData2 = this.storedTacticoLabels2.map(l => (tactico[l]?.valor || 0));
+                } else {
+                    this.storedTacticoLabels1 = rawTacticoLabels;
+                    this.storedTacticoData1 = rawTacticoLabels.map(l => (tactico[l]?.valor || 0));
+                    this.storedTacticoLabels2 = [];
+                    this.storedTacticoData2 = [];
+                }
+                const allTacticoData = rawTacticoLabels.map(l => (tactico[l]?.valor || 0));
+                
+                this.storedTacticoLabels = rawTacticoLabels;
+                this.storedTacticoData = allTacticoData;
 
                 // DATA FÍSICA
                 this.storedFisicoLabels = Object.keys(fisico);
@@ -341,34 +363,68 @@ export class MisHabilidadesComponent implements OnInit {
     }
 
     renderTacticoChart() {
-        const ctx = document.getElementById('tacticoChart') as HTMLCanvasElement;
-        if (!ctx) return;
-        if (this.tacticoChart) this.tacticoChart.destroy();
-        this.tacticoChart = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: this.storedTacticoLabels,
-                datasets: [{
-                    label: 'Mi Táctica',
-                    data: this.storedTacticoData,
-                    fill: true,
-                    backgroundColor: 'rgba(0, 242, 255, 0.05)',
-                    borderColor: '#00f2ff',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#111',
-                    pointBorderColor: '#00f2ff',
-                    pointRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: { angleLines: { color: '#eee' }, grid: { color: '#f0f0f0' }, suggestedMin: 0, suggestedMax: 10, pointLabels: { font: { size: 10, weight: 'bold' }, color: '#444' }, ticks: { display: false } }
+        const ctx1 = document.getElementById('tacticoChart1') as HTMLCanvasElement;
+        const ctx2 = document.getElementById('tacticoChart2') as HTMLCanvasElement;
+        
+        if (ctx1 && this.storedTacticoLabels1.length > 0) {
+            if (this.tacticoChart1) this.tacticoChart1.destroy();
+            this.tacticoChart1 = new Chart(ctx1, {
+                type: 'radar',
+                data: {
+                    labels: this.storedTacticoLabels1,
+                    datasets: [{
+                        label: 'Mi Táctica 1',
+                        data: this.storedTacticoData1,
+                        fill: true,
+                        backgroundColor: 'rgba(0, 242, 255, 0.05)',
+                        borderColor: '#00f2ff',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#111',
+                        pointBorderColor: '#00f2ff',
+                        pointRadius: 5
+                    }]
                 },
-                plugins: { legend: { display: false } }
-            }
-        });
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: { angleLines: { color: '#eee' }, grid: { color: '#f0f0f0' }, suggestedMin: 0, suggestedMax: 10, pointLabels: { font: { size: 10, weight: 'bold' }, color: '#444' }, ticks: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        if (ctx2 && this.storedTacticoLabels2.length > 0) {
+            if (this.tacticoChart2) this.tacticoChart2.destroy();
+            setTimeout(() => {
+                this.tacticoChart2 = new Chart(ctx2, {
+                    type: 'radar',
+                    data: {
+                        labels: this.storedTacticoLabels2,
+                        datasets: [{
+                            label: 'Mi Táctica 2',
+                            data: this.storedTacticoData2,
+                            fill: true,
+                            backgroundColor: 'rgba(0, 242, 255, 0.05)',
+                            borderColor: '#00f2ff',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#111',
+                            pointBorderColor: '#00f2ff',
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: { angleLines: { color: '#eee' }, grid: { color: '#f0f0f0' }, suggestedMin: 0, suggestedMax: 10, pointLabels: { font: { size: 10, weight: 'bold' }, color: '#444' }, ticks: { display: false } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }, 50);
+        }
     }
 
     renderFisicoChart() {
