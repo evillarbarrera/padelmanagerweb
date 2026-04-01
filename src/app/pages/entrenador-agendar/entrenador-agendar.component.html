@@ -132,9 +132,15 @@
                                     <img [src]="a.jugador_foto || 'assets/images/placeholder_avatar.png'">
                                     <div class="st-meta">
                                         <b>{{ a.jugador_nombre }}</b>
-                                        <span [class.negativo]="(a.sesiones_restantes || 0) <= 0">
-                                            {{ a.pack_nombre || 'Sin Pack' }} ({{ a.sesiones_restantes || 0 }} créd.)
-                                        </span>
+                                        <div class="credits-info">
+                                            <span [class.no-cred]="(a.creditos_reales || 0) <= 0" class="real-credits">
+                                                {{ (a.creditos_reales > 0) ? (a.creditos_reales + ' disp.') : 'Sin créditos' }}
+                                            </span>
+                                            <span class="reserved-info" *ngIf="a.sesiones_reservadas > 0">
+                                                ({{ a.sesiones_reservadas }} reservadas)
+                                            </span>
+                                        </div>
+                                        <small class="pack-name">{{ a.pack_nombre || 'Sin Pack' }}</small>
                                     </div>
                                     <div class="check" *ngIf="isAlumnoSelected(a)">✔</div>
                                 </div>
@@ -177,23 +183,46 @@
                             <div class="pack-section mt-3">
                                 <!-- INDIVIDUAL: Pack actual del alumno -->
                                 <ng-container *ngIf="tipoClaseSeleccionado === 'individual'">
-                                    <div class="class-info-card current-pack" *ngIf="alumnoSeleccionado && (alumnoSeleccionado.sesiones_restantes || 0) > 0">
-                                        <i class="fas fa-ticket-alt"></i>
-                                        <div class="txt">
-                                            <b>Pack del Alumno:</b>
-                                            <p>{{ alumnoSeleccionado.pack_nombre }} ({{ alumnoSeleccionado.sesiones_restantes }} créd.)</p>
-                                        </div>
+                                    <!-- Multiple packs with credits selection -->
+                                    <div *ngIf="alumnosPacksConCredito.length > 1">
+                                        <label class="info-label">SELECCIONAR PACK DEL ALUMNO:</label>
+                                        <select [(ngModel)]="alumnoSeleccionado.pack_jugador_id" (change)="onPackAlumnoToggle()" class="modern-select highlight">
+                                            <option *ngFor="let p of alumnosPacksConCredito" [value]="p.id || p.pack_jugador_id">
+                                                {{ p.pack_nombre }} ({{ p.sesiones_restantes }} créd.)
+                                            </option>
+                                        </select>
                                     </div>
 
-                                    <div *ngIf="alumnoSeleccionado && (alumnoSeleccionado.sesiones_restantes || 0) <= 0">
-                                        <label class="info-label">EL ALUMNO NO TIENE PACK ACTIVO:</label>
-                                        <div class="manual-check active">
-                                            <input type="checkbox" [checked]="true" [disabled]="true">
-                                            <span>Asignar nuevo pack hoy</span>
+                                    <!-- INDIVIDUAL: Single Active Pack (Priority: Loaded Packs, Fallback: Student Record) -->
+                                    <div class="class-info-card current-pack" *ngIf="alumnoSeleccionado && (alumnosPacksConCredito.length === 1 || (alumnosPacksConCredito.length === 0 && (alumnoSeleccionado.creditos_reales || 0) > 0)) && !mostrarSelectorPackManual">
+                                        <i class="fas fa-ticket-alt"></i>
+                                        <div class="txt">
+                                            <b>Pack Activo:</b>
+                                            <span *ngIf="alumnosPacksConCredito.length === 1">{{ alumnosPacksConCredito[0].pack_nombre }} ({{ alumnosPacksConCredito[0].sesiones_restantes - alumnosPacksConCredito[0].sesiones_reservadas }} disp.)</span>
+                                            <span *ngIf="alumnosPacksConCredito.length === 0">{{ alumnoSeleccionado.pack_nombre }} ({{ alumnoSeleccionado.creditos_reales }} disp.)</span>
+                                        </div>
+                                        <button class="btn-change-pack" (click)="mostrarSelectorPackManual = true">Cambiar</button>
+                                    </div>
+
+                                    <!-- INDIVIDUAL: Exhausted/No active packs warning -->
+                                    <div class="exhausted-pack-card" *ngIf="alumnoSeleccionado && alumnosPacksConCredito.length === 0 && (alumnoSeleccionado.creditos_reales || 0) <= 0 && !mostrarSelectorPackManual && !packAAsignar">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <div class="txt">
+                                            <b>¡Sin Créditos Libres!</b>
+                                            <p>Este alumno ya consumió o reservó todo su saldo. Necesitas asignarle un pack nuevo.</p>
+                                        </div>
+                                        <button class="btn-change-pack highlight" (click)="mostrarSelectorPackManual = true">Vender Pack</button>
+                                    </div>
+
+                                    <!-- INDIVIDUAL: Manual/New Pack Selection -->
+                                    <div class="manual-assign" *ngIf="alumnoSeleccionado && (alumnosPacksConCredito.length === 0 || mostrarSelectorPackManual)">
+                                        <div class="flex-between">
+                                            <label class="info-label text-accent">ASIGNAR NUEVO PACK:</label>
+                                            <button class="btn-xs" *ngIf="mostrarSelectorPackManual && alumnosPacksConCredito.length > 0" (click)="mostrarSelectorPackManual = false">Volver al Actual</button>
                                         </div>
                                         <select [(ngModel)]="packAAsignar" class="modern-select highlight animate-up">
-                                            <option [ngValue]="null">-- Elegir Pack Individual --</option>
-                                            <option *ngFor="let p of packsParaTipo" [ngValue]="p">{{ p.nombre }} - ${{ p.precio }}</option>
+                                            <option [ngValue]="null">-- Elegir Nuevo Pack --</option>
+                                            <option *ngFor="let p of packsDisponibles" [ngValue]="p">{{ p.titulo || p.nombre }} - ${{ (p.precio_total || p.precio) | number:'1.0-0' }}</option>
                                         </select>
                                     </div>
                                 </ng-container>
@@ -273,10 +302,11 @@
                 <button class="b-cancel" (click)="closeModal()">DESCARTAR</button>
                 <button class="b-confirm" 
                         (click)="confirmarAgenda()" 
-                        [disabled]="isLoading || 
-                            (tipoClaseSeleccionado === 'individual' && (!alumnoSeleccionado || ((alumnoSeleccionado.sesiones_restantes || 0) <= 0 && !packAAsignar))) ||
-                            (tipoClaseSeleccionado !== 'individual' && (alumnosSeleccionados.length < 2 || !packAAsignar))">
-                    <span *ngIf="!isLoading">CONFIRMAR Y AGENDAR</span>
+                        [disabled]="isLoading || cargandoPacks || !selectedSlot">
+                    <span *ngIf="!isLoading && !cargandoPacks">CONFIRMAR Y AGENDAR</span>
+                    <span *ngIf="cargandoPacks" class="loader-flex">
+                        <i class="fas fa-sync fa-spin"></i> CARGANDO DATOS...
+                    </span>
                     <span *ngIf="isLoading" class="loader-flex">
                         <i class="fas fa-spinner fa-spin"></i> PROCESANDO...
                     </span>

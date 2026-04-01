@@ -28,6 +28,11 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   margin-bottom: 30px;
 
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 16px;
+  }
+
   .search-bar {
     display: flex;
     align-items: center;
@@ -59,16 +64,22 @@
     gap: 12px;
     border-top: 1px solid #f0f0f0;
     padding-top: 15px;
+    flex-wrap: wrap;
+
+    @media (max-width: 768px) {
+      gap: 8px;
+    }
 
     .sort-label {
       font-size: 11px;
       font-weight: 800;
       color: #999;
       text-transform: uppercase;
+      @media (max-width: 480px) { width: 100%; margin-bottom: 4px; }
     }
 
     .sort-btn {
-      padding: 6px 14px;
+      padding: 8px 16px;
       border-radius: 20px;
       border: 1px solid #e5e5e5;
       background: #fff;
@@ -91,17 +102,28 @@
 
     .create-btn {
       margin-left: auto;
-      padding: 8px 18px;
+      padding: 10px 20px;
       background: #ccff00;
       color: #000;
       border: 1.5px solid #000;
       border-radius: 20px;
       font-size: 11px;
-      font-weight: 900;
+      font-weight: 950;
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       
+      @media (max-width: 768px) {
+        margin-left: 0;
+        width: 100%;
+        margin-top: 10px;
+        order: -1; /* Move important action to top of sort controls on mobile if needed */
+        justify-content: center;
+        display: flex;
+        height: 50px;
+        align-items: center;
+      }
+
       &:hover {
         background: #000;
         color: #ccff00;
@@ -423,10 +445,16 @@
   align-items: center;
   gap: 32px;
   margin-top: 60px;
-  padding: 40px;
+  padding: 32px;
   background: white;
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+  }
 
   .page-btn {
     padding: 14px 28px;
@@ -443,6 +471,11 @@
     display: flex;
     align-items: center;
     gap: 10px;
+
+    @media (max-width: 600px) {
+      width: 100%;
+      justify-content: center;
+    }
 
     &::before {
         content: '←';

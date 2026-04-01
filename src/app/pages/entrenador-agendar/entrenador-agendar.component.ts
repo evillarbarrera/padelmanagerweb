@@ -58,6 +58,9 @@ export class EntrenadorAgendarComponent implements OnInit {
     alumnosSeleccionados: any[] = [];
 
     slotsByDay: { [key: string]: any[] } = {};
+    alumnosPacks: any[] = []; // Packs of the currently selected student
+    cargandoPacks = false;
+    mostrarSelectorPackManual = false;
     
     // Modal State
     showModal = false;
@@ -65,6 +68,19 @@ export class EntrenadorAgendarComponent implements OnInit {
     selectedSlot: any = null;
     recurrencia: number = 1;
     tipoClaseSeleccionado: 'individual' | 'multijugador' | 'grupal' = 'individual';
+
+    get alumnosPacksConCredito(): any[] {
+        // Only show packs that have REAL available credits (Total Remaining - Already Reserved)
+        return (this.alumnosPacks || []).filter(p => {
+            const totales = Number(p.sesiones_totales || p.sesiones || 0);
+            const usadas = Number(p.sesiones_usadas || 0);
+            const reservadas = Number(p.sesiones_reservadas || 0);
+            const restantes = p.sesiones_restantes !== undefined ? Number(p.sesiones_restantes) : (totales - usadas);
+            
+            const disponibles = restantes - reservadas;
+            return disponibles > 0;
+        });
+    }
 
     get maxAlumnos(): number {
         if (this.tipoClaseSeleccionado === 'multijugador') return 4;
@@ -207,11 +223,17 @@ export class EntrenadorAgendarComponent implements OnInit {
         if (!this.entrenadorId) return;
         this.alumnoService.getAlumnos(this.entrenadorId).subscribe({
             next: (res: any[]) => { 
-                this.alumnos = (res || []).map(a => ({
-                    ...a,
-                    pack_nombre: a.pack_nombres || a.pack_nombre,
-                    sesiones_restantes: Number(a.sesiones_restantes || 0)
-                })); 
+                this.alumnos = (res || []).map(a => {
+                    const restantes = Number(a.sesiones_restantes || 0);
+                    const reservadas = Number(a.sesiones_reservadas || 0);
+                    return {
+                        ...a,
+                        pack_nombre: a.pack_nombres || a.pack_nombre,
+                        sesiones_restantes: restantes,
+                        sesiones_reservadas: reservadas,
+                        creditos_reales: restantes - reservadas
+                    };
+                }); 
             },
             error: (err: any) => console.error('Error loading students:', err)
         });
@@ -449,6 +471,45 @@ export class EntrenadorAgendarComponent implements OnInit {
         }
         // Reset pack when selection changes
         this.packAAsignar = null;
+        this.alumnosPacks = [];
+        
+        if (this.alumnoSeleccionado) {
+            this.cargarPacksAlumno(this.alumnoSeleccionado.jugador_id || this.alumnoSeleccionado.id);
+        }
+    }
+
+    cargarPacksAlumno(jugadorId: number) {
+        this.cargandoPacks = true;
+        // Search globally for student packs (remove trainer filter to find all credits)
+        this.entrenamientoService.getPacksAlumno(jugadorId).subscribe({
+            next: (res: any) => {
+                // The API returns an array directly, not an object with 'packs'
+                this.alumnosPacks = Array.isArray(res) ? res : (res.packs || []);
+                
+                // Auto-select first pack with credits if none selected
+                if (this.alumnosPacks.length > 0 && !this.packAAsignar) {
+                    const activePack = this.alumnosPacks.find(p => Number(p.sesiones_restantes || 0) > 0);
+                    if (activePack) {
+                        this.alumnoSeleccionado.pack_id = activePack.pack_id;
+                        this.alumnoSeleccionado.pack_jugador_id = activePack.id || activePack.pack_jugador_id;
+                        this.alumnoSeleccionado.sesiones_restantes = activePack.sesiones_restantes;
+                        this.alumnoSeleccionado.pack_nombre = activePack.pack_nombre;
+                    }
+                }
+                this.cargandoPacks = false;
+            },
+            error: () => this.cargandoPacks = false
+        });
+    }
+
+    onPackAlumnoToggle() {
+        if (!this.alumnoSeleccionado) return;
+        const pack = this.alumnosPacks.find(p => (p.id || p.pack_jugador_id) == this.alumnoSeleccionado.pack_jugador_id);
+        if (pack) {
+            this.alumnoSeleccionado.pack_id = pack.pack_id;
+            this.alumnoSeleccionado.pack_nombre = pack.pack_nombre;
+            this.alumnoSeleccionado.sesiones_restantes = pack.sesiones_restantes;
+        }
     }
 
     isAlumnoSelected(alumno: any): boolean {
@@ -500,22 +561,115 @@ export class EntrenadorAgendarComponent implements OnInit {
               });
 
         obsPack.subscribe({
-            next: (resP: any) => {
+            next: async (resP: any) => {
+                // Ensure we have a valid pack_id
+                let fId: any = 0;
+                let fJugadorId: any = 0;
+
+                // 1. PRIMARY: Match from specific NEW pack assignment first
+                if (this.packAAsignar) {
+                    fId = this.packAAsignar.id || this.packAAsignar.pack_id || 0;
+                    fJugadorId = resP.pack_jugador_id || 0;
+                } 
+                // 2. SECONDARY: Match from loaded packs with credits (highest accuracy for existing packs)
+                else if (this.alumnosPacksConCredito.length > 0) {
+                    const best = this.alumnosPacksConCredito[0]; // Take the first valid pack
+                    fId = best.pack_id || best.id_pack || best.id || 0;
+                    fJugadorId = best.id || best.pack_jugador_id || best.pack_id || fId || 0;
+                    
+                    // If we found a pack but ID are still shaky, use the primary key 'id'
+                    if (fId === fJugadorId && best.pack_id) {
+                         fId = best.pack_id;
+                    }
+                } 
+                // 3. TERTIARY: Detection from student object - Exhaustive key search
+                else if (primerJugador) {
+                    const keys = [
+                        'pack_id', 'id_pack', 'idPack', 'id_pack_entrenador', 
+                        'pack_ids', 'pack_jugador_id', 'id_pack_jugador', 
+                        'idPackJugador', 'pack_jugador_ids', 'pack_jugadores_id',
+                        'id_pack_jugadores', 'pack_compra_id', 'id'
+                    ];
+                    
+                    // Priority 1: Check known keys
+                    for(const k of keys) {
+                        const val = primerJugador[k];
+                        if (val && String(val) !== '0' && String(val).length > 0) {
+                            if (k === 'id' && Number(val) === Number(primerJugador.jugador_id || primerJugador.id_jugador)) continue;
+                            fId = String(val).includes(',') ? val.split(',')[0].trim() : val;
+                            break;
+                        }
+                    }
+
+                    // Priority 2: Speculative search
+                    if (!fId || fId === 0) {
+                        for(const k in primerJugador) {
+                            if (k.toLowerCase().includes('id') && !k.toLowerCase().includes('jugador') && !k.toLowerCase().includes('usuario')) {
+                                const val = primerJugador[k];
+                                if (val && !isNaN(Number(val)) && Number(val) > 0 && Number(val) !== Number(primerJugador.jugador_id)) {
+                                    fId = val;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    fJugadorId = primerJugador.pack_jugador_id || primerJugador.id_pack_jugador || primerJugador.pack_jugadores_id || fId || 0;
+                    
+                // Priority 3: Case for Liz Silva - We have a name ('Bienvenida') but no ID
+                if ((!fId || fId === 0) && primerJugador.pack_nombre && (primerJugador.creditos_reales > 0 || primerJugador.sesiones_restantes > 0)) {
+                    console.log('Searching for pack ID by name:', primerJugador.pack_nombre);
+                    // Match against all available packs (this.packsDisponibles)
+                    const foundInCatalog = (this.packsDisponibles || []).find((p: any) => (p.nombre || p.titulo) === primerJugador.pack_nombre);
+                    if (foundInCatalog) {
+                        fId = foundInCatalog.id || foundInCatalog.pack_id || 0;
+                        fJugadorId = fId; // We use the base pack_id as fallback
+                        console.log('Recovery by name successful! ID:', fId);
+                    }
+                }
+
+                // Priority 4: Fallback if we STILL don't have an ID
+                if ((!fId || fId === 0) && (primerJugador.creditos_reales > 0 || primerJugador.sesiones_restantes > 0)) {
+                    console.log('Force fetching pack via getPack for jugador_id:', primerJugador.jugador_id || primerJugador.id);
+                    try {
+                        const resG: any = await this.alumnoService.getPack(primerJugador.jugador_id || primerJugador.id).toPromise();
+                        const target = Array.isArray(resG) ? resG[0] : resG;
+                        if (target && (target.pack_id || target.id)) {
+                             fId = target.pack_id || target.id;
+                             fJugadorId = target.id || target.pack_jugador_id || fId;
+                             console.log('Emergency ID recovered:', fId);
+                        }
+                    } catch (e) { console.error('Emergency fetch failed:', e); }
+                }
+                }
+
+                // If still 0, block and notify user to avoid 400
+                if (!fId || Number(fId) === 0) {
+                    if (!this.packAAsignar) {
+                        this.isLoading = false;
+                        const debugInfo = `ID Alumno: ${primerJugador?.jugador_id || primerJugador?.id}. Pack detectado: ${fId}. Packs cargados: ${this.alumnosPacksConCredito.length}`;
+                        const allKeys = Object.keys(primerJugador || {}).join(', ');
+                        alert(`⚠️ No se pudo asignar automáticamente un pack a este alumno.\n\n${debugInfo}\n\nCampos disponibles: ${allKeys}\n\nPor favor, selecciona uno manualmente.`);
+                        return;
+                    }
+                }
+
                 const payloadReserva: any = {
-                    entrenador_id: this.entrenadorId,
-                    pack_id: (this.packAAsignar ? (this.packAAsignar.id || this.packAAsignar.pack_id) : (primerJugador.pack_id || 0)) || null,
-                    pack_jugador_id: resP.pack_jugador_id || null,
+                    entrenador_id: String(this.entrenadorId),
+                    pack_id: String(fId),
+                    pack_jugador_id: String(fJugadorId),
                     fecha: this.selectedSlot.dateStr,
                     hora_inicio: this.selectedSlot.hour,
                     hora_fin: this.getHoraFin(this.selectedSlot.hour),
-                    jugador_id: primerJugador.jugador_id || primerJugador.id,
+                    jugador_id: String(primerJugador.jugador_id || primerJugador.id),
+                    jugador_nombre: primerJugador.jugador_nombre || 'Alumno',
                     estado: 'reservado',
-                    recurrencia: this.recurrencia,
+                    recurrencia: String(this.recurrencia || 1),
                     tipo: this.tipoClaseSeleccionado,
-                    club_id: this.selectedSlot.slotData.club_id,
-                    malla_id: this.planificacionId,
-                    clase_id: this.claseMallaId,
-                    clase_titulo: this.clasesDisponibles.find(c => c.id == this.claseMallaId)?.titulo || null
+                    club_id: String(this.selectedSlot.slotData.club_id || 1),
+                    malla_id: String(this.planificacionId || 0),
+                    clase_id: String(this.claseMallaId || 0),
+                    clase_titulo: this.selectedClaseToPreview?.titulo || ''
                 };
 
                 // For multi/grupal, send all player IDs
@@ -523,6 +677,8 @@ export class EntrenadorAgendarComponent implements OnInit {
                     payloadReserva.jugador_ids = jugadorIds;
                     payloadReserva.jugador_nombre = jugadores.map((j: any) => j.jugador_nombre).join(', ');
                 }
+
+                console.log('Enviando reserva:', payloadReserva);
 
                 this.entrenamientoService.crearReserva(payloadReserva).subscribe({
                     next: () => {

@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PopupComponent } from './components/popup/popup.component';
 import { PopupService } from './services/popup.service';
+import { AnalyticsService } from './services/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +26,10 @@ import { PopupService } from './services/popup.service';
 export class AppComponent implements OnInit {
   activePopup: any = null;
 
-  constructor(private popupService: PopupService) { }
+  constructor(
+    private popupService: PopupService,
+    private analyticsService: AnalyticsService
+  ) { }
 
   ngOnInit() {
     this.popupService.popupState$.subscribe(data => {

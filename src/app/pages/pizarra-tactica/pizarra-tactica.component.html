@@ -25,100 +25,125 @@
             <button [class.active]="coachSubTab === 'datos'" (click)="coachSubTab = 'datos'">📊 DATOS PARTIDO</button>
         </div>
 
-        <!-- TOP: PLAYER NAMES -->
-        <header class="players-header">
-            <div class="pair p1">
-                <input [(ngModel)]="players[0].name" (ngModelChange)="onNameChange(0)" [style.color]="players[0].color" placeholder="Jugador 1">
-                <input [(ngModel)]="players[1].name" (ngModelChange)="onNameChange(1)" [style.color]="players[1].color" placeholder="Jugador 2">
+        <!-- COMPACT PLAYER NAMES EDITOR -->
+        <header class="names-editor-top">
+            <div class="pair-edit p1">
+                <input [(ngModel)]="players[0].name" (ngModelChange)="onNameChange(0)" [style.color]="players[0].color" placeholder="J1">
+                <input [(ngModel)]="players[1].name" (ngModelChange)="onNameChange(1)" [style.color]="players[1].color" placeholder="J2">
             </div>
-            <div class="vs-badge">VS</div>
-            <div class="pair p2">
-                <input [(ngModel)]="players[2].name" (ngModelChange)="onNameChange(2)" [style.color]="players[2].color" placeholder="Rival 1">
-                <input [(ngModel)]="players[3].name" (ngModelChange)="onNameChange(3)" [style.color]="players[3].color" placeholder="Rival 2">
+            <div class="vs-divider">VS</div>
+            <div class="pair-edit p2">
+                <input [(ngModel)]="players[2].name" (ngModelChange)="onNameChange(2)" [style.color]="players[2].color" placeholder="R1">
+                <input [(ngModel)]="players[3].name" (ngModelChange)="onNameChange(3)" [style.color]="players[3].color" placeholder="R2">
             </div>
         </header>
 
-        <div class="coach-grid-main" [class.show-pizarra]="coachSubTab === 'pizarra'" [class.show-datos]="coachSubTab === 'datos'">
-            <!-- COLUMN 1: SCOREBOARD -->
-            <aside class="col-score animate-left">
-                <div class="section-title">MARCADOR</div>
-                <div class="set-card" *ngFor="let set of setsMarcador; let i = index">
-                    <div class="set-num">SET {{ i + 1 }}</div>
-                    <div class="team-row">
-                        <span class="abbr">{{ players[0].label }} + {{ players[1].label }}</span>
-                        <div class="score-ctrl">
-                            <button (click)="updateScore(i, 1, -1)">-</button>
-                            <span class="val">{{ set.p1 }}</span>
-                            <button (click)="updateScore(i, 1, 1)">+</button>
+        <div class="coach-grid-main">
+            <!-- LEFT COLUMN: SCORE + COURT -->
+            <div class="col-main-left animate-left">
+                <!-- HORIZONTAL SCOREBOARD -->
+                <header class="horizontal-score">
+                    <div class="set-item" *ngFor="let set of setsMarcador; let i = index">
+                        <div class="s-label">SET {{ i + 1 }}</div>
+                        <div class="s-values">
+                            <div class="v-pair">
+                                <span class="n">{{ (players[0].name.split(' ')[0] || players[0].label) + ' / ' + (players[1].name.split(' ')[0] || players[1].label) }}</span>
+                                <div class="v-ctrl">
+                                    <button (click)="updateScore(i, 1, -1)">-</button>
+                                    <span class="v">{{ set.p1 }}</span>
+                                    <button (click)="updateScore(i, 1, 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="v-pair">
+                                <span class="n">{{ (players[2].name.split(' ')[0] || players[2].label) + ' / ' + (players[3].name.split(' ')[0] || players[3].label) }}</span>
+                                <div class="v-ctrl">
+                                    <button (click)="updateScore(i, 2, -1)">-</button>
+                                    <span class="v">{{ set.p2 }}</span>
+                                    <button (click)="updateScore(i, 2, 1)">+</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="team-row">
-                        <span class="abbr">{{ players[2].label }} + {{ players[3].label }}</span>
-                        <div class="score-ctrl">
-                            <button (click)="updateScore(i, 2, -1)">-</button>
-                            <span class="val">{{ set.p2 }}</span>
-                            <button (click)="updateScore(i, 2, 1)">+</button>
-                        </div>
+                </header>
+
+                <!-- TACTICAL COURT -->
+                <section class="col-court">
+                    <div class="floating-toolbar">
+                        <button [class.active]="activeTool === 'select'" (click)="setTool('select')">🖱️</button>
+                        <button [class.active]="activeTool === 'draw'" (click)="setTool('draw')">✏️</button>
+                        <button (click)="undo()">↩️</button>
+                        <div class="divider"></div>
+                        <button (click)="addPlayer('#cc3333')">🔴</button>
+                        <button (click)="addPlayer('#33aacc')">🔵</button>
+                        <button (click)="addCone()">▲</button>
+                        <div class="divider"></div>
+                        <button class="delete" (click)="clearAll()">🗑️</button>
                     </div>
-                </div>
-            </aside>
 
-            <!-- COLUMN 2: TACTICAL COURT -->
-            <section class="col-court animate-up">
-                <div class="floating-toolbar">
-                    <button [class.active]="activeTool === 'select'" (click)="setTool('select')">🖱️</button>
-                    <button [class.active]="activeTool === 'draw'" (click)="setTool('draw')">✏️</button>
-                    <button (click)="undo()">↩️</button>
-                    <div class="divider"></div>
-                    <button (click)="addPlayer('#cc3333')">🔴</button>
-                    <button (click)="addPlayer('#33aacc')">🔵</button>
-                    <button (click)="addCone()">▲</button>
-                    <div class="divider"></div>
-                    <button class="delete" (click)="clearAll()">🗑️</button>
-                </div>
-
-                <div class="court-svg-container">
-                    <svg viewBox="0 0 500 800" class="padel-court-svg"
-                         (mousedown)="startAction($event)" (mousemove)="doAction($event)" (mouseup)="stopAction()"
-                         (touchstart)="startAction($event)" (touchmove)="doAction($event)" (touchend)="stopAction()">
-                        
-                        <rect x="50" y="50" width="400" height="700" fill="#2a67a8" stroke="#fff" stroke-width="4" />
-                        <line x1="50" y1="200" x2="450" y2="200" stroke="#fff" stroke-width="2" />
-                        <line x1="50" y1="400" x2="450" y2="400" stroke="#fff" stroke-width="2" stroke-dasharray="8,5" />
-                        <line x1="50" y1="600" x2="450" y2="600" stroke="#fff" stroke-width="2" />
-                        <line x1="250" y1="50" x2="250" y2="750" stroke="#fff" stroke-width="2" />
-
-                        <g class="drawings">
-                            <path *ngFor="let p of drawings" [attr.d]="p.d" [attr.stroke]="p.color" stroke-width="4" fill="none" />
-                        </g>
-
-                        <g *ngFor="let el of elements" class="tactical-el" [attr.transform]="'translate('+el.x+','+el.y+')'"
-                           (mousedown)="startAction($event, el)" (touchstart)="startAction($event, el)">
-                            <circle *ngIf="el.type === 'player'" r="20" [attr.fill]="el.color" stroke="#fff" stroke-width="2" />
-                            <text *ngIf="el.type === 'player'" y="5" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">{{el.label}}</text>
+                    <div class="court-svg-container">
+                        <svg viewBox="0 0 500 800" class="padel-court-svg"
+                             (mousedown)="startAction($event)" (mousemove)="doAction($event)" (mouseup)="stopAction()"
+                             (touchstart)="startAction($event)" (touchmove)="doAction($event)" (touchend)="stopAction()">
                             
-                            <circle *ngIf="el.type === 'ball'" r="8" fill="#ccff00" stroke="#000" />
-                            <path *ngIf="el.type === 'cone'" d="M 0 -10 L 12 12 L -12 12 Z" fill="#ff7711" />
-                        </g>
-                    </svg>
-                </div>
-            </section>
+                            <rect x="50" y="50" width="400" height="700" fill="#2a67a8" stroke="#fff" stroke-width="4" />
+                            <line x1="50" y1="200" x2="450" y2="200" stroke="#fff" stroke-width="2" />
+                            <line x1="50" y1="400" x2="450" y2="400" stroke="#fff" stroke-width="2" stroke-dasharray="8,5" />
+                            <line x1="50" y1="600" x2="450" y2="600" stroke="#fff" stroke-width="2" />
+                            <line x1="250" y1="50" x2="250" y2="750" stroke="#fff" stroke-width="2" />
 
-            <!-- COLUMN 3: STATS PER PLAYER -->
+                            <g class="drawings">
+                                <path *ngFor="let p of drawings" [attr.d]="p.d" [attr.stroke]="p.color" stroke-width="4" fill="none" />
+                            </g>
+
+                            <g *ngFor="let el of elements" class="tactical-el" [attr.transform]="'translate('+el.x+','+el.y+')'"
+                               (mousedown)="startAction($event, el)" (touchstart)="startAction($event, el)">
+                                <circle *ngIf="el.type === 'player'" r="20" [attr.fill]="el.color" stroke="#fff" stroke-width="2" />
+                                <text *ngIf="el.type === 'player'" y="5" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">{{el.label}}</text>
+                                
+                                <circle *ngIf="el.type === 'ball'" r="8" fill="#ccff00" stroke="#000" />
+                                <path *ngIf="el.type === 'cone'" d="M 0 -10 L 12 12 L -12 12 Z" fill="#ff7711" />
+                            </g>
+                        </svg>
+                    </div>
+                </section>
+            </div>
+
+            <!-- RIGHT COLUMN: STATS (SPLIT) -->
             <aside class="col-stats animate-right">
-                <div class="stats-table">
-                    <header class="stats-header">
-                        <div class="stat-name-col">MÉTRICA</div>
-                        <div class="player-col" *ngFor="let p of players" [title]="p.name">{{ p.label }}</div>
-                    </header>
-                    <div class="stats-body">
-                        <div class="stat-row" *ngFor="let stat of statList">
-                            <div class="stat-name-col">{{ stat }}</div>
-                            <div class="player-col" *ngFor="let p of players">
-                                <div class="mini-ctrl">
-                                    <button (click)="updatePlayerStat(p.key, stat, 1)">+</button>
-                                    <span [class.active]="playerStats[p.key][stat] > 0">{{ playerStats[p.key][stat] }}</span>
-                                    <button (click)="updatePlayerStat(p.key, stat, -1)">-</button>
+                <div class="stats-dashboard">
+                    <div class="stats-group">
+                        <header class="stats-header">
+                            <div class="stat-name-col">MÉTRICA</div>
+                            <div class="player-col" *ngFor="let p of [players[0], players[1]]" [title]="p.name">{{ p.label }}</div>
+                        </header>
+                        <div class="stats-body">
+                            <div class="stat-row" *ngFor="let stat of statList">
+                                <div class="stat-name-col">{{ stat }}</div>
+                                <div class="player-col" *ngFor="let p of [players[0], players[1]]">
+                                    <div class="mini-ctrl">
+                                        <button (click)="updatePlayerStat(p.key, stat, 1)">+</button>
+                                        <span [class.active]="playerStats[p.key][stat] > 0">{{ playerStats[p.key][stat] }}</span>
+                                        <button (click)="updatePlayerStat(p.key, stat, -1)">-</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-group second">
+                        <header class="stats-header rival">
+                            <div class="stat-name-col">MÉTRICA RIVAL</div>
+                            <div class="player-col" *ngFor="let p of [players[2], players[3]]" [title]="p.name">{{ p.label }}</div>
+                        </header>
+                        <div class="stats-body">
+                            <div class="stat-row" *ngFor="let stat of statList">
+                                <div class="stat-name-col">{{ stat }}</div>
+                                <div class="player-col" *ngFor="let p of [players[2], players[3]]">
+                                    <div class="mini-ctrl">
+                                        <button (click)="updatePlayerStat(p.key, stat, 1)">+</button>
+                                        <span [class.active]="playerStats[p.key][stat] > 0">{{ playerStats[p.key][stat] }}</span>
+                                        <button (click)="updatePlayerStat(p.key, stat, -1)">-</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

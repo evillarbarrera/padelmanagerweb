@@ -17,8 +17,8 @@
                     
                     <div class="info">
                         <h1 class="fade-in" style="text-transform: capitalize;">{{ alumnoNombre || 'Cargando perfil...' }}</h1>
-                        <div class="pack-tag">
-                            <span>📦</span> {{ (packActual?.nombre_pack || packActual?.nombre) || 'Sin pack activo' }}
+                        <div class="user-meta" style="margin-top: -5px; margin-bottom: 5px;">
+                            <span class="user-handle" style="color: #666; font-weight: 500;">@{{ alumnoProfile?.usuario || alumnoProfile?.email?.split('@')[0] || 'usuario' }}</span>
                         </div>
                         
                         <div class="level-edit">
@@ -218,10 +218,15 @@
                         <div class="v-card" *ngFor="let vid of filteredVideos">
                             <div class="v-media">
                                 <video [src]="vid.video_url" controls></video>
+                                <button class="btn-delete-vid" *ngIf="userRole === 'entrenador' || userRole === 'admin'" (click)="confirmDeleteVideo(vid)" title="Eliminar Video">
+                                    🗑️
+                                </button>
                             </div>
                             <div class="v-body">
-                                <h4>{{ vid.titulo }}</h4>
-                                <span class="v-cat">{{ vid.categoria }}</span>
+                                <div class="v-meta-row">
+                                    <h4>{{ vid.titulo }}</h4>
+                                    <span class="v-cat">{{ vid.categoria }}</span>
+                                </div>
                                 <div class="v-ai-report" *ngIf="aiResults[vid.id]">
                                     <div class="ai-badge">🤖 Reporte IA</div>
                                     <p>"{{ aiResults[vid.id].FeedbackGeneral | slice:0:80 }}..."</p>
@@ -229,6 +234,14 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 🔄 LOADING OVERLAY -->
+            <div class="global-loader" *ngIf="isLoading">
+                <div class="loader-content">
+                    <div class="spinner-neon"></div>
+                    <p>Procesando...</p>
                 </div>
             </div>
 

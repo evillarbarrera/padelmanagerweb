@@ -8,13 +8,16 @@ import { environment } from '../../environments/environment';
 })
 export class EntrenamientoService {
   private apiUrl = environment.apiUrl;
-  private getHeaders(): HttpHeaders {
+  private getHeaders(isMultipart: boolean = false): HttpHeaders {
     const token = localStorage.getItem('token');
-    return new HttpHeaders({
+    const headers: any = {
       'Authorization': token ? `Bearer ${token}` : '',
-      'X-Authorization': token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json'
-    });
+      'X-Authorization': token ? `Bearer ${token}` : ''
+    };
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return new HttpHeaders(headers);
   }
 
   constructor(private http: HttpClient) { }
@@ -32,7 +35,15 @@ export class EntrenamientoService {
   }
 
   crearReserva(payload: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/disponibilidad/reservas.php`, payload, {
+    // Ensure everything is a simple primitive for JSON safety
+    const cleanPayload: any = {};
+    Object.keys(payload).forEach(key => {
+        if (payload[key] !== null && payload[key] !== undefined) {
+          cleanPayload[key] = payload[key];
+        }
+    });
+
+    return this.http.post(`${this.apiUrl}/disponibilidad/reservas.php`, cleanPayload, {
       headers: this.getHeaders()
     });
   }
