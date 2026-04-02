@@ -42,7 +42,7 @@
 }
 
 .coach-grid-main {
-    flex: 1; display: grid; grid-template-columns: 50% 50%; background: #fff; overflow: hidden;
+    flex: 1; display: grid; grid-template-columns: 40% 60%; background: #fff; overflow: hidden;
 }
 
 /* LEFT COLUMN: TACTICS & SCORE (FLUID) */
@@ -106,23 +106,23 @@
 
 .stats-header {
     position: sticky; top: 0; z-index: 10; background: #fff; padding: 12px 16px; border-bottom: 2.5px solid #f1f5f9; 
-    display: grid; grid-template-columns: 1fr repeat(2, 70px); gap: 15px; align-items: center;
-    .stat-name-col { font-size: 10px; font-weight: 950; color: #2563eb; letter-spacing: 1.5px; text-transform: uppercase; }
-    .player-col { font-size: 9px; font-weight: 950; color: #111; text-align: center; }
+    display: grid; grid-template-columns: 1fr repeat(2, 80px); gap: 15px; align-items: center;
+    .stat-name-col { font-size: 13px; font-weight: 950; color: #2563eb; letter-spacing: 1.5px; text-transform: uppercase; }
+    .player-col { font-size: 13px; font-weight: 950; color: #111; text-align: center; }
 }
 
 .stats-body { padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; height: 100%; }
 
 .stat-row {
-    flex: 1; background: #fff; border-radius: 12px; padding: 10px 16px; display: grid; grid-template-columns: 1fr repeat(2, 70px); gap: 15px; align-items: center; transition: 0.15s; border: 1.5px solid #f1f5f9;
+    flex: 1; background: #fff; border-radius: 12px; padding: 12px 16px; display: grid; grid-template-columns: 1fr repeat(2, 80px); gap: 15px; align-items: center; transition: 0.15s; border: 1.5px solid #f1f5f9;
     box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-    &:hover { border-color: #2563eb; background: #fdfdfd; transform: scale(1.01); box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
-    .stat-name-col { font-size: 11px; font-weight: 800; color: #1e293b; text-transform: uppercase; line-height: 1.1; }
+    &:hover { border-color: #2563eb; background: #fdfdfd; transform: scale(1.005); box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+    .stat-name-col { font-size: 14px; font-weight: 800; color: #1e293b; text-transform: uppercase; line-height: 1.1; }
     .player-col {
         .mini-ctrl {
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            button { border: none; background: #f1f5f9; border-radius: 6px; color: #64748b; width: 22px; height: 22px; font-size: 12px; cursor: pointer; transition: 0.2s; &:hover { background: #111; color: #fff; } }
-            span { font-size: 16px; font-weight: 950; color: #cbd5e1; min-width: 18px; text-align: center; &.active { color: #2563eb; } }
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            button { border: none; background: #f1f5f9; border-radius: 6px; color: #64748b; width: 28px; height: 28px; font-size: 14px; cursor: pointer; transition: 0.2s; &:hover { background: #111; color: #fff; } }
+            span { font-size: 22px; font-weight: 950; color: #cbd5e1; min-width: 24px; text-align: center; &.active { color: #2563eb; } }
         }
     }
 }

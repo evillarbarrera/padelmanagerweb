@@ -214,10 +214,41 @@
                         </button>
                     </div>
 
+                    <!-- 🎥 VIDEO GRID & STATES -->
                     <div class="video-grid">
-                        <div class="v-card" *ngFor="let vid of filteredVideos">
+                        
+                        <!-- 🦴 SKELETON LOADERS (While fetching) -->
+                        <ng-container *ngIf="isVideosLoading">
+                            <div class="skeleton-card" *ngFor="let i of [1,2,3]">
+                                <div class="sk-media"></div>
+                                <div class="sk-body">
+                                    <div class="sk-line title"></div>
+                                    <div class="sk-line meta"></div>
+                                </div>
+                            </div>
+                        </ng-container>
+
+                        <!-- 💎 PREMIUM EMPTY STATE -->
+                        <div class="empty-state-premium fade-in" *ngIf="!isVideosLoading && filteredVideos.length === 0">
+                            <div class="empty-illustration">🎥</div>
+                            <h3>Videoteca Vacía</h3>
+                            <p>Aún no hay clips analizados en esta categoría. Sube un nuevo video para comenzar el análisis con IA.</p>
+                            <button class="btn-action-empty" (click)="triggerVideoUpload()" *ngIf="userRole === 'entrenador'">
+                                ➕ Subir mi primer clip
+                            </button>
+                        </div>
+
+                        <!-- 🎬 VIDEO CARDS -->
+                        <div class="v-card fade-in" *ngFor="let vid of filteredVideos">
                             <div class="v-media">
-                                <video [src]="vid.video_url" controls></video>
+                                <!-- OVERLAY SI ESTA ANALIZANDO -->
+                                <div class="analysis-overlay" *ngIf="isAnalyzing[vid.id]">
+                                    <div class="spinner-neon"></div>
+                                    <span>Analizando con IA...</span>
+                                </div>
+                                
+                                <video [src]="vid.video_url" controls *ngIf="!isAnalyzing[vid.id]"></video>
+                                
                                 <button class="btn-delete-vid" *ngIf="userRole === 'entrenador' || userRole === 'admin'" (click)="confirmDeleteVideo(vid)" title="Eliminar Video">
                                     🗑️
                                 </button>
@@ -227,9 +258,15 @@
                                     <h4>{{ vid.titulo }}</h4>
                                     <span class="v-cat">{{ vid.categoria }}</span>
                                 </div>
-                                <div class="v-ai-report" *ngIf="aiResults[vid.id]">
+                                
+                                <div class="v-ai-report" *ngIf="aiResults[vid.id] && !isAnalyzing[vid.id]">
                                     <div class="ai-badge">🤖 Reporte IA</div>
                                     <p>"{{ aiResults[vid.id].FeedbackGeneral | slice:0:80 }}..."</p>
+                                </div>
+
+                                <div class="v-ai-report pending" *ngIf="isAnalyzing[vid.id]">
+                                    <div class="ai-badge" style="color: #666;">🤖 Procesando...</div>
+                                    <p>Estamos trabajando en tu análisis técnico detallado.</p>
                                 </div>
                             </div>
                         </div>

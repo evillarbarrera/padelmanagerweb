@@ -37,6 +37,7 @@ export class AlumnoClasesComponent implements OnInit {
     activeTab: string = 'roadmap';
     activeProgresoSubTab: string = 'graficos';
     isLoading: boolean = false;
+    isVideosLoading: boolean = false;
     
     // Pedagogical Data
     historialMalla: any[] = [];
@@ -138,8 +139,27 @@ export class AlumnoClasesComponent implements OnInit {
             if (id) {
                 this.alumnoId = Number(id);
                 this.loadInitialData();
+                this.restoreAnalysisState();
             }
         });
+    }
+
+    private restoreAnalysisState() {
+        const stored = localStorage.getItem(`analyzing_videos_${this.alumnoId}`);
+        if (stored) {
+            try {
+                const analyzing = JSON.parse(stored);
+                // Si el analisis fue hace mas de 2 horas, probablemente fallo o termino
+                const now = Date.now();
+                Object.keys(analyzing).forEach(vidId => {
+                    if (now - analyzing[vidId] < 7200000) {
+                        this.isAnalyzing[Number(vidId)] = true;
+                        // Simular polling si el backend no lo notifica via sockets
+                        // this.pollAnalysisStatus(Number(vidId));
+                    }
+                });
+            } catch(e) {}
+        }
     }
 
     loadInitialData() {
@@ -308,14 +328,22 @@ export class AlumnoClasesComponent implements OnInit {
 
     loadVideos() {
         if (!this.alumnoId || !this.userId) return;
+        this.isVideosLoading = true;
         this.alumnoService.getVideos(this.alumnoId, this.userId).subscribe({
             next: (vids) => {
-                const processed = (vids || []).filter((v:any) => v.entrenador_id && Number(v.entrenador_id) === this.userId).map((v:any) => {
+                const processed = (vids || []).filter((v:any) => v.entrenador_id && Number(v.entrenador_id) === this.userId || this.userRole === 'alumno').map((v:any) => {
                     if (v.video_url && !v.video_url.startsWith('http')) {
                         v.video_url = `https://api.padelmanager.cl/${v.video_url.startsWith('/') ? v.video_url.substring(1) : v.video_url}`;
                     }
                     if (v.ai_report) {
-                        try { this.aiResults[v.id] = typeof v.ai_report === 'string' ? JSON.parse(v.ai_report) : v.ai_report; } catch(e){}
+                        try { 
+                            this.aiResults[v.id] = typeof v.ai_report === 'string' ? JSON.parse(v.ai_report) : v.ai_report; 
+                            // Si tiene reporte, ya no se esta analizando
+                            if (this.isAnalyzing[v.id]) {
+                                delete this.isAnalyzing[v.id];
+                                this.saveAnalysisState();
+                            }
+                        } catch(e){}
                     }
                     return { ...v, categoria: v.categoria || 'General' };
                 });
@@ -331,12 +359,27 @@ export class AlumnoClasesComponent implements OnInit {
                 });
                 this.availableVideoCategories = Array.from(cats);
                 
-                // If current filter is not in new cats, set to first cat
                 if (this.availableVideoCategories.length > 0 && !this.availableVideoCategories.includes(this.activeVideoCategory)) {
                     this.activeVideoCategory = this.availableVideoCategories[0];
                 }
+                this.isVideosLoading = false;
+                this.cdr.detectChanges();
+            },
+            error: () => {
+                this.isVideosLoading = false;
+                this.cdr.detectChanges();
             }
         });
+    }
+
+    private saveAnalysisState() {
+        const analyzing: any = {};
+        Object.keys(this.isAnalyzing).forEach(id => {
+            if (this.isAnalyzing[Number(id)]) {
+                analyzing[id] = Date.now();
+            }
+        });
+        localStorage.setItem(`analyzing_videos_${this.alumnoId}`, JSON.stringify(analyzing));
     }
 
     get filteredVideos() {
