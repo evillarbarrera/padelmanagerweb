@@ -11,7 +11,8 @@ export class AlumnoService {
   private getHeaders(isMultipart: boolean = false): HttpHeaders {
     const token = localStorage.getItem('token');
     const headers: any = {
-      'Authorization': token ? `Bearer ${token}` : ''
+      'Authorization': token ? `Bearer ${token}` : '',
+      'X-Authorization': token ? `Bearer ${token}` : ''
     };
     if (!isMultipart) {
       headers['Content-Type'] = 'application/json';
@@ -22,14 +23,16 @@ export class AlumnoService {
   constructor(private http: HttpClient) { }
 
   crearAlumno(data: { nombre: string, email: string, entrenador_id: number }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/alumno/create_alumno.php`, data, {
+    const token = localStorage.getItem('token');
+    return this.http.post(`${this.apiUrl}/alumno/create_alumno.php?token=${token}`, data, {
       headers: this.getHeaders()
     });
   }
 
   getAlumnos(entrenadorId: number): Observable<any[]> {
+    const token = localStorage.getItem('token');
     return this.http.get<any[]>(
-      `${this.apiUrl}/alumno/get_alumno.php?entrenador_id=${entrenadorId}`,
+      `${this.apiUrl}/alumno/get_alumno.php?entrenador_id=${entrenadorId}&token=${token}`,
       { headers: this.getHeaders() }
     );
   }

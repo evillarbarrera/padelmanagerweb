@@ -431,6 +431,30 @@
                 letter-spacing: -1px;
             }
 
+            .p-price-usd {
+                margin-bottom: 20px;
+                .usd-amount {
+                    font-size: 28px;
+                    font-weight: 950;
+                    color: #059669; // Verde para USD
+                    letter-spacing: -1.5px;
+                    line-height: 1;
+                }
+                .clp-ref {
+                    font-size: 11px;
+                    color: #9ca3af;
+                    font-weight: 700;
+                    margin-top: 4px;
+                    text-transform: uppercase;
+                }
+            }
+
+            #paypal-button-container {
+                margin-bottom: 12px;
+                width: 100%;
+                z-index: 10;
+            }
+
             .p-features {
                 list-style: none;
                 padding: 0;

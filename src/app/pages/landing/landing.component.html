@@ -266,81 +266,34 @@
       </div>
 
       <div class="pricing-grid">
-        <!-- PLAN EMPRENDEDOR -->
-        <div class="p-card reveal slide-up" style="--d: 0.1s">
-          <div class="p-header">
-            <span class="p-name">EMPRENDEDOR</span>
-            <div class="p-price">
-              <span class="currency">$</span>
-              <span class="amount">0</span>
-              <span class="period">/mes</span>
-            </div>
+        <div *ngFor="let plan of plans; let i = index" 
+             class="p-card reveal slide-up" 
+             [class.featured]="plan.featured"
+             [style.--d]="(0.1 * (i+1)) + 's'">
+          
+          <div class="badge-best" *ngIf="plan.badge" [style.background]="plan.name === 'PRO 40' ? '#fff' : ''" [style.color]="plan.name === 'PRO 40' ? '#111' : ''">
+            {{ plan.badge }}
           </div>
-          <div class="p-features">
-            <div class="f-item"><span>✓</span> IA Analysis Free</div>
-            <div class="f-item"><span>✓</span> Comisión Venta <b>3.5%</b></div>
-            <div class="f-item promo">💎 <b>3 Meses: 0% Comisión</b></div>
-          </div>
-          <button class="btn-p-card" (click)="irALogin()">EMPEZAR GRATIS</button>
-        </div>
 
-        <!-- PLAN INICIAL 20 -->
-        <div class="p-card featured reveal slide-up" style="--d: 0.2s">
-          <div class="badge-best">PARA EMPEZAR</div>
           <div class="p-header">
-            <span class="p-name">INICIAL 20</span>
+            <span class="p-name">{{ plan.name }}</span>
             <div class="p-price">
-              <span class="currency">$</span>
-              <span class="amount">19.990</span>
-              <span class="period">/mes</span>
+              <span class="currency">{{ isInternational ? '$' : '$' }}</span>
+              <span class="amount">{{ isInternational ? (plan.usd | number:'1.0-0') : (plan.clp | number:'1.0-0':'es') }}</span>
+              <span class="period">{{ plan.period }}</span>
+              <div class="currency-tag" *ngIf="plan.clp > 0">{{ isInternational ? 'USD' : 'CLP' }}</div>
             </div>
           </div>
+          
           <div class="p-features">
-            <div class="f-item"><span>✓</span> Hasta 20 Alumnos</div>
-            <div class="f-item"><span>✓</span> IA Premium</div>
-            <div class="f-item"><span>✓</span> <b>0%</b> Comisión Venta</div>
-            <div class="f-item promo">💎 <b>90 Días Gratis</b></div>
+            <div class="f-item"><span>✓</span> {{ plan.sessions }}</div>
+            <div class="f-item"><span>✓</span> {{ plan.fee }}</div>
+            <div class="f-item promo">💎 <b>{{ plan.promo }}</b></div>
           </div>
-          <button class="btn-p-card active" (click)="irALogin()">PRUEBA GRATUITA</button>
-        </div>
-
-        <!-- PLAN PRO 40 -->
-        <div class="p-card featured reveal slide-up" style="--d: 0.3s">
-          <div class="badge-best" style="background: #fff; color: #111;">MÁS POPULAR</div>
-          <div class="p-header">
-            <span class="p-name">PRO 40</span>
-            <div class="p-price">
-              <span class="currency">$</span>
-              <span class="amount">29.990</span>
-              <span class="period">/mes</span>
-            </div>
-          </div>
-          <div class="p-features">
-            <div class="f-item"><span>✓</span> Hasta 40 Alumnos</div>
-            <div class="f-item"><span>✓</span> IA Premium Plus</div>
-            <div class="f-item"><span>✓</span> <b>0%</b> Comisión Venta</div>
-            <div class="f-item promo">💎 <b>90 Días Gratis</b></div>
-          </div>
-          <button class="btn-p-card active" (click)="irALogin()">PRUEBA GRATUITA</button>
-        </div>
-
-        <!-- PLAN ELITE ILIMITADO -->
-        <div class="p-card reveal slide-up" style="--d: 0.4s">
-          <div class="p-header">
-            <span class="p-name">ELITE ILIMITADO</span>
-            <div class="p-price">
-              <span class="currency">$</span>
-              <span class="amount">49.990</span>
-              <span class="period">/mes</span>
-            </div>
-          </div>
-          <div class="p-features">
-            <div class="f-item"><span>✓</span> Alumnos Ilimitados</div>
-            <div class="f-item"><span>✓</span> Marca Blanca</div>
-            <div class="f-item"><span>✓</span> Soporte VIP 24/7</div>
-            <div class="f-item promo">💎 <b>90 Días Gratis</b></div>
-          </div>
-          <button class="btn-p-card" (click)="irALogin()">COMIENZA AHORA</button>
+          
+          <button class="btn-p-card" [class.active]="plan.featured" (click)="irALogin()">
+            {{ plan.btnText }}
+          </button>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -12,7 +12,7 @@ Chart.register(...registerables);
 @Component({
     selector: 'app-admin-dashboard',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, NgIf, NgFor],
     templateUrl: './admin-dashboard.component.html',
     styleUrls: ['./admin-dashboard.component.scss']
 })
@@ -20,18 +20,25 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     userId: number | null = null;
     adminNombre = 'Administrador';
     adminFoto: string | null = null;
+    activeTab: 'resumen' | 'entrenadores' | 'analiticas' | 'config' = 'resumen';
+    isSidebarOpen = false;
 
     stats: any = null;
     isLoading = true;
-    activeTab: string = 'resumen';
     
     // New Analytics Properties
     socialStats: any = null;
     analyticsData: any[] = [];
     growthStats: any = null;
 
-    switchTab(tab: string) {
+    toggleSidebar() {
+        this.isSidebarOpen = !this.isSidebarOpen;
+    }
+
+    switchTab(tab: any) {
         this.activeTab = tab;
+        this.isSidebarOpen = false; // Cierra menú en móvil al navegar
+        
         if (tab === 'resumen' || tab === 'analiticas') {
             setTimeout(() => this.renderCharts(), 200);
         }
@@ -43,6 +50,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     // Entrenadores
     entrenadores: any[] = [];
     loadingEntrenadores = false;
+    selectedEntrenador: any = null;
+    entrenadorStats: any = null;
+    loadingStats = false;
 
     chartData: any = null;
     revenueChart: any;
@@ -75,6 +85,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         });
     }
 
+    isBlocked = false;
+    subMessage = '';
+
     constructor(private http: HttpClient, private router: Router) { }
 
     ngOnInit(): void {
@@ -88,7 +101,30 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
             }
         }
 
+        this.checkSubStatus();
         this.loadStats();
+    }
+
+    checkSubStatus() {
+        const coachId = localStorage.getItem('userId');
+        const token = localStorage.getItem('token');
+        const authValue = token ? `Bearer ${token}` : '';
+        
+        fetch(`${environment.apiUrl}/subscriptions/get_subscription_status.php?coach_id=${coachId}`, {
+            headers: { 'Authorization': authValue, 'X-Authorization': authValue }
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status === 'blocked') {
+                this.isBlocked = true;
+                this.subMessage = res.message;
+            }
+        })
+        .catch(err => console.error('Error sub check:', err));
+    }
+
+    goToBilling() {
+        this.router.navigate(['/mi-plan']);
     }
 
     ngAfterViewInit() {
@@ -323,6 +359,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                             e.foto_perfil = `${this.apiUrl.replace('/api_training', '')}/${e.foto_perfil}`;
                         }
                     });
+                    
+                    // Auto-select first trainer if none selected
+                    if (this.entrenadores.length > 0 && !this.selectedEntrenador) {
+                        this.verDetalle(this.entrenadores[0]);
+                    }
                 } else {
                     this.entrenadores = [];
                 }
@@ -330,6 +371,25 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
             error: (err) => {
                 this.loadingEntrenadores = false;
                 console.error('Error loading entrenadores', err);
+            }
+        });
+    }
+
+    verDetalle(e: any) {
+        this.selectedEntrenador = e;
+        this.loadingStats = true;
+        this.entrenadorStats = null;
+        
+        this.http.get<any>(`${this.apiUrl}/admin/get_entrenador_stats.php?entrenador_id=${e.id}`, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                this.loadingStats = false;
+                if (res.success) {
+                    this.entrenadorStats = res.data;
+                }
+            },
+            error: (err) => {
+                this.loadingStats = false;
+                console.error('Error loading trainer stats', err);
             }
         });
     }

@@ -144,4 +144,10 @@ export class MysqlService {
   getMallaById(id: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/mallas/get_mallas.php?id=${id}`, { headers: this.getHeaders() });
   }
+
+  postApi(endpoint: string, data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${endpoint}`, data, {
+      headers: this.getHeaders()
+    });
+  }
 }

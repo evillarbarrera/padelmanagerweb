@@ -5,13 +5,15 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { PacksService } from '../../services/packs.service';
 import { AlumnoService } from '../../services/alumno.service';
+import { CurrencyService } from '../../services/currency.service';
 
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-jugador-packs',
     standalone: true,
-    imports: [CommonModule, SidebarComponent],
+    imports: [CommonModule, SidebarComponent, FormsModule],
     templateUrl: './jugador-packs.component.html',
     styleUrls: ['./jugador-packs.component.scss']
 })
@@ -22,16 +24,22 @@ export class JugadorPacksComponent implements OnInit {
     selectedEntrenador: number | null = null;
     userId: number | null = null;
 
-    // User Data matches other components
+    // User Data
     jugadorNombre: string = 'Jugador';
     jugadorFoto: string | null = null;
 
     // Location Filter
-    useLocation = true; // Enabled by default as requested
+    useLocation = true;
     userLat: number | null = null;
     userLng: number | null = null;
-    searchRadius = 50; // Default 50km
+    searchRadius = 50;
     isLoadingLocation = false;
+
+    // Currency & PayPal
+    isInternational = false;
+    usdPrice: number | null = null;
+    selectedPackForPaypal: any = null;
+    paypalLoaded = false;
 
     // View State
     viewMode: 'trainers' | 'packs' = 'trainers';
@@ -48,6 +56,7 @@ export class JugadorPacksComponent implements OnInit {
         private mysqlService: MysqlService,
         private packsService: PacksService,
         private alumnoService: AlumnoService,
+        private currencyService: CurrencyService,
         private router: Router,
         private route: ActivatedRoute,
         private popupService: PopupService
@@ -60,18 +69,36 @@ export class JugadorPacksComponent implements OnInit {
             return;
         }
         this.loadUserProfile();
-        this.getCurrentLocation(); // Auto-request location
+        this.detectCurrency();
+        this.getCurrentLocation();
         this.checkPaymentStatus();
         this.calculateNextSaturday();
+    }
+
+    detectCurrency(): void {
+        this.currencyService.detectLocation().subscribe(country => {
+            this.isInternational = country !== 'CL';
+            if (this.isInternational) {
+                this.loadPaypalScript();
+            }
+        });
+    }
+
+    loadPaypalScript(): void {
+        if (this.paypalLoaded) return;
+        const script = document.createElement('script');
+        script.src = 'https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD';
+        script.onload = () => {
+            this.paypalLoaded = true;
+        };
+        document.body.appendChild(script);
     }
 
     calculateNextSaturday(): void {
         const today = new Date();
         const nextSat = new Date();
-        // 6 is Saturday. If today is Sat, it adds 7 days to get NEXT sat.
         const daysToSaturday = (6 - today.getDay() + 7) % 7 || 7;
         nextSat.setDate(today.getDate() + daysToSaturday);
-
         const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
         this.nextSaturday = nextSat.toLocaleDateString('es-ES', options);
     }
@@ -81,11 +108,7 @@ export class JugadorPacksComponent implements OnInit {
             const status = params['status'];
             if (status === 'success') {
                 this.popupService.success('¡Pago Exitoso!', 'El pack ha sido activado en tu cuenta.');
-                // Clean URL
-                this.router.navigate([], {
-                    queryParams: { 'status': null },
-                    queryParamsHandling: 'merge'
-                });
+                this.router.navigate([], { queryParams: { 'status': null }, queryParamsHandling: 'merge' });
             } else if (status === 'error_db' || status === 'error_token') {
                 this.popupService.error('Error', 'Hubo un problema confirmando tu pago.');
             } else if (status === 'cancelled') {
@@ -114,30 +137,27 @@ export class JugadorPacksComponent implements OnInit {
         } else {
             this.userLat = null;
             this.userLng = null;
-            this.loadPacks(); // Reload all
+            this.loadPacks();
         }
     }
 
     getCurrentLocation(): void {
         if (!navigator.geolocation) {
-            this.popupService.error('Error', 'Geolocalización no soportada en este navegador');
+            this.popupService.error('Error', 'Geolocalización no soportada');
             this.useLocation = false;
             return;
         }
-
         this.isLoadingLocation = true;
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 this.userLat = position.coords.latitude;
                 this.userLng = position.coords.longitude;
                 this.isLoadingLocation = false;
-                this.loadPacks(); // Reload with location
+                this.loadPacks();
             },
             (error) => {
-                console.error('Error getting location', error);
-                this.popupService.error('Error', 'No se pudo obtener tu ubicación. Verifica los permisos.');
                 this.isLoadingLocation = false;
-                this.useLocation = false;
+                this.loadPacks();
             }
         );
     }
@@ -145,7 +165,7 @@ export class JugadorPacksComponent implements OnInit {
     onRadiusChange(event: any): void {
         this.searchRadius = Number(event.target.value);
         if (this.useLocation && this.userLat && this.userLng) {
-            this.loadPacks(); // Reload with new radius
+            this.loadPacks();
         }
     }
 
@@ -158,11 +178,9 @@ export class JugadorPacksComponent implements OnInit {
             next: (data: any[]) => {
                 this.packs = data || [];
                 this.cargarEntrenadores();
-                this.filtrarPacks(); // Re-apply other filters if any
+                this.filtrarPacks();
             },
-            error: (err: any) => {
-                console.error('Error al cargar packs', err);
-            }
+            error: (err: any) => console.error('Error al cargar packs', err)
         });
     }
 
@@ -180,7 +198,6 @@ export class JugadorPacksComponent implements OnInit {
                 });
             }
         });
-        // Sort by distance if available
         this.entrenadores = Array.from(map.values()).sort((a, b) => (a.distancia || 999) - (b.distancia || 999));
     }
 
@@ -199,26 +216,14 @@ export class JugadorPacksComponent implements OnInit {
 
     filtrarPacks(): void {
         let filtered = [...this.packs];
-
         if (this.selectedEntrenador) {
             filtered = filtered.filter(p => p.entrenador_id == this.selectedEntrenador);
         }
-
         this.packsFiltrados = filtered;
-
-        // Sort by price (Lower to Higher)
         this.packsFiltrados.sort((a, b) => Number(a.precio) - Number(b.precio));
-
-        // Categorize with more robust checks (handles strings and nulls)
-        this.packsIndividual = this.packsFiltrados.filter(p =>
-            p.tipo === 'individual' && (Number(p.cantidad_personas) <= 1 || !p.cantidad_personas)
-        );
-        this.packsSmallGroups = this.packsFiltrados.filter(p =>
-            p.tipo === 'individual' && Number(p.cantidad_personas) > 1
-        );
-        this.packsGrupales = this.packsFiltrados.filter(p =>
-            p.tipo === 'grupal'
-        );
+        this.packsIndividual = this.packsFiltrados.filter(p => p.tipo === 'individual' && (Number(p.cantidad_personas) <= 1 || !p.cantidad_personas));
+        this.packsSmallGroups = this.packsFiltrados.filter(p => p.tipo === 'individual' && Number(p.cantidad_personas) > 1);
+        this.packsGrupales = this.packsFiltrados.filter(p => p.tipo === 'grupal');
     }
 
     onEntrenadorChange(event: any): void {
@@ -228,19 +233,29 @@ export class JugadorPacksComponent implements OnInit {
     }
 
     async comprarPack(pack: any) {
-        // Redirección si hay créditos disponibles
+        if (this.isInternational) {
+            this.selectedPackForPaypal = pack;
+            this.usdPrice = this.currencyService.getUsdAmount(pack.precio);
+            
+            this.popupService.confirm(
+                'Pago Internacional',
+                `El monto es $${pack.precio} CLP. Para pagos internacionales se convertirá a $${this.usdPrice} USD. ¿Proceder con PayPal?`
+            ).then(confirmed => {
+                if (confirmed) {
+                    this.renderPaypalButton(pack);
+                }
+            });
+            return;
+        }
+
         this.mysqlService.getHomeStats(Number(this.userId)).subscribe({
             next: (res: any) => {
                 const disponibles = res.estadisticas?.packs?.disponibles || 0;
                 if (disponibles > 0) {
-                    this.popupService.warning('Acción restringida', 'Ya tienes créditos disponibles. Debes usarlos antes de adquirir un nuevo pack.');
+                    this.popupService.warning('Acción restringida', 'Ya tienes créditos disponibles.');
                     return;
                 }
-
-                this.popupService.confirm(
-                    '¿Confirmar compra?',
-                    `Vas a adquirir el pack "${pack.nombre}" por $${pack.precio}.`
-                ).then((confirmed) => {
+                this.popupService.confirm('¿Confirmar compra?', `Vas a adquirir "${pack.nombre}" por $${pack.precio}.`).then((confirmed) => {
                     if (confirmed) {
                         if (pack.transbank_activo == 1 || pack.transbank_activo == '1') {
                             this.iniciarPagoTransbank(pack);
@@ -253,73 +268,81 @@ export class JugadorPacksComponent implements OnInit {
         });
     }
 
+    renderPaypalButton(pack: any): void {
+        setTimeout(() => {
+            const container = document.getElementById('paypal-button-container');
+            if (container) {
+                container.innerHTML = '';
+                (window as any).paypal.Buttons({
+                    createOrder: (data: any, actions: any) => {
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: { value: this.currencyService.getUsdAmount(pack.precio).toString() },
+                                description: `Pack: ${pack.nombre}`
+                            }]
+                        });
+                    },
+                    onApprove: (data: any, actions: any) => {
+                        return actions.order.capture().then((details: any) => {
+                            this.verifyPaypalPayment(data.orderID, pack);
+                        });
+                    }
+                }).render('#paypal-button-container');
+            }
+        }, 100);
+    }
+
+    verifyPaypalPayment(orderID: string, pack: any): void {
+        this.popupService.info('Verificando pago...', 'No cierres esta ventana.');
+        this.mysqlService.postApi('pagos/paypal_capture.php', {
+            orderID: orderID,
+            pack_id: pack.id,
+            jugador_id: this.userId,
+            amount_usd: this.currencyService.getUsdAmount(pack.precio)
+        }).subscribe({
+            next: (res: any) => {
+                if (res.success) {
+                    this.popupService.success('¡Pago Exitoso!', 'Tu pack ha sido activado.');
+                    this.router.navigate(['/alumno-clases']);
+                } else {
+                    this.popupService.error('Error', res.error || 'No se pudo validar el pago.');
+                }
+            },
+            error: () => this.popupService.error('Error', 'Error de conexión.')
+        });
+    }
+
     async iniciarPagoTransbank(pack: any) {
-        this.isLoadingLocation = true; // Use the existing loading flag or add one
-        const packId = Number(pack.id || pack.pack_id || pack.id_pack);
-
-        const paymentPayload = {
-            pack_id: packId,
-            jugador_id: Number(this.userId),
-            amount: pack.precio,
-            origin: window.location.origin + window.location.pathname
-        };
-
+        this.isLoadingLocation = true;
+        const packId = Number(pack.id || pack.pack_id);
+        const paymentPayload = { pack_id: packId, jugador_id: Number(this.userId), amount: pack.precio, origin: window.location.origin + window.location.pathname };
         this.alumnoService.initTransaction(paymentPayload).subscribe({
             next: (payRes: any) => {
                 this.isLoadingLocation = false;
                 if (payRes.token && payRes.url) {
-                    const separator = payRes.url.includes('?') ? '&' : '?';
-                    window.location.href = `${payRes.url}${separator}token_ws=${payRes.token}`;
+                    window.location.href = `${payRes.url}${payRes.url.includes('?') ? '&' : '?'}token_ws=${payRes.token}`;
                 } else {
-
                     this.popupService.error('Error', 'No se pudo generar el enlace de pago.');
                 }
             },
             error: (err) => {
                 this.isLoadingLocation = false;
-                console.error('Error init transaction:', err);
-                this.popupService.error('Error', 'Error al conectar con la pasarela de pagos.');
+                this.popupService.error('Error', 'Error al conectar con la pasarela.');
             }
         });
     }
 
     procesarCompraManual(pack: any): void {
         if (!this.userId) return;
-
         this.popupService.info('Procesando...', 'Estamos activando tu pack.');
-
-        const payload = {
-            pack_id: pack.id,
-            jugador_id: this.userId
-        };
-
+        const payload = { pack_id: pack.id, jugador_id: this.userId };
         this.alumnoService.insertPack(payload).subscribe({
             next: (res: any) => {
-                this.popupService.success('¡Pack Activado!', `El pack "${pack.nombre}" ya está disponible en tu cuenta.`);
+                this.popupService.success('¡Pack Activado!', `El pack "${pack.nombre}" ya está disponible.`);
                 this.router.navigate(['/mis-packs-activos']);
             },
-            error: (err) => {
-                console.error('Error al activar pack:', err);
-                this.popupService.error('Error', 'No se pudo activar el pack. Inténtalo más tarde.');
-            }
+            error: (err) => this.popupService.error('Error', 'No se pudo activar el pack.')
         });
-    }
-
-
-    irAInicio(): void {
-        this.router.navigate(['/jugador-home']);
-    }
-
-    irACalendario(): void {
-        this.router.navigate(['/jugador-calendario']);
-    }
-
-    irAReservas(): void {
-        this.router.navigate(['/jugador-reservas']);
-    }
-
-    irAPerfil(): void {
-        this.router.navigate(['/perfil']);
     }
 
     logout(): void {

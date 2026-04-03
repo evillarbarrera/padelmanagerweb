@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { AuthService } from '../../services/auth.service';
 import { EntrenamientoService } from '../../services/entrenamientos.service';
+import { CurrencyService } from '../../services/currency.service';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -21,6 +22,59 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   userName = '';
   userId: number | null = null;
   isLoading = true;
+
+  // Currency Detection
+  isInternational = false;
+  currencySymbol = '$';
+  currencyCode = 'CLP';
+
+  // Plans Data
+  plans = [
+    { 
+        name: 'EMPRENDEDOR', 
+        clp: 0, 
+        usd: 0, 
+        period: '/mes', 
+        sessions: 'IA Analysis Free', 
+        fee: 'Comisión Venta 3.5%', 
+        promo: '3 Meses: 0% Comisión',
+        btnText: 'EMPEZAR GRATIS'
+    },
+    { 
+        name: 'INICIAL 20', 
+        clp: 19990, 
+        usd: 21, 
+        period: '/mes', 
+        sessions: 'Hasta 20 Alumnos', 
+        fee: 'IA Premium', 
+        promo: '90 Días Gratis', 
+        featured: true, 
+        badge: 'PARA EMPEZAR',
+        btnText: 'PRUEBA GRATUITA'
+    },
+    { 
+        name: 'PRO 40', 
+        clp: 29990, 
+        usd: 32, 
+        period: '/mes', 
+        sessions: 'Hasta 40 Alumnos', 
+        fee: 'IA Premium Plus', 
+        promo: '90 Días Gratis', 
+        featured: true, 
+        badge: 'MÁS POPULAR',
+        btnText: 'PRUEBA GRATUITA'
+    },
+    { 
+        name: 'ELITE ILIMITADO', 
+        clp: 49990, 
+        usd: 53, 
+        period: '/mes', 
+        sessions: 'Alumnos Ilimitados', 
+        fee: 'Marca Blanca', 
+        promo: '90 Días Gratis',
+        btnText: 'COMIENZA AHORA'
+    }
+  ];
 
   // Mock data for trainers
   trainers = [
@@ -52,7 +106,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     proxima_clase: null as any
   };
 
-  // Datos para entrenador
   // Slider logic
   currentSlide = 0;
   slides = [
@@ -92,10 +145,12 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private mysqlService: MysqlService,
     private authService: AuthService,
-    private entrenamientoService: EntrenamientoService
+    private entrenamientoService: EntrenamientoService,
+    private currencyService: CurrencyService
   ) { }
 
   ngOnInit(): void {
+    this.detectCurrency();
     this.userId = Number(localStorage.getItem('userId'));
     const userRole = localStorage.getItem('userRole');
 
@@ -105,18 +160,17 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Redirect logic if already authenticated
-    const role = (userRole as string).toLowerCase();
-    if (role.includes('administrador') || role.includes('admin')) {
-      // Keep on landing or redirect? For now, if they are here, we show the authenticated version or redirect
-      // The HTML has a [class.not-authenticated]="!isAuthenticated"
-      // But the logic below was redirecting. I'll comment out the redirect for now so we can see the landing.
-      // this.router.navigate(['/admin-club']);
-    }
-
     this.isAuthenticated = true;
     this.userRole = userRole as any;
     this.cargarDatos();
+  }
+
+  detectCurrency(): void {
+    this.currencyService.detectLocation().subscribe((country: string) => {
+      this.isInternational = country !== 'CL';
+      this.currencySymbol = this.isInternational ? 'USD $' : '$';
+      this.currencyCode = this.isInternational ? 'USD' : 'CLP';
+    });
   }
 
   ngAfterViewInit(): void {
@@ -145,7 +199,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   setSlide(index: number): void {
     this.currentSlide = index;
-    // Reset interval
     if (this.slideInterval) {
       clearInterval(this.slideInterval);
       this.startSlider();
@@ -170,7 +223,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   initLandingCharts(): void {
-    // Interactive Radar Chart for Landing
     const radarCtx = document.getElementById('landingRadarChart') as HTMLCanvasElement;
     if (radarCtx) {
       new Chart(radarCtx, {
@@ -190,9 +242,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
-          layout: {
-            padding: window.innerWidth < 768 ? 25 : 10
-          },
           scales: {
             r: {
               suggestedMin: 0,
@@ -212,7 +261,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
-    // Line Chart for Landing
     const lineCtx = document.getElementById('landingLineChart') as HTMLCanvasElement;
     if (lineCtx) {
       new Chart(lineCtx, {
@@ -233,14 +281,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
-          layout: {
-            padding: {
-              left: 10,
-              right: 15,
-              top: 0,
-              bottom: 0
-            }
-          },
           scales: {
             y: { display: false },
             x: {
@@ -321,7 +361,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   irAHome(): void {
     const role = (this.userRole as string)?.toLowerCase() || '';
     if (role.includes('administrador') || role.includes('admin')) {
-      this.router.navigate(['/admin-club']);
+      this.router.navigate(['/admin-dashboard']);
     } else if (role.includes('entrenador')) {
       this.router.navigate(['/entrenador-home']);
     } else {
@@ -350,10 +390,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('currentUser');
+    localStorage.clear();
     this.isAuthenticated = false;
     this.router.navigate(['/login']);
   }

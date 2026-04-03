@@ -39,16 +39,16 @@
             <div class="plan-type">{{ p.type === 'commission' ? 'Variable' : 'Tarifa Fija Mensual' }}</div>
             <h3>{{ p.name }}</h3>
             <div class="price">
-              <span class="amount">${{ p.price_clp | number:'1.0-0' }}</span>
+              <span class="amount">{{ isInternational ? ('USD $' + currencyService.getUsdAmount(p.price_clp)) : ('$' + (p.price_clp | number:'1.0-0')) }}</span>
               <span class="period">/ mes</span>
             </div>
             <p class="desc">{{ p.description }}</p>
             <div class="plan-features">
-                <div class="feat">3 Meses Gratis ($0 CLP)</div>
-                <div class="feat" *ngIf="p.type === 'commission'">3.5% comisión por venta (Facturada mensualmente)</div>
+                <div class="feat">3 Meses Gratis ({{ isInternational ? 'USD $0' : '$0 CLP' }})</div>
+                <div class="feat" *ngIf="p.type === 'commission'">3.5% comisión por venta (Consolidada)</div>
                 <div class="feat" *ngIf="p.type !== 'commission'">0% comisión por recaudación</div>
             </div>
-            <button class="btn-save btn-glow mt-4" (click)="cambiarPlan(p.id)">Empieza Gratis ahora</button>
+            <button class="btn-save btn-glow mt-4" (click)="cambiarPlan(p.id)">{{ isInternational ? 'Empieza Gratis en USD' : 'Empieza Gratis ahora' }}</button>
           </div>
         </div>
       </section>
@@ -61,15 +61,15 @@
             <div class="stat-widget card-pm">
                 <div class="widget-icon" style="color: #ffb400;">📈</div>
                 <div class="widget-data">
-                    <div class="widget-val">${{ sub.pending_commission | number:'1.0-0' }}</div>
+                    <div class="widget-val">{{ isInternational ? ('USD $' + currencyService.getUsdAmount(sub.pending_commission)) : ('$' + (sub.pending_commission | number:'1.0-0')) }}</div>
                     <div class="widget-label">Comisión Mes (Por Cobrar)</div>
                 </div>
             </div>
             <div class="stat-widget card-pm">
                 <div class="widget-icon">💎</div>
                 <div class="widget-data">
-                    <div class="widget-val">${{ sub.price_clp | number:'1.0-0' }}</div>
-                    <div class="widget-label">Costo Plan</div>
+                    <div class="widget-val">{{ isInternational ? ('USD $' + currencyService.getUsdAmount(sub.price_clp)) : ('$' + (sub.price_clp | number:'1.0-0')) }}</div>
+                    <div class="widget-label">Costo Plan Mensual</div>
                 </div>
             </div>
             <div class="stat-widget card-pm">
@@ -129,18 +129,29 @@
           <!-- Column 2: Payment & History -->
           <div class="billing-col">
             <div class="billing-card payment-card card-pm">
-                <span class="card-label">Tarjeta para Pago de Comisiones</span>
+                <span class="card-label">{{ isInternational ? 'Método de Pago Internacional' : 'Tarjeta para Pago de Comisiones' }}</span>
                 <div class="payment-method-box">
-                  <div class="card-brand"><i class="fab fa-cc-visa"></i></div>
+                  <div class="card-brand">
+                    <i class="fab fa-cc-visa" *ngIf="!isInternational"></i>
+                    <i class="fab fa-paypal" *ngIf="isInternational" style="color: #0070ba;"></i>
+                  </div>
                   <div class="card-info">
-                    <b>Visa para Facturación Interna</b>
+                    <b>{{ isInternational ? 'Suscripción vía PayPal' : 'Visa para Facturación Interna' }}</b>
                     <span *ngIf="sub.card_last_four">Finalizada en **** {{ sub.card_last_four }}</span>
-                    <span *ngIf="!sub.card_last_four" style="color: #ff4d4d; font-weight: 700;">Sin tarjeta registrada</span>
+                    <span *ngIf="!sub.card_last_four" style="color: #ff4d4d; font-weight: 700;">{{ isInternational ? 'Requiere vinculación PayPal' : 'Sin tarjeta registrada' }}</span>
                   </div>
                 </div>
-                <button class="btn-save btn-glow full-width mt-4" (click)="cambiarTarjeta()">
-                   REGISTRAR TARJETA SEGURA
+
+                <!-- Botón Mercado Pago (Solo Chile) -->
+                <button class="btn-save btn-glow full-width mt-4" (click)="cambiarTarjeta()" *ngIf="!isInternational">
+                   REGISTRAR TARJETA SEGURA 🇨🇱
                 </button>
+
+                <!-- Botón PayPal (Solo Internacional) -->
+                <div id="paypal-subscription-container" *ngIf="isInternational" class="mt-4">
+                  <!-- El SDK de PayPal renderizará el botón aquí -->
+                   <div id="paypal-button-container"></div>
+                </div>
             </div>
 
             <section class="history-section card-pm">

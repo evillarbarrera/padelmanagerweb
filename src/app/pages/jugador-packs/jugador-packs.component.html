@@ -152,18 +152,28 @@
                         {{ pack.tipo === 'grupal' ? 'GRUPAL' : (pack.cantidad_personas > 1 ? 'MULTI' : 'PERSONAL') }}
                     </div>
                     <h4 class="p-title">{{ pack.nombre }}</h4>
-                    <div class="p-price">${{ pack.precio | number:'1.0-0':'es' }}</div>
+                    
+                    <div class="p-price" *ngIf="!isInternational">
+                        ${{ pack.precio | number:'1.0-0':'es' }} <small>CLP</small>
+                    </div>
+
+                    <div class="p-price-usd" *ngIf="isInternational">
+                        <div class="usd-amount">${{ usdPrice }} <small>USD</small></div>
+                        <div class="clp-ref">Aprox. ${{ pack.precio | number:'1.0-0':'es' }} CLP</div>
+                    </div>
+
                     <ul class="p-features">
                         <li><strong>{{ pack.sesiones_totales }}</strong> clases</li>
                         <li>Duración: <strong>{{ pack.duracion_sesion_min }}min</strong></li>
-                        <li *ngIf="pack.cantidad_personas > 1">Para <strong>{{ pack.cantidad_personas }}</strong>
-                            personas</li>
-                        <li *ngIf="pack.rango_horario_inicio">Horario: <strong>{{ pack.rango_horario_inicio | slice:0:5
-                                }} a {{ pack.rango_horario_fin | slice:0:5 }}</strong></li>
-                        <li>Nivel: <strong>{{ pack.categoria || 'Todos' }}</strong></li>
+                        <li *ngIf="pack.cantidad_personas > 1">Para <strong>{{ pack.cantidad_personas }}</strong> personas</li>
                     </ul>
-                    <button class="btn-buy-v2" [class.btn-enroll]="pack.tipo === 'grupal'" (click)="comprarPack(pack)">
-                        {{ pack.tipo === 'grupal' ? 'Inscribirme' : 'Comprar Ahora' }}
+
+                    <div id="paypal-button-container" *ngIf="isInternational && selectedPackForPaypal?.id === pack.id"></div>
+
+                    <button class="btn-buy-v2" [class.btn-enroll]="pack.tipo === 'grupal'" 
+                            *ngIf="!isInternational || selectedPackForPaypal?.id !== pack.id"
+                            (click)="comprarPack(pack)">
+                        {{ isInternational ? 'Pagar con PayPal' : (pack.tipo === 'grupal' ? 'Inscribirme' : 'Comprar Ahora') }}
                     </button>
                 </div>
             </ng-template>
