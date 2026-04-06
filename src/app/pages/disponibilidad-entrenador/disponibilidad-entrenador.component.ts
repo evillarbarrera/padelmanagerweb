@@ -44,6 +44,11 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   dias: DiaSemana[] = [];
   diaSeleccionado: string = '';
   bloquesPorDia: { [fecha: string]: BloqueHorario[] } = {};
+  
+  // Months navigation (for 6 months horizon)
+  mesesDisponibles: { label: string, month: number, year: number }[] = [];
+  selectedMonthLabel: string = '';
+  diasFiltrados: DiaSemana[] = [];
 
   // Cache of existing availability keys "YYYY-MM-DD HH:MM:00-YYYY-MM-DD HH:MM:00" -> club_id
   disponibilidadExistente: Map<string, number> = new Map();
@@ -106,25 +111,55 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
-    const TOTAL_DIAS = 30;
+    const TOTAL_DIAS = 180; // Expand to 6 months
     const nombresDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
     this.dias = [];
+    this.mesesDisponibles = [];
 
     for (let i = 0; i < TOTAL_DIAS; i++) {
-      const fecha = new Date(hoy);
-      fecha.setDate(hoy.getDate() + i);
+        const fecha = new Date(hoy);
+        fecha.setDate(hoy.getDate() + i);
+        
+        const mLabel = `${nombresMeses[fecha.getMonth()]} ${fecha.getFullYear()}`;
+        if (!this.mesesDisponibles.some(m => m.label === mLabel)) {
+            this.mesesDisponibles.push({ label: mLabel, month: fecha.getMonth(), year: fecha.getFullYear() });
+        }
 
-      this.dias.push({
-        nombre: nombresDias[fecha.getDay()],
-        fecha: this.getLocalISODate(fecha),
-        hora_inicio: '07:00',
-        hora_fin: '22:00',
-        duracion: 60
-      });
+        this.dias.push({
+            nombre: nombresDias[fecha.getDay()],
+            fecha: this.getLocalISODate(fecha),
+            hora_inicio: '07:00',
+            hora_fin: '22:00',
+            duracion: 60
+        });
     }
-    this.diaSeleccionado = this.dias[0].fecha;
-  }
+
+    if (this.mesesDisponibles.length > 0) {
+        this.selectedMonthLabel = this.mesesDisponibles[0].label;
+        this.filtrarDiasPorMes();
+    }
+}
+
+filtrarDiasPorMes() {
+    this.diasFiltrados = this.dias.filter(d => {
+        const dObj = new Date(d.fecha + 'T00:00:00');
+        const mLabel = `${['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][dObj.getMonth()]} ${dObj.getFullYear()}`;
+        return mLabel === this.selectedMonthLabel;
+    });
+
+    if (this.diasFiltrados.length > 0) {
+        // Only change selection if current isn't in filtered list
+        if (!this.diasFiltrados.some(df => df.fecha === this.diaSeleccionado)) {
+            this.diaSeleccionado = this.diasFiltrados[0].fecha;
+        }
+    }
+}
+
+onMonthChange() {
+    this.filtrarDiasPorMes();
+}
 
   getLocalISODate(date: Date): string {
     const y = date.getFullYear();
@@ -527,16 +562,44 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
           return;
         }
 
-        this.popupService.confirm('Aplicar Plantilla', 'Esto generará automáticamente tus bloques de disponibilidad para los próximos 30 días. ¿Continuar?')
+        const selectedMonthObj = this.mesesDisponibles.find(m => m.label === this.selectedMonthLabel);
+        const hoy = new Date();
+        let dateStart = this.getLocalISODate(hoy);
+        let daysAhead = 30;
+        let msg = `Esto generará automáticamente tus bloques de disponibilidad para los próximos 30 días. ¿Continuar?`;
+
+        if (selectedMonthObj) {
+            // First day of selected month
+            let startOfSelected = new Date(selectedMonthObj.year, selectedMonthObj.month, 1);
+            
+            // If it's the current month, start from today
+            if (selectedMonthObj.month === hoy.getMonth() && selectedMonthObj.year === hoy.getFullYear()) {
+                dateStart = this.getLocalISODate(hoy);
+                const lastDay = new Date(selectedMonthObj.year, selectedMonthObj.month + 1, 0).getDate();
+                daysAhead = lastDay - hoy.getDate() + 1;
+                msg = `Aplicaremos tu plantilla para los días restantes de ${this.selectedMonthLabel}. ¿Continuar?`;
+            } else {
+                dateStart = this.getLocalISODate(startOfSelected);
+                const lastDay = new Date(selectedMonthObj.year, selectedMonthObj.month + 1, 0).getDate();
+                daysAhead = lastDay;
+                msg = `¿Deseas aplicar tu plantilla base a TODO el mes de ${this.selectedMonthLabel} (${daysAhead} días)?`;
+            }
+        }
+
+        this.popupService.confirm('Aplicar Plantilla', msg)
           .then(conf => {
             if (conf) {
-              this.entrenamientoService.applyDefaultConfig({ entrenador_id: this.userId, days_ahead: 30 }).subscribe({
+              this.entrenamientoService.applyDefaultConfig({ 
+                entrenador_id: this.userId, 
+                days_ahead: daysAhead, 
+                date_start: dateStart 
+              }).subscribe({
                 next: () => {
-                  this.popupService.success('Completado', 'Horarios aplicados para los próximos 30 días.');
+                  this.popupService.success('Completado', `Horarios aplicados para ${this.selectedMonthLabel}.`);
                   this.disponibilidadExistente.clear();
                   this.cargarDisponibilidadExistente();
                 },
-                error: () => {
+                error: (err) => {
                   this.isLoading = false;
                   this.popupService.error('Error', 'No se pudo aplicar la plantilla');
                 }

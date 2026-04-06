@@ -35,9 +35,9 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
         clp: 0, 
         usd: 0, 
         period: '/mes', 
-        sessions: 'IA Analysis Free', 
-        fee: 'Comisión Venta 3.5%', 
-        promo: '3 Meses: 0% Comisión',
+        sessions: 'Gestión de Alumnos', 
+        fee: 'Calendario Básico', 
+        promo: '90 Días 0% Comisión',
         btnText: 'EMPEZAR GRATIS'
     },
     { 
@@ -46,8 +46,8 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
         usd: 21, 
         period: '/mes', 
         sessions: 'Hasta 20 Alumnos', 
-        fee: 'IA Premium', 
-        promo: '90 Días Gratis', 
+        fee: 'IA & Pizarra Táctica', 
+        promo: '3 Meses GRATIS', 
         featured: true, 
         badge: 'PARA EMPEZAR',
         btnText: 'PRUEBA GRATUITA'
@@ -58,8 +58,8 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
         usd: 32, 
         period: '/mes', 
         sessions: 'Hasta 40 Alumnos', 
-        fee: 'IA Premium Plus', 
-        promo: '90 Días Gratis', 
+        fee: 'Gestión Completa', 
+        promo: '3 Meses GRATIS', 
         featured: true, 
         badge: 'MÁS POPULAR',
         btnText: 'PRUEBA GRATUITA'
@@ -70,8 +70,8 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
         usd: 53, 
         period: '/mes', 
         sessions: 'Alumnos Ilimitados', 
-        fee: 'Marca Blanca', 
-        promo: '90 Días Gratis',
+        fee: 'Asistencia VIP', 
+        promo: '3 Meses GRATIS',
         btnText: 'COMIENZA AHORA'
     }
   ];
@@ -110,24 +110,24 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   currentSlide = 0;
   slides = [
     {
-      badge: 'SISTEMA PRO 2.0',
-      title: 'DOMINA LA PISTA',
-      highlight: 'CON INTELIGENCIA',
-      description: 'La primera plataforma que une la gestión de academia con análisis biomécánico avanzado por IA.',
+      badge: 'PADEL MANAGER PRO',
+      title: 'GESTIONA TU ACADEMIA',
+      highlight: 'COMO UN PROFESIONAL',
+      description: 'La solución definitiva para entrenadores: agenda, pagos, alumnos y análisis táctico en una sola plataforma.',
       image: 'assets/images/app-screenshot-v2.png'
     },
     {
-      badge: 'PROMO EXCLUSIVA ⚡',
-      title: '3 MESES DE REGALO',
+      badge: 'OFERTA DE LANZAMIENTO ⚡',
+      title: '3 MESES GRATIS',
       highlight: 'PARA ENTRENADORES',
-      description: 'Lanza tu academia digital hoy. Durante los primeros 90 días, todas las funciones son gratuitas y la comisión por venta es 0%. Tu éxito es nuestro éxito.',
+      description: 'Inscríbete hoy y disfruta de todas las funciones premium de Padel Manager sin costo por 90 días. Sin letras chicas.',
       image: 'assets/images/slide-coaches.jpg'
     },
     {
-      badge: 'CRECIMIENTO REAL',
-      title: 'GESTIONA TU',
-      highlight: 'ACADEMIA 360°',
-      description: 'Desde pagos automáticos hasta análisis técnico por IA. Todo lo que necesitas para escalar tu negocio de pádel en un solo lugar.',
+      badge: 'TECNOLOGÍA IA',
+      title: 'ELEVA EL NIVEL',
+      highlight: 'DE TUS ALUMNOS',
+      description: 'Usa nuestra pizarra táctica con métricas en tiempo real y análisis biomecánico para entregar un servicio de élite.',
       image: 'assets/images/slide-players.jpg'
     }
   ];

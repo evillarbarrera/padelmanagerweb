@@ -35,10 +35,10 @@
 
       <!-- Stats Summary Widgets -->
       <div class="stats-row">
-        <div class="stat-widget" style="background: #111; color: white;">
-          <div class="widget-icon" style="background: rgba(204, 255, 0, 0.1); color: #ccff00;">⏳</div>
+        <div class="stat-widget dark">
+          <div class="widget-icon">⏳</div>
           <div class="widget-data">
-            <span class="widget-val" style="color: #ccff00;">{{ quickStats.clasesPendientes }}</span>
+            <span class="widget-val">{{ quickStats.clasesPendientes }}</span>
             <span class="widget-label">Pendientes</span>
           </div>
         </div>
@@ -65,28 +65,23 @@
         </div>
       </div>
 
-      <!-- Main Operational Area (Full-Width Agenda) -->
-      <div class="main-dashboard-content full-width">
-        <div class="today-classes-section">
+      <!-- Main Operational Area -->
+      <div class="main-dashboard-content stack-layout">
+        
+        <!-- TOP ROW: AGENDA (Compact Cards) -->
+        <div class="top-agenda-section">
           <h3 class="column-title">Agenda Ejecutiva</h3>
 
-          <div class="classes-list" *ngIf="clasesHoyList.length > 0">
-            <div class="class-card animate-up" *ngFor="let clase of clasesHoyList; let i = index" (click)="irACalendario()"
-              [style.animation-delay]="i * 0.1 + 's'">
-              <div class="time-col">
+          <div class="agenda-grid" *ngIf="clasesHoyList.length > 0">
+            <div class="class-card-compact animate-up" *ngFor="let clase of clasesHoyList; let i = index" (click)="irACalendario()"
+              [style.animation-delay]="i * 0.05 + 's'">
+              <div class="cc-header">
                 <span class="day-badge" [class.tomorrow]="clase.diaLabel === 'Mañana'">{{ clase.diaLabel }}</span>
-                <span class="time">{{ clase.hora }}</span>
+                <span class="badge" [ngClass]="clase.tipo === 'Grupal' ? 'badge-grupal' : 'badge-indiv'">{{ clase.tipo }}</span>
               </div>
-              <div class="info-col">
-                <span class="class-title">{{ clase.titulo }}</span>
-                <span class="class-subtitle">{{ clase.subtitulo }}</span>
-              </div>
-              <div class="type-col">
-                <span class="badge" [ngClass]="clase.tipo === 'Grupal' ? 'badge-grupal' : 'badge-indiv'">
-                  {{ clase.tipo }}
-                </span>
-              </div>
-              <span class="arrow-indicator">→</span>
+              <div class="cc-time">{{ clase.hora }}</div>
+              <div class="cc-title">{{ clase.titulo }}</div>
+              <div class="cc-subtitle">{{ clase.subtitulo }}</div>
             </div>
           </div>
 
@@ -96,6 +91,52 @@
             <button class="btn-outline-small" (click)="irACalendario()">Ver mi Agenda Completa</button>
           </div>
         </div>
+
+        <!-- BOTTOM ROW: FINANZAS (Side by Side) -->
+        <div class="bottom-finanzas-section">
+          <h3 class="column-title">Reporte Financiero</h3>
+          
+          <div class="finanzas-grid">
+            <!-- Daily Chart -->
+            <div class="finanzas-widget fade-in slide-up">
+              <div class="finanzas-header">
+                <h4>Total Recaudado (Mes)</h4>
+                <h2>${{ totalRecaudado | number }}</h2>
+              </div>
+              
+              <div class="chart-container" *ngIf="ventasPorDia.length > 0">
+                <div class="chart-bar" *ngFor="let dia of ventasPorDia" [style.height.%]="dia.heightPercent">
+                  <span class="tooltip-val">${{ dia.total | number }}</span>
+                  <span class="day-label">{{ dia.dayString }}</span>
+                </div>
+              </div>
+              
+              <div *ngIf="ventasPorDia.length === 0" style="text-align: center; color: #999; font-size: 13px; padding: 20px 0;">
+                No hay ventas registradas este mes.
+              </div>
+            </div>
+
+            <!-- Monthly Chart -->
+            <div class="finanzas-widget fade-in slide-up" style="animation-delay: 0.1s;">
+              <div class="finanzas-header">
+                <h4>Total Recaudado (Año)</h4>
+                <h2>${{ totalRecaudadoAnio | number }}</h2>
+              </div>
+              
+              <div class="chart-container" *ngIf="ventasPorMes.length > 0">
+                <div class="chart-bar" style="background: rgba(37, 99, 235, 0.4);" *ngFor="let mes of ventasPorMes" [style.height.%]="mes.heightPercent">
+                  <span class="tooltip-val" style="background: #2563eb;">${{ mes.total | number }}</span>
+                  <span class="day-label">{{ mes.monthString }}</span>
+                </div>
+              </div>
+              
+              <div *ngIf="ventasPorMes.length === 0" style="text-align: center; color: #999; font-size: 13px; padding: 20px 0;">
+                No hay ventas registradas este año.
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>

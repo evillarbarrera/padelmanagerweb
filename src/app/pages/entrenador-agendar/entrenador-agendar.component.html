@@ -8,7 +8,7 @@
             <!-- Page Header -->
             <div class="page-header-flex">
                 <div>
-                    <h1 class="section-title">Mi Calendario (Agendar Alumno)</h1>
+                    <h1 class="section-title">{{ getCalendarTitle() }}</h1>
                     <div class="legend compact-top">
                         <div class="l-item"><span class="box-l box-avail"></span> AGENDAR</div>
                         <div class="l-item"><span class="box-l box-booked"></span> CONFIRMADA</div>
@@ -45,6 +45,9 @@
                                  class="slot-cell"
                                  [class.available]="getSlotData(day, hour) && !getSlotData(day, hour).ocupado"
                                  [class.booked]="getSlotData(day, hour)?.ocupado"
+                                 [class.is-manana]="getSlotData(day, hour)?.ocupado && getTimeOfDay(hour) === 'manana'"
+                                 [class.is-tarde]="getSlotData(day, hour)?.ocupado && getTimeOfDay(hour) === 'tarde'"
+                                 [class.is-noche]="getSlotData(day, hour)?.ocupado && getTimeOfDay(hour) === 'noche'"
                                  (click)="openBooking(day, hour, getSlotData(day, hour))">
                                 <div class="content-box" *ngIf="getSlotData(day, hour) as slot">
                                     <ng-container *ngIf="slot.ocupado">
@@ -72,8 +75,8 @@
                              [class.today]="isToday(day)"
                              [class.other-month]="day.getMonth() !== currentDate.getMonth()">
                             <span class="m-num">{{ day | date:'d' }}</span>
-                            <div class="m-status-dots">
-                                <div *ngIf="slotsByDay[formatDate(day)]?.length" class="dot"></div>
+                            <div class="m-status-dots" *ngIf="getReservasCount(day) > 0">
+                                <span class="badge" style="background: #111; color: #ccff00; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">{{ getReservasCount(day) }} clases</span>
                             </div>
                         </div>
                     </ng-container>
@@ -120,16 +123,16 @@
                             </div>
 
                             <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" [(ngModel)]="filtroAlumnos" placeholder="Buscar alumno...">
+                                <i class="jam jam-search"></i>
+                                <input type="text" [(ngModel)]="filtroAlumnos" (ngModelChange)="filtrarListaAlumnos()" placeholder="Buscar alumno...">
                             </div>
 
-                            <div class="st-list compact">
-                                <div *ngFor="let a of alumnosFiltrados" 
+                            <div class="st-list custom-scroll">
+                                <div *ngFor="let a of alumnosFiltradosList" 
                                      class="st-row"
                                      [class.selected]="isAlumnoSelected(a)"
                                      (click)="seleccionarAlumno(a)">
-                                    <img [src]="a.jugador_foto || 'assets/images/placeholder_avatar.png'">
+                                    <img [src]="a.foto_perfil || a.foto || a.jugador_foto || 'assets/images/placeholder_avatar.png'">
                                     <div class="st-meta">
                                         <b>{{ a.jugador_nombre }}</b>
                                         <div class="credits-info">
@@ -201,24 +204,29 @@
                                             <span *ngIf="alumnosPacksConCredito.length === 1">{{ alumnosPacksConCredito[0].pack_nombre }} ({{ alumnosPacksConCredito[0].sesiones_restantes - alumnosPacksConCredito[0].sesiones_reservadas }} disp.)</span>
                                             <span *ngIf="alumnosPacksConCredito.length === 0">{{ alumnoSeleccionado.pack_nombre }} ({{ alumnoSeleccionado.creditos_reales }} disp.)</span>
                                         </div>
-                                        <button class="btn-change-pack" (click)="mostrarSelectorPackManual = true">Cambiar</button>
                                     </div>
 
                                     <!-- INDIVIDUAL: Exhausted/No active packs warning -->
-                                    <div class="exhausted-pack-card" *ngIf="alumnoSeleccionado && alumnosPacksConCredito.length === 0 && (alumnoSeleccionado.creditos_reales || 0) <= 0 && !mostrarSelectorPackManual && !packAAsignar">
+                                    <div class="exhausted-pack-card" *ngIf="alumnoSeleccionado && alumnosPacksConCredito.length === 0 && (alumnoSeleccionado.creditos_reales || 0) <= 0">
                                         <i class="fas fa-exclamation-circle"></i>
                                         <div class="txt">
                                             <b>¡Sin Créditos Libres!</b>
-                                            <p>Este alumno ya consumió o reservó todo su saldo. Necesitas asignarle un pack nuevo.</p>
+                                            <p>Este alumno ya consumió o reservó todo su saldo. Elige un pack nuevo a continuación.</p>
                                         </div>
-                                        <button class="btn-change-pack highlight" (click)="mostrarSelectorPackManual = true">Vender Pack</button>
                                     </div>
 
-                                    <!-- INDIVIDUAL: Manual/New Pack Selection -->
+                                    <!-- CHECKBOX TO TOGGLE NEW PACK STORE -->
+                                    <div class="chk-new-pack mt-2 mb-2" *ngIf="alumnoSeleccionado && (alumnosPacksConCredito.length > 0 || (alumnoSeleccionado.creditos_reales || 0) > 0)">
+                                        <label class="info-label select-pointer">
+                                            <input type="checkbox" [(ngModel)]="mostrarSelectorPackManual" (change)="mostrarSelectorPackManual ? '' : packAAsignar = null">
+                                            <b>Asignar un pack NUEVO</b>
+                                        </label>
+                                    </div>
+
+                                    <!-- INDIVIDUAL: Manual/New Pack Selection Store -->
                                     <div class="manual-assign" *ngIf="alumnoSeleccionado && (alumnosPacksConCredito.length === 0 || mostrarSelectorPackManual)">
                                         <div class="flex-between">
                                             <label class="info-label text-accent">ASIGNAR NUEVO PACK:</label>
-                                            <button class="btn-xs" *ngIf="mostrarSelectorPackManual && alumnosPacksConCredito.length > 0" (click)="mostrarSelectorPackManual = false">Volver al Actual</button>
                                         </div>
                                         <select [(ngModel)]="packAAsignar" class="modern-select highlight animate-up">
                                             <option [ngValue]="null">-- Elegir Nuevo Pack --</option>
@@ -230,15 +238,43 @@
                                 <!-- MULTI: Seleccionar pack multijugador -->
                                 <ng-container *ngIf="tipoClaseSeleccionado === 'multijugador'">
                                     <label class="info-label">PACK MULTIJUGADOR ({{ alumnosSeleccionados.length }} jugadores):</label>
-                                    <div *ngIf="packsParaTipo.length > 0">
-                                        <select [(ngModel)]="packAAsignar" class="modern-select highlight">
-                                            <option [ngValue]="null">-- Elegir Pack Multi --</option>
-                                            <option *ngFor="let p of packsParaTipo" [ngValue]="p">
-                                                {{ p.nombre }} ({{ p.cantidad_personas || '2+' }} pers.) - ${{ p.precio }}
-                                            </option>
-                                        </select>
+                                    
+                                    <!-- MULTI: Use Existing Pack -->
+                                    <div *ngIf="alumnosPacksConCredito.length > 0 && !mostrarSelectorPackManual" class="class-info-card current-pack mb-3">
+                                        <i class="fas fa-users"></i>
+                                        <div class="txt">
+                                            <b>Usar Pack Multi Existente:</b>
+                                            <select [(ngModel)]="alumnosSeleccionados[0].pack_jugador_id" class="modern-select mt-1 mb-1">
+                                                <option *ngFor="let p of alumnosPacksConCredito" [value]="p.id || p.pack_jugador_id">
+                                                    {{ p.pack_nombre }} ({{ p.sesiones_restantes - p.sesiones_reservadas }} disp.)
+                                                </option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div *ngIf="packsParaTipo.length === 0 && alumnosSeleccionados.length > 0" class="no-packs-alert">
+
+                                    <!-- CHECKBOX TO TOGGLE NEW PACK STORE (MULTI) -->
+                                    <div class="chk-new-pack mt-2 mb-2" *ngIf="alumnosPacksConCredito.length > 0">
+                                        <label class="info-label select-pointer">
+                                            <input type="checkbox" [(ngModel)]="mostrarSelectorPackManual" (change)="mostrarSelectorPackManual ? '' : packAAsignar = null">
+                                            <b>Asignar un pack NUEVO</b>
+                                        </label>
+                                    </div>
+
+                                    <!-- MULTI: Assign New Pack -->
+                                    <div class="manual-assign" *ngIf="alumnosPacksConCredito.length === 0 || mostrarSelectorPackManual">
+                                        <div class="flex-between">
+                                            <label class="info-label text-accent">ASIGNAR NUEVO PACK MULTI:</label>
+                                        </div>
+                                        <div *ngIf="packsParaTipoList.length > 0">
+                                            <select [(ngModel)]="packAAsignar" class="modern-select highlight">
+                                                <option [ngValue]="null">-- Elegir Nuevo Pack Multi --</option>
+                                                <option *ngFor="let p of packsParaTipoList" [ngValue]="p">
+                                                    {{ p.nombre }} ({{ p.cantidad_personas || '2+' }} pers.) - ${{ p.precio }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="packsParaTipoList.length === 0 && alumnosSeleccionados.length > 0" class="no-packs-alert">
                                         <i class="fas fa-exclamation-triangle"></i>
                                         <span>No hay packs multijugador para {{ alumnosSeleccionados.length }} jugadores. Crea uno en "Mis Packs".</span>
                                     </div>
@@ -258,15 +294,15 @@
                                 <!-- GRUPAL: Seleccionar pack grupal -->
                                 <ng-container *ngIf="tipoClaseSeleccionado === 'grupal'">
                                     <label class="info-label">PACK GRUPAL ({{ alumnosSeleccionados.length }} jugadores):</label>
-                                    <div *ngIf="packsParaTipo.length > 0">
+                                    <div *ngIf="packsParaTipoList.length > 0">
                                         <select [(ngModel)]="packAAsignar" class="modern-select highlight">
                                             <option [ngValue]="null">-- Elegir Pack Grupal --</option>
-                                            <option *ngFor="let p of packsParaTipo" [ngValue]="p">
+                                            <option *ngFor="let p of packsParaTipoList" [ngValue]="p">
                                                 {{ p.nombre }} ({{ p.capacidad_minima }}-{{ p.capacidad_maxima }} pers.) - ${{ p.precio }}
                                             </option>
                                         </select>
                                     </div>
-                                    <div *ngIf="packsParaTipo.length === 0" class="no-packs-alert">
+                                    <div *ngIf="packsParaTipoList.length === 0" class="no-packs-alert">
                                         <i class="fas fa-exclamation-triangle"></i>
                                         <span>No hay packs grupales. Crea uno en "Mis Packs".</span>
                                     </div>
@@ -338,12 +374,14 @@
 
         <div class="m-body">
             <!-- VIEW MODE: EXACT REPLICA -->
-            <div class="detail-card" *ngIf="!isEditingDetail">
-                <div class="player-info">
-                    <img [src]="'https://ui-avatars.com/api/?name=' + selectedSlot?.slotData?.jugador_nombre + '&background=ccff00&color=000'" alt="Alumno">
-                    <div class="txt">
-                        <b>ALUMNO</b>
-                        <h3>{{ selectedSlot?.slotData?.jugador_nombre }}</h3>
+            <div class="detail-card" *ngIf="!isEditingDetail" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="player-hero-card">
+                    <div class="avatar-wrap">
+                        <img class="avatar-lg" [src]="'https://ui-avatars.com/api/?name=' + selectedSlot?.slotData?.jugador_nombre + '&background=ccff00&color=000'" alt="Alumno">
+                    </div>
+                    <div class="p-info">
+                        <span>ALUMNO</span>
+                        <h2>{{ selectedSlot?.slotData?.jugador_nombre }}</h2>
                     </div>
                 </div>
 

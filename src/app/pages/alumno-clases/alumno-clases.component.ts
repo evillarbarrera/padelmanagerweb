@@ -9,6 +9,7 @@ import { EvaluacionService } from '../../services/evaluacion.service';
 import { AlumnoService } from '../../services/alumno.service';
 import { PopupService } from '../../services/popup.service';
 import { Chart, registerables } from 'chart.js';
+import { forkJoin } from 'rxjs';
 import Swal from 'sweetalert2';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { HttpEventType } from '@angular/common/http';
@@ -98,6 +99,10 @@ export class AlumnoClasesComponent implements OnInit {
     availableMallas: any[] = [];
     alumnoPacks: any[] = [];
     activeEvalSubTab: 'tecnico' | 'tactico' | 'fisico' | 'mental' = 'tecnico';
+    
+    // Multi-Packs Roadmap
+    mallasActivas: any[] = [];
+    selectedPack: any = null;
 
     constructor(
         private route: ActivatedRoute,
@@ -198,24 +203,72 @@ export class AlumnoClasesComponent implements OnInit {
         });
     }
 
-    loadMallaData() {
+    async loadMallaData() {
         if (!this.alumnoId) return;
         this.isLoading = true;
-        this.entrenamientoService.getHistorialMalla(this.alumnoId, this.userId).subscribe({
+
+        // Fetch all active meshes and all of the student's packs
+        forkJoin({
+            mallas: this.entrenamientoService.getMallasAlumno(this.alumnoId),
+            packs: this.entrenamientoService.getPacksAlumno(this.alumnoId)
+        }).subscribe({
             next: (res: any) => {
-                this.historialMalla = Array.isArray(res) ? res : [];
-                this.isLoading = false;
-                this.cdr.detectChanges();
+                this.mallasActivas = res.mallas || [];
+                const allPacks = (res.packs.data || res.packs || []);
+                
+                // Map packs to include their active mesh if it exists
+                this.alumnoPacks = allPacks.map((p: any) => {
+                    // Normalize properties from the API
+                    const packId = p.pack_id || p.id;
+                    const packName = p.pack_nombre || p.nombre || 'Pack';
+
+                    // Find mesh (check pack_id first, then fallback to trainer if it's old data with pack_id=0)
+                    let mesh = this.mallasActivas.find(m => m.pack_id == packId);
+                    if (!mesh && this.mallasActivas.length > 0) {
+                        // If we only have one mesh for this trainer and it has pack_id=0, assume it's this one
+                        mesh = this.mallasActivas.find(m => m.entrenador_id == p.entrenador_id && (m.pack_id == 0 || !m.pack_id));
+                    }
+                    
+                    return { ...p, id: packId, nombre: packName, activeMesh: mesh };
+                });
+
+                if (this.alumnoPacks.length > 0) {
+                    this.seleccionarPackRoadmap(this.alumnoPacks[0]);
+                } else {
+                    this.historialMalla = [];
+                    this.isLoading = false;
+                }
             },
             error: () => this.isLoading = false
         });
     }
 
+    seleccionarPackRoadmap(pack: any) {
+        this.selectedPack = pack;
+        
+        if (pack.activeMesh) {
+            this.isLoading = true;
+            this.entrenamientoService.getHistorialMalla(this.alumnoId, pack.activeMesh.entrenador_id, pack.id).subscribe({
+                next: (res: any) => {
+                    this.historialMalla = Array.isArray(res) ? res : [];
+                    this.isLoading = false;
+                    this.cdr.detectChanges();
+                },
+                error: () => this.isLoading = false
+            });
+        } else {
+            this.historialMalla = [];
+            this.isLoading = false;
+            this.cdr.detectChanges();
+        }
+    }
+
     loadEvaluaciones() {
         if (!this.alumnoId) return;
         
-        // Coach only sees their own evaluations, student sees all.
-        const currentCoachId = (this.userRole === 'entrenador') ? this.userId : undefined;
+        // Per requirement: Coaches should only see evaluations they have performed, 
+        // to track their specific technical progress with the student.
+        const currentCoachId = (this.userRole === 'entrenador') ? this.userId : undefined; 
         
         this.evaluacionService.getEvaluaciones(this.alumnoId, currentCoachId).subscribe({
             next: (res: any) => {
@@ -277,49 +330,59 @@ export class AlumnoClasesComponent implements OnInit {
         const last = evals[0];
         try {
             const raw = typeof last.scores === 'string' ? JSON.parse(last.scores) : last.scores;
+            
+            // Handle nested (New) or flat (Legacy) format
             const tecnico = raw.tecnico || raw;
             const tactico = raw.tactico || {};
             const fisico = raw.fisico || {};
             const mental = raw.mental || {};
 
-            // RADAR TÉCNICO (Golpes)
-            this.storedRadarLabels = Object.keys(tecnico);
+            // 1. RADAR TÉCNICO (Golpes)
+            this.storedRadarLabels = Object.keys(tecnico).filter(k => typeof tecnico[k] === 'object');
             if (this.storedRadarLabels.length === 0) this.storedRadarLabels = this.golpes;
+            
             this.storedRadarData = this.storedRadarLabels.map(l => {
                 const g = tecnico[l];
                 if (!g) return 0;
-                return (Number(g.tecnica || 0) + Number(g.control || 0) + Number(g.direccion || 0) + Number(g.decision || 0)) / 4;
+                // Average of technical metrics
+                const vals = [g.tecnica, g.control, g.direccion, g.decision].map(v => Number(v) || 0);
+                return vals.reduce((a, b) => a + b, 0) / 4;
             });
 
-            // RADAR TÁCTICO
-            this.storedTacticoLabels = Object.keys(tactico);
-            if (this.storedTacticoLabels.length === 0) this.storedTacticoLabels = this.tacticas;
-            this.storedTacticoData = this.storedTacticoLabels.map(l => (tactico[l]?.valor || 0));
+            // 2. RADARS EXTRA (New Categories)
+            this.storedTacticoLabels = Object.keys(tactico).length > 0 ? Object.keys(tactico) : this.tacticas;
+            this.storedTacticoData = this.storedTacticoLabels.map(l => Number(tactico[l]?.valor || 0));
 
-            // RADAR FÍSICO
-            this.storedFisicoLabels = Object.keys(fisico);
-            if (this.storedFisicoLabels.length === 0) this.storedFisicoLabels = this.fisicos;
-            this.storedFisicoData = this.storedFisicoLabels.map(l => (fisico[l]?.valor || 0));
+            this.storedFisicoLabels = Object.keys(fisico).length > 0 ? Object.keys(fisico) : this.fisicos;
+            this.storedFisicoData = this.storedFisicoLabels.map(l => Number(fisico[l]?.valor || 0));
 
-            // RADAR MENTAL
-            this.storedMentalLabels = Object.keys(mental);
-            if (this.storedMentalLabels.length === 0) this.storedMentalLabels = this.mentales;
-            this.storedMentalData = this.storedMentalLabels.map(l => (mental[l]?.valor || 0));
+            this.storedMentalLabels = Object.keys(mental).length > 0 ? Object.keys(mental) : this.mentales;
+            this.storedMentalData = this.storedMentalLabels.map(l => Number(mental[l]?.valor || 0));
 
-            // EVOLUCIÓN LINEAL
-            this.storedLineLabels = evals.slice().reverse().map((e, idx) => `S${idx + 1}`);
+            // 3. EVOLUCIÓN LINEAL (General Average over time)
+            this.storedLineLabels = evals.slice().reverse().map((e, idx) => {
+               const date = new Date(e.fecha);
+               return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+            });
+
             this.storedLineData = evals.slice().reverse().map(e => {
                 const n = typeof e.scores === 'string' ? JSON.parse(e.scores) : e.scores;
-                const scoresTecnico = n.tecnico || n;
-                const averages = Object.values(scoresTecnico).map((g: any) => {
+                const sTec = n.tecnico || n;
+                const hits = Object.values(sTec).filter(v => typeof v === 'object');
+                if (hits.length === 0) return Number(e.promedio_general) || 0;
+                
+                const hitAverages = hits.map((g: any) => {
                     return (Number(g.tecnica || 0) + Number(g.control || 0) + Number(g.direccion || 0) + Number(g.decision || 0)) / 4;
                 });
-                return averages.length > 0 ? averages.reduce((a, b: any) => a + b, 0) / averages.length : 0;
+                return hitAverages.reduce((a, b) => a + b, 0) / hitAverages.length;
             });
 
             this.hasChartData = true;
+            this.cdr.detectChanges();
+            
+            // Force re-render if we are in progress tab
             if (this.activeTab === 'progreso') {
-                setTimeout(() => this.renderCharts(), 100);
+                setTimeout(() => this.renderCharts(), 200);
             }
         } catch(e) {
             console.error("Error processing charts:", e);
@@ -697,7 +760,87 @@ export class AlumnoClasesComponent implements OnInit {
     }
 
     abrirPanelDetalle(sesion: any) {
-        this.popupService.info('Detalle de Sesión', `Objetivos: ${sesion.lista_objetivos || 'No definidos'}`);
+        const objs = Array.isArray(sesion.lista_objetivos) ? sesion.lista_objetivos : [sesion.lista_objetivos];
+        const objsHtml = objs.map((o: string) => `
+            <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; text-align: left;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #ccff00; margin-top: 6px; flex-shrink: 0; box-shadow: 0 0 10px rgba(204, 255, 0, 0.4);"></span>
+                <span style="color: #475569; font-weight: 700; font-size: 14px; line-height: 1.4;">${o}</span>
+            </div>
+        `).join('');
+
+        const meshName = this.selectedPack?.activeMesh?.malla_nombre || 'Plan de Entrenamiento';
+
+        let contentHtml = '';
+        if (sesion.calentamiento || sesion.parte_tecnica || sesion.drills || sesion.juego) {
+            contentHtml = `
+                <div style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+                    <div style="font-size: 11px; font-weight: 950; color: #111; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; width: fit-content; margin-bottom: 15px;">PLAN DE TRABAJO</div>
+                    
+                    ${sesion.calentamiento ? `
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 10px; font-weight: 950; color: #94a3b8; text-transform: uppercase;">🔥 Calentamiento</div>
+                            <div style="font-size: 13px; color: #475569; font-weight: 600;">${sesion.calentamiento}</div>
+                        </div>` : ''}
+                    
+                    ${sesion.parte_tecnica ? `
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 10px; font-weight: 950; color: #94a3b8; text-transform: uppercase;">🎾 Parte Técnica</div>
+                            <div style="font-size: 13px; color: #475569; font-weight: 600;">${sesion.parte_tecnica}</div>
+                        </div>` : ''}
+
+                    ${sesion.drills ? `
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 10px; font-weight: 950; color: #94a3b8; text-transform: uppercase;">⚡ Drills</div>
+                            <div style="font-size: 13px; color: #475569; font-weight: 600;">${sesion.drills}</div>
+                        </div>` : ''}
+
+                    ${sesion.juego ? `
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 10px; font-weight: 950; color: #94a3b8; text-transform: uppercase;">🏆 Juego / Puntos</div>
+                            <div style="font-size: 13px; color: #475569; font-weight: 600;">${sesion.juego}</div>
+                        </div>` : ''}
+                </div>
+            `;
+        }
+
+        Swal.fire({
+            title: `<div style="text-align: left; font-size: 12px; font-weight: 950; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Ficha Técnica de Sesión</div>
+                    <div style="text-align: left; font-size: 24px; font-weight: 950; color: #111; line-height: 1.1; letter-spacing: -1px;">${sesion.titulo}</div>`,
+            html: `
+                <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 15px; padding: 20px; margin-top: 15px; font-family: 'Inter', sans-serif; text-align: left;">
+                    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #e2e8f0;">
+                         <div style="font-size: 10px; font-weight: 950; color: #94a3b8; margin-bottom: 5px;">ESTRATEGIA ACTIVA</div>
+                         <div style="font-size: 14px; font-weight: 900; color: #111;">${meshName}</div>
+                    </div>
+                    
+                    <div style="font-size: 11px; font-weight: 950; color: #111; background: #ccff00; padding: 4px 10px; border-radius: 6px; width: fit-content; margin-bottom: 15px;">OBJETIVOS ACADÉMICOS</div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        ${objsHtml || '<p style="color: #94a3b8; font-style: italic;">Sin objetivos específicos definidos.</p>'}
+                    </div>
+
+                    ${contentHtml}
+                </div>
+
+                <div style="display: flex; gap: 20px; margin-top: 20px; padding: 0 10px;">
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-size: 9px; font-weight: 950; color: #94a3b8; text-transform: uppercase;">Programación</div>
+                        <div style="font-size: 13px; font-weight: 850; color: #111;">${sesion.fecha ? sesion.fecha : 'Pendiente'}</div>
+                    </div>
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-size: 9px; font-weight: 950; color: #94a3b8; text-transform: uppercase;">Horario</div>
+                        <div style="font-size: 13px; font-weight: 850; color: #111;">${sesion.hora ? sesion.hora.slice(0,5) + ' hrs' : '--:--'}</div>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#111',
+            width: '450px',
+            padding: '2rem',
+            background: '#ffffff',
+            showClass: { popup: 'animate__animated animate__fadeInUp animate__faster' },
+            hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' }
+        });
     }
 
     verDetalleGolpe(label: string) {
@@ -913,11 +1056,16 @@ export class AlumnoClasesComponent implements OnInit {
     guardarEvaluacion() {
         if (!this.alumnoId || !this.userId) return;
 
-        // Mostrar indicador de carga
-        Swal.fire({
-            title: 'Publicando Evaluación',
+        // Mostrar indicador de carga limpio con botón de cancelar
+        let isCancelled = false;
+        const swalLoading = Swal.fire({
+            title: 'Registrando Evaluación',
             text: 'Guardando métricas y notificando al alumno...',
             allowOutsideClick: false,
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar Registro',
+            cancelButtonColor: '#ff4b5c',
             didOpen: () => {
                 Swal.showLoading();
             }
@@ -935,17 +1083,32 @@ export class AlumnoClasesComponent implements OnInit {
             }
         };
 
-        this.evaluacionService.crearEvaluacion(payload).subscribe({
+        const subscription = this.evaluacionService.crearEvaluacion(payload).subscribe({
             next: () => {
+                if (isCancelled) return;
                 Swal.close();
-                this.popupService.success('Evaluación Publicada', 'La evaluación trazable se ha guardado correctamente y ya está disponible en el panel del alumno.');
+                this.popupService.success('Evaluación Publicada', 'Los resultados ya están disponibles en los gráficos de progreso.');
+                
+                // Reset fields
+                this.evaluacionComentarios = '';
+                
+                // Reload and Navigate
                 this.loadEvaluaciones();
                 this.setTab('progreso');
+                this.activeProgresoSubTab = 'graficos';
             },
             error: (err) => {
+                if (isCancelled) return;
                 Swal.close();
                 console.error('Save error detailed:', err);
-                this.popupService.error('Error de Publicación', 'Hubo un problema al guardar la evaluación. Por favor, revisa tu conexión e inténtalo de nuevo.');
+                this.popupService.error('Error de Publicación', 'No se pudo guardar. Revisa tu conexión.');
+            }
+        });
+
+        swalLoading.then((result) => {
+            if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+                isCancelled = true;
+                subscription.unsubscribe();
             }
         });
     }

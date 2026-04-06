@@ -162,10 +162,17 @@ export class EntrenamientoService {
     return this.http.post(`${this.apiUrl}/mallas/asignar_malla.php`, data, { headers: this.getHeaders() });
   }
 
-  getHistorialMalla(jugadorId: number, entrenadorId?: number): Observable<any[]> {
+  getMallasAlumno(jugadorId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/mallas/get_mallas_alumno.php?jugador_id=${jugadorId}`, { headers: this.getHeaders() });
+  }
+
+  getHistorialMalla(jugadorId: number, entrenadorId?: number, packId?: number): Observable<any[]> {
     let url = `${this.apiUrl}/mallas/get_historial.php?jugador_id=${jugadorId}`;
     if (entrenadorId) {
       url += `&entrenador_id=${entrenadorId}`;
+    }
+    if (packId) {
+      url += `&pack_id=${packId}`;
     }
     return this.http.get<any[]>(url, { headers: this.getHeaders() });
   }

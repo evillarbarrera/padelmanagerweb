@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 import { EntrenamientoService } from '../../services/entrenamientos.service';
+import Swal from 'sweetalert2';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
 import { MysqlService } from '../../services/mysql.service';
@@ -53,6 +54,8 @@ export class EntrenadorAgendarComponent implements OnInit {
     mostrarOpcionPack = false;
     packsDisponibles: any[] = [];
     packAAsignar: any = null;
+    packsParaTipoList: any[] = [];
+    alumnosFiltradosList: any[] = [];
 
     // Multi-student selection
     alumnosSeleccionados: any[] = [];
@@ -67,19 +70,25 @@ export class EntrenadorAgendarComponent implements OnInit {
     showDetailModal = false;
     selectedSlot: any = null;
     recurrencia: number = 1;
-    tipoClaseSeleccionado: 'individual' | 'multijugador' | 'grupal' = 'individual';
+    tipoClaseSeleccionado: 'individual' | 'multijugador' | 'grupal' | 'evaluacion' = 'individual';
 
     get alumnosPacksConCredito(): any[] {
         // Only show packs that have REAL available credits (Total Remaining - Already Reserved)
-        return (this.alumnosPacks || []).filter(p => {
-            const totales = Number(p.sesiones_totales || p.sesiones || 0);
-            const usadas = Number(p.sesiones_usadas || 0);
-            const reservadas = Number(p.sesiones_reservadas || 0);
-            const restantes = p.sesiones_restantes !== undefined ? Number(p.sesiones_restantes) : (totales - usadas);
-            
-            const disponibles = restantes - reservadas;
-            return disponibles > 0;
-        });
+        return (this.alumnosPacks || [])
+            .map(p => {
+                const totales = Number(p.sesiones_totales || p.sesiones || 0);
+                const usadas = Number(p.sesiones_usadas || 0);
+                
+                // Fallback formulation so HTML math evaluates safely
+                if (p.sesiones_restantes === undefined || p.sesiones_restantes === null) {
+                    p.sesiones_restantes = totales - usadas;
+                }
+                
+                const reservadas = Number(p.sesiones_reservadas || 0);
+                p._disponibles = Number(p.sesiones_restantes) - reservadas;
+                return p;
+            })
+            .filter(p => p._disponibles > 0);
     }
 
     get maxAlumnos(): number {
@@ -88,39 +97,41 @@ export class EntrenadorAgendarComponent implements OnInit {
         return 1;
     }
 
-    get packsParaTipo(): any[] {
-        const cant = this.alumnosSeleccionados.length || 1;
-        
-        if (this.tipoClaseSeleccionado === 'individual') {
-            // Show packs for 1 person only
-            return this.packsDisponibles.filter(p => {
+    actualizarPacksParaTipo() {
+        if (this.tipoClaseSeleccionado === 'individual' || this.tipoClaseSeleccionado === 'evaluacion') {
+            this.packsParaTipoList = this.packsDisponibles.filter(p => {
+                const tipo = (p.tipo || '').toLowerCase();
                 const personas = Number(p.cantidad_personas || 1);
-                return personas === 1;
+                const capMax = Number(p.capacidad_maxima || personas);
+                return tipo !== 'grupal' && tipo !== 'pack_grupal' && personas < 2 && capMax < 4;
             });
-        }
-        if (this.tipoClaseSeleccionado === 'multijugador') {
-            // Show packs where cantidad_personas matches selected count (2-4)
-            return this.packsDisponibles.filter(p => {
+        } else if (this.tipoClaseSeleccionado === 'multijugador') {
+            this.packsParaTipoList = this.packsDisponibles.filter(p => {
+                const tipo = (p.tipo || '').toLowerCase();
                 const personas = Number(p.cantidad_personas || 1);
-                return personas >= 2 && personas <= 4 && personas >= cant;
+                const capMax = Number(p.capacidad_maxima || personas);
+                return (personas > 1 && personas < 4) || (capMax >= 2 && capMax < 4) || tipo === 'duo' || tipo === 'trio' || tipo === 'multijugador';
             });
-        }
-        if (this.tipoClaseSeleccionado === 'grupal') {
-            // Show grupal packs or packs with high capacity
-            return this.packsDisponibles.filter(p => {
+        } else {
+            this.packsParaTipoList = this.packsDisponibles.filter(p => {
                 const tipo = (p.tipo || '').toLowerCase();
                 const personas = Number(p.cantidad_personas || 1);
                 const capMax = Number(p.capacidad_maxima || personas);
                 return tipo === 'grupal' || tipo === 'pack_grupal' || capMax >= 4 || personas >= 5;
             });
         }
-        return this.packsDisponibles;
     }
 
-    get alumnosFiltrados() {
-        if (!this.filtroAlumnos) return this.alumnos;
-        const f = this.filtroAlumnos.toLowerCase();
-        return this.alumnos.filter(a =>
+    filtrarListaAlumnos() {
+        // PERF: Do not render full list. Only render if they type something.
+        if (!this.filtroAlumnos || this.filtroAlumnos.trim().length < 2) {
+            this.alumnosFiltradosList = this.alumnos.filter(a => this.isAlumnoSelected(a));
+            return;
+        }
+        
+        const f = this.filtroAlumnos.trim().toLowerCase();
+        this.alumnosFiltradosList = this.alumnos.filter(a =>
+            this.isAlumnoSelected(a) ||
             (a.jugador_nombre || '').toLowerCase().includes(f) ||
             (a.pack_nombre || '').toLowerCase().includes(f)
         );
@@ -219,6 +230,29 @@ export class EntrenadorAgendarComponent implements OnInit {
             date.getFullYear() === today.getFullYear();
     }
 
+    getCalendarTitle(): string {
+        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        if (this.viewMode === 'month') {
+            return `${meses[this.currentDate.getMonth()]} ${this.currentDate.getFullYear()}`;
+        } else if (this.viewMode === 'week') {
+            const start = this.weekDates[0];
+            const end = this.weekDates[6];
+            if (start.getMonth() !== end.getMonth()) {
+                return `${start.getDate()} ${meses[start.getMonth()].substring(0, 3)} - ${end.getDate()} ${meses[end.getMonth()].substring(0, 3)} ${this.currentDate.getFullYear()}`;
+            }
+            return `Semana ${start.getDate()} al ${end.getDate()} ${meses[start.getMonth()]} ${this.currentDate.getFullYear()}`;
+        } else {
+            return `${this.currentDate.getDate()} de ${meses[this.currentDate.getMonth()]} ${this.currentDate.getFullYear()}`;
+        }
+    }
+
+    getReservasCount(day: Date): number {
+        const slots = this.slotsByDay[this.formatDate(day)];
+        if (!slots) return 0;
+        // Count only booked slots to show the number of classes that day
+        return slots.filter((s: any) => s.reserva_id != null).length;
+    }
+
     loadAlumnos(): void {
         if (!this.entrenadorId) return;
         this.alumnoService.getAlumnos(this.entrenadorId).subscribe({
@@ -231,9 +265,10 @@ export class EntrenadorAgendarComponent implements OnInit {
                         pack_nombre: a.pack_nombres || a.pack_nombre,
                         sesiones_restantes: restantes,
                         sesiones_reservadas: reservadas,
-                        creditos_reales: restantes - reservadas
+                        creditos_reales: Number(a.creditos_reales || 0)
                     };
                 }); 
+                this.filtrarListaAlumnos();
             },
             error: (err: any) => console.error('Error loading students:', err)
         });
@@ -253,7 +288,10 @@ export class EntrenadorAgendarComponent implements OnInit {
     loadPacks(): void {
         if (!this.entrenadorId) return;
         this.entrenamientoService.getPacks(this.entrenadorId).subscribe({
-            next: (res: any[]) => { this.packsDisponibles = res; },
+            next: (res: any[]) => { 
+                this.packsDisponibles = res; 
+                this.actualizarPacksParaTipo();
+            },
             error: (err: any) => console.error('Error loading packs:', err)
         });
     }
@@ -408,6 +446,8 @@ export class EntrenadorAgendarComponent implements OnInit {
 
         this.selectedSlot = { date, dateStr: this.formatDate(date), hour, slotData };
         this.tipoClaseSeleccionado = 'individual'; // Reset to default
+        this.filtroAlumnos = '';
+        this.filtrarListaAlumnos();
         this.showModal = true;
     }
 
@@ -483,8 +523,8 @@ export class EntrenadorAgendarComponent implements OnInit {
         // Search globally for student packs (remove trainer filter to find all credits)
         this.entrenamientoService.getPacksAlumno(jugadorId).subscribe({
             next: (res: any) => {
-                // The API returns an array directly, not an object with 'packs'
-                this.alumnosPacks = Array.isArray(res) ? res : (res.packs || []);
+                // The API returns {success: true, data: [...]}
+                this.alumnosPacks = Array.isArray(res) ? res : (res.data || res.packs || []);
                 
                 // Auto-select first pack with credits if none selected
                 if (this.alumnosPacks.length > 0 && !this.packAAsignar) {
@@ -531,6 +571,23 @@ export class EntrenadorAgendarComponent implements OnInit {
         } else {
             if (this.alumnosSeleccionados.length === 0 || !this.selectedSlot) return;
         }
+
+        // --- SAFEGUARD: Validaciones de Pack ---
+        if (this.mostrarSelectorPackManual && !this.packAAsignar) {
+            Swal.fire('Atención', 'Activaste la opción de vender un pack nuevo, pero no seleccionaste ninguno del menú.', 'warning');
+            return;
+        }
+
+        // Si no tiene saldo activo y tampoco seleccionó uno nuevo para comprar
+        const requiereNuevoPack = this.tipoClaseSeleccionado === 'individual' 
+            ? (this.alumnosPacksConCredito.length === 0 && (this.alumnoSeleccionado?.creditos_reales || 0) <= 0)
+            : (this.alumnosPacksConCredito.length === 0);
+
+        if (requiereNuevoPack && !this.packAAsignar) {
+            Swal.fire('Sin Saldo', 'El alumno no tiene sesiones disponibles. Selecciona un pack nuevo para asignarle antes de agendar.', 'error');
+            return;
+        }
+
         this.isLoading = true;
 
         // For individual: use first selected student
@@ -543,17 +600,19 @@ export class EntrenadorAgendarComponent implements OnInit {
         const jugadorIds = jugadores.map((j: any) => j.jugador_id || j.id);
 
         // Check if we need to assign a pack
-        const needsPack = this.tipoClaseSeleccionado === 'individual'
-            ? (primerJugador.sesiones_restantes || 0) <= 0
-            : true; // multi/grupal always reference a pack
+        // If a new pack was manually selected from the dropdown, always purchase it.
+        const needsPack = this.packAAsignar 
+            ? true 
+            : (this.tipoClaseSeleccionado === 'multijugador' || this.tipoClaseSeleccionado === 'grupal'
+                ? true
+                : (this.tipoClaseSeleccionado === 'individual' ? (primerJugador.sesiones_restantes || 0) <= 0 : false));
 
         const obsPack = (needsPack && this.packAAsignar)
             ? this.entrenamientoService.insertPack({
                 pack_id: this.packAAsignar.id || this.packAAsignar.pack_id,
                 jugador_id: primerJugador.jugador_id || primerJugador.id,
                 estado_pago: 'pendiente',
-                metodo_pago: 'manual_entrenador',
-                precio_pagado: 0
+                metodo_pago: 'manual_entrenador'
               })
             : new Observable(obs => {
                 obs.next({ success: true, pack_jugador_id: primerJugador.pack_jugador_id });
@@ -573,7 +632,10 @@ export class EntrenadorAgendarComponent implements OnInit {
                 } 
                 // 2. SECONDARY: Match from loaded packs with credits (highest accuracy for existing packs)
                 else if (this.alumnosPacksConCredito.length > 0) {
-                    const best = this.alumnosPacksConCredito[0]; // Take the first valid pack
+                    // Respect the user's manual dropdown selection
+                    let best = this.alumnosPacksConCredito.find(p => String(p.id || p.pack_jugador_id) === String(primerJugador.pack_jugador_id));
+                    if (!best) { best = this.alumnosPacksConCredito[0]; } // Fallback to first available
+                    
                     fId = best.pack_id || best.id_pack || best.id || 0;
                     fJugadorId = best.id || best.pack_jugador_id || best.pack_id || fId || 0;
                     
@@ -781,5 +843,12 @@ export class EntrenadorAgendarComponent implements OnInit {
             },
             error: (err: any) => this.handleError(err)
         });
+    }
+
+    getTimeOfDay(hour: string): 'manana' | 'tarde' | 'noche' {
+        const h = parseInt(hour.split(':')[0]);
+        if (h < 12) return 'manana';
+        if (h < 17) return 'tarde';
+        return 'noche';
     }
 }

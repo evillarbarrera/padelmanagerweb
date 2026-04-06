@@ -28,6 +28,16 @@ export class EntrenadorHomeComponent implements OnInit {
   hoyNombre = '';
   fechaHoyFormatted = '';
 
+  // Finanzas Chart Data
+  totalRecaudado: number = 0;
+  ventasPorDia: any[] = [];
+  maxVentaDia: number = 0;
+
+  totalRecaudadoAnio: number = 0;
+  ventasPorMes: any[] = [];
+  maxVentaMes: number = 0;
+
+
 
   constructor(
     private mysqlService: MysqlService,
@@ -198,6 +208,40 @@ export class EntrenadorHomeComponent implements OnInit {
           promoActiva: res.promo_activa || false,
           promoDiasRestantes: res.promo_dias_restantes || 0
         };
+      }
+    });
+
+    // Load Finanzas para Graficos
+    this.mysqlService.getFinanzas(this.userId).subscribe({
+      next: (res: any) => {
+        // Daily Chart
+        this.totalRecaudado = res.recaudado || 0;
+        const dias = res.ventas_por_dia || [];
+        if (dias.length > 0) {
+          this.maxVentaDia = Math.max(...dias.map((d: any) => d.total));
+          this.ventasPorDia = dias.map((d: any) => ({
+            ...d,
+            dayString: new Date(d.fecha + 'T00:00:00').getDate(),
+            heightPercent: this.maxVentaDia > 0 ? (d.total / this.maxVentaDia) * 100 : 0
+          }));
+        }
+
+        // Monthly Chart
+        this.totalRecaudadoAnio = res.recaudado_anio || 0;
+        const meses = res.ventas_por_mes || [];
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        if (meses.length > 0) {
+          this.maxVentaMes = Math.max(...meses.map((m: any) => m.total));
+          this.ventasPorMes = meses.map((m: any) => {
+            const dateParts = m.mes.split('-'); // e.g., '2026-04'
+            const monthIdx = parseInt(dateParts[1], 10) - 1;
+            return {
+              ...m,
+              monthString: monthNames[monthIdx],
+              heightPercent: this.maxVentaMes > 0 ? (m.total / this.maxVentaMes) * 100 : 0
+            };
+          });
+        }
       }
     });
   }

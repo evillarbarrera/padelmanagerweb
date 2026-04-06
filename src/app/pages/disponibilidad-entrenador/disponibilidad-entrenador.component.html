@@ -109,10 +109,22 @@
       </div>
 
       <ng-container *ngIf="!isLoading">
+        <!-- Month Selector Tabs -->
+        <div class="month-tabs-wrapper animate-down" style="margin-bottom: 25px;">
+            <div class="month-tabs">
+                <button *ngFor="let m of mesesDisponibles" 
+                        class="month-tab" 
+                        [class.active]="selectedMonthLabel === m.label"
+                        (click)="selectedMonthLabel = m.label; onMonthChange()">
+                    {{ m.label }}
+                </button>
+            </div>
+        </div>
+
         <!-- Day Tabs (Horizontal Scroll) -->
         <div class="day-tabs-wrapper animate-down">
           <div class="day-tabs">
-            <div *ngFor="let dia of dias" class="day-tab" [class.active]="diaSeleccionado === dia.fecha"
+            <div *ngFor="let dia of diasFiltrados" class="day-tab" [class.active]="diaSeleccionado === dia.fecha"
               (click)="seleccionarDia(dia.fecha)">
               <span class="day-name">{{ dia.nombre | slice:0:3 }}</span>
               <span class="day-date">{{ dia.fecha | date:'dd' }}</span>

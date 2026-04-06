@@ -22,8 +22,8 @@ export class PizarraTacticaComponent implements OnInit {
   players = [
     { key: 'j1', name: 'Jugador 1', label: 'J1', color: '#cc3333' },
     { key: 'j2', name: 'Jugador 2', label: 'J2', color: '#cc3333' },
-    { key: 'r1', name: 'Rival 1', label: 'R1', color: '#33aacc' },
-    { key: 'r2', name: 'Rival 2', label: 'R2', color: '#33aacc' }
+    { key: 'r1', name: 'Rival 1', label: 'R1', color: '#eab308' },
+    { key: 'r2', name: 'Rival 2', label: 'R2', color: '#eab308' }
   ];
 
   // --- MARCADOR ---
@@ -35,10 +35,17 @@ export class PizarraTacticaComponent implements OnInit {
 
   // --- STATS PER PLAYER ---
   statList: string[] = [
-    'SAQUE (GANADOS)', 'DEV. DE SAQUE (ERRADA)',
-    'ERRORES NO FORZADOS', 'VOLEAS GANADORAS', 'VOLEA DERECHA ERRADA', 'VOLEA REVES ERRADA',
-    'SMASH GANADORES', 'BANDEJA', 'BANDEJA ERRADA', 'SALIDA PARED ERRADA',
-    'DERECHA', 'SALIDA DE PARED', 'REVES', 'GLOBO'
+    'SAQUE',
+    'DEV. SAQUE',
+    'DERECHA',
+    'REVÉS',
+    'VOLEA DER.',
+    'VOLEA REV.',
+    'BANDEJA',
+    'RULO',
+    'SMASH/X3/X4',
+    'BAJADA DE PARED',
+    'ERRORES NO FORZADOS'
   ];
 
   playerStats: any = {
@@ -57,8 +64,8 @@ export class PizarraTacticaComponent implements OnInit {
   elements: any[] = [
     { id: 1, type: 'player', color: '#cc3333', x: 150, y: 180, label: 'J1', key: 'j1' },
     { id: 2, type: 'player', color: '#cc3333', x: 350, y: 180, label: 'J2', key: 'j2' },
-    { id: 3, type: 'player', color: '#33aacc', x: 180, y: 550, label: 'R1', key: 'r1' },
-    { id: 4, type: 'player', color: '#33aacc', x: 320, y: 550, label: 'R2', key: 'r2' },
+    { id: 3, type: 'player', color: '#eab308', x: 180, y: 550, label: 'R1', key: 'r1' },
+    { id: 4, type: 'player', color: '#eab308', x: 320, y: 550, label: 'R2', key: 'r2' },
     { id: 5, type: 'ball', color: '#ccff00', x: 250, y: 400 },
     { id: 6, type: 'cone', color: '#ff7711', x: 250, y: 710 }
   ];
@@ -66,6 +73,7 @@ export class PizarraTacticaComponent implements OnInit {
   drawings: any[] = []; 
   savedSessions: any[] = [];
   idEntrenador: number | null = null;
+  selectedSessionPreview: any = null;
 
   constructor(
     private pizarraService: PizarraService,
@@ -226,7 +234,7 @@ export class PizarraTacticaComponent implements OnInit {
 
   loadTactica(t: any) {
     this.currentTacticaId = t.id;
-    this.nombreSesion = t.nombre_sesion;
+    this.nombreSesion = t.nombre_sesion || t.nombre;
     this.notas = t.notas;
     
     // API should return already decoded json from my PHP
@@ -238,6 +246,43 @@ export class PizarraTacticaComponent implements OnInit {
     this.activeTab = 'coach';
   }
 
+  selectSessionToPreview(t: any) {
+    this.selectedSessionPreview = t;
+  }
+
+  getTotalStats(playerKey: string): number {
+    if (!this.selectedSessionPreview?.stats_data?.[playerKey]) return 0;
+    const stats = this.selectedSessionPreview.stats_data[playerKey];
+    return Object.values(stats).reduce((acc: any, val: any) => acc + (Number(val) || 0), 0) as number;
+  }
+
+  getWinningPoints(playerKey: string): number {
+     if (!this.selectedSessionPreview?.stats_data?.[playerKey]) return 0;
+     const stats = this.selectedSessionPreview.stats_data[playerKey];
+     const winnerKeys = ['VOLEA DER.', 'VOLEA REV.', 'BANDEJA', 'SMASH/X3/X4'];
+     return winnerKeys.reduce((acc, key) => acc + (Number(stats[key]) || 0), 0);
+  }
+
+  getErrors(playerKey: string): number {
+     if (!this.selectedSessionPreview?.stats_data?.[playerKey]) return 0;
+     const stats = this.selectedSessionPreview.stats_data[playerKey];
+     return Number(stats['ERRORES NO FORZADOS']) || 0;
+  }
+
+  getWinnerTeam(): number {
+    if (!this.selectedSessionPreview?.marcador_data) return 0;
+    let setsP1 = 0;
+    let setsP2 = 0;
+    this.selectedSessionPreview.marcador_data.forEach((s: any) => {
+       if (Number(s.p1) > Number(s.p2)) setsP1++;
+       else if (Number(s.p2) > Number(s.p1)) setsP2++;
+    });
+    if (setsP1 > setsP2) return 1;
+    if (setsP2 > setsP1) return 2;
+    return 0;
+  }
+
+
   newSession() {
     this.currentTacticaId = null;
     this.nombreSesion = 'Nueva Sesión Coach';
@@ -246,8 +291,8 @@ export class PizarraTacticaComponent implements OnInit {
     this.elements = [
       { id: 1, type: 'player', color: '#cc3333', x: 150, y: 180, label: 'J1', key: 'j1' },
       { id: 2, type: 'player', color: '#cc3333', x: 350, y: 180, label: 'J2', key: 'j2' },
-      { id: 3, type: 'player', color: '#33aacc', x: 180, y: 550, label: 'R1', key: 'r1' },
-      { id: 4, type: 'player', color: '#33aacc', x: 320, y: 550, label: 'R2', key: 'r2' },
+      { id: 3, type: 'player', color: '#eab308', x: 180, y: 550, label: 'R1', key: 'r1' },
+      { id: 4, type: 'player', color: '#eab308', x: 320, y: 550, label: 'R2', key: 'r2' },
       { id: 5, type: 'ball', color: '#ccff00', x: 250, y: 400 },
       { id: 6, type: 'cone', color: '#ff7711', x: 250, y: 710 }
     ];

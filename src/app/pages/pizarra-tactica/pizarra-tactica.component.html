@@ -74,7 +74,7 @@
                         <button (click)="undo()">↩️</button>
                         <div class="divider"></div>
                         <button (click)="addPlayer('#cc3333')">🔴</button>
-                        <button (click)="addPlayer('#33aacc')">🔵</button>
+                        <button (click)="addPlayer('#eab308')">🟡</button>
                         <button (click)="addCone()">▲</button>
                         <div class="divider"></div>
                         <button class="delete" (click)="clearAll()">🗑️</button>
@@ -155,19 +155,111 @@
 
     <!-- TAB: ARCHIVO Y NOTAS -->
     <div class="archive-layout" *ngIf="activeTab === 'archivo'">
-        <div class="archive-grid">
-            <section class="sessions-panel">
-                <h3>SESIONES GUARDADAS</h3>
-                <div class="sessions-list">
-                    <div class="session-card" *ngFor="let t of savedSessions" (click)="loadTactica(t)" [class.active]="currentTacticaId === t.id">
-                        <div class="info">
-                            <span class="name">{{ t.nombre_sesion || 'Sesión sin título' }}</span>
-                            <span class="date">{{ t.fecha_actualizacion | date:'short' }}</span>
+        <div class="archive-split">
+            <!-- Sidebar: Lista de Sesiones -->
+            <aside class="archive-sidebar">
+                <header class="sidebar-header">
+                    <h3>HISTORIAL DE SESIONES</h3>
+                    <div class="search-mini">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Filtrar archivos...">
+                    </div>
+                </header>
+
+                <div class="archive-list custom-scroll">
+                    <div class="archive-item" *ngFor="let t of savedSessions" 
+                         (click)="selectSessionToPreview(t)" 
+                         [class.active]="selectedSessionPreview?.id === t.id">
+                        <div class="item-icon">📂</div>
+                        <div class="item-info">
+                            <span class="name">{{ t.nombre || t.nombre_sesion || 'Sesión #' + t.id }}</span>
+                            <span class="date">{{ t.fecha_actualizacion | date:'mediumDate' }} • {{ t.id }}</span>
                         </div>
-                        <span class="id">#{{ t.id }}</span>
+                        <i class="fas fa-chevron-right arrow"></i>
                     </div>
                 </div>
-            </section>
+            </aside>
+
+            <!-- Main Panel: Resumen Inteligente -->
+            <main class="archive-viewer animate-fade">
+                <div class="empty-state" *ngIf="!selectedSessionPreview">
+                    <i class="fas fa-folder-open"></i>
+                    <h2>Selecciona una sesión para ver el análisis</h2>
+                    <p>El resumen de métricas y marcador aparecerá aquí.</p>
+                </div>
+
+                <div class="viewer-content" *ngIf="selectedSessionPreview" id="sessionPreview">
+                    <header class="viewer-header">
+                        <div class="h-left">
+                            <span class="badge-status">SESIÓN FINALIZADA</span>
+                            <h1>{{ selectedSessionPreview.nombre || selectedSessionPreview.nombre_sesion }}</h1>
+                            <p class="meta"><i class="fas fa-calendar"></i> {{ selectedSessionPreview.fecha_actualizacion | date:'fullDate':'':'es' }}</p>
+                        </div>
+                        <button class="btn-open-session animate-pop" (click)="loadTactica(selectedSessionPreview)">
+                            <i class="fas fa-expand-arrows-alt"></i> ABRIR EN PIZARRA
+                        </button>
+                    </header>
+
+                    <div class="viewer-grid">
+                        <!-- Scoreboard Summary -->
+                        <section class="summary-section score-summary">
+                            <h3><i class="fas fa-trophy"></i> MARCADOR FINAL</h3>
+                            <div class="score-display">
+                                <div class="pair-row" [class.is-winner]="getWinnerTeam() === 1">
+                                    <div class="p-names-group">
+                                        <span class="p-names">{{ (selectedSessionPreview.players_data?.[0]?.name || 'Jugador 1') + ' / ' + (selectedSessionPreview.players_data?.[1]?.name || 'Jugador 2') }}</span>
+                                        <span class="winner-badge" *ngIf="getWinnerTeam() === 1">🏆 WINNER</span>
+                                    </div>
+                                    <div class="sets">
+                                        <span class="set" *ngFor="let s of selectedSessionPreview.marcador_data" [class.w]="s.p1 > s.p2">{{ s.p1 }}</span>
+                                    </div>
+                                </div>
+                                <div class="divider">VS</div>
+                                <div class="pair-row rival" [class.is-winner]="getWinnerTeam() === 2">
+                                    <div class="p-names-group">
+                                        <span class="p-names">{{ (selectedSessionPreview.players_data?.[2]?.name || 'Rival 1') + ' / ' + (selectedSessionPreview.players_data?.[3]?.name || 'Rival 2') }}</span>
+                                        <span class="winner-badge" *ngIf="getWinnerTeam() === 2">🏆 WINNER</span>
+                                    </div>
+                                    <div class="sets">
+                                        <span class="set" *ngFor="let s of selectedSessionPreview.marcador_data" [class.w]="s.p2 > s.p1">{{ s.p2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- High Level Metrics -->
+                        <section class="summary-section metrics-summary">
+                            <h3><i class="fas fa-chart-pie"></i> RENDIMIENTO POR JUGADOR</h3>
+                            <div class="metrics-grid">
+                                <div class="player-perf-card" *ngFor="let p of (selectedSessionPreview.players_data || players)">
+                                    <div class="card-header" [style.border-color]="p.color">
+                                        <span class="p-initials" [style.background]="p.color">{{ p.label }}</span>
+                                        <span class="p-full-name">{{ p.name }}</span>
+                                    </div>
+                                    <div class="card-stats">
+                                        <div class="stat-item winners">
+                                            <span class="val">{{ getWinningPoints(p.key) }}</span>
+                                            <span class="lab">GANADORES</span>
+                                        </div>
+                                        <div class="stat-item errors">
+                                            <span class="val">{{ getErrors(p.key) }}</span>
+                                            <span class="lab">ERRORES</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Notes / Analysis -->
+                        <section class="summary-section notes-summary">
+                            <h3><i class="fas fa-sticky-note"></i> CONCLUSIONES TÁCTICAS</h3>
+                            <div class="notes-content">
+                                {{ selectedSessionPreview.notas || 'No hay notas técnicas registradas en esta sesión.' }}
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
   </main>

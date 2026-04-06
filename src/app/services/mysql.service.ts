@@ -61,6 +61,12 @@ export class MysqlService {
     });
   }
 
+  getFinanzas(entrenadorId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/entrenador/get_finanzas.php?entrenador_id=${entrenadorId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
   getEstadisticasEntrenador(entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/entrenador/get_packs_grupales.php?entrenador_id=${entrenadorId}`, {
       headers: this.getHeaders()

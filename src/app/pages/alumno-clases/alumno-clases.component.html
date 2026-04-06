@@ -81,30 +81,46 @@
                     <p>Tu evolución técnica definida por el Coach para alcanzar el siguiente nivel.</p>
                 </div>
 
+                <!-- 🧩 ROADMAP TABS: BY ALL STUDENT PACKS -->
+                <div class="sub-nav" *ngIf="alumnoPacks.length > 1">
+                    <button class="sn-btn" *ngFor="let p of alumnoPacks" [class.active]="selectedPack?.id === p.id" (click)="seleccionarPackRoadmap(p)">
+                        📦 {{ p.nombre }}
+                    </button>
+                </div>
+
                 <div class="roadmap-grid" *ngIf="historialMalla.length > 0">
-                    <div class="sesion-card" *ngFor="let sesion of historialMalla; let i = index">
+                    <div class="sesion-card professional-sheet fade-in" *ngFor="let sesion of historialMalla; let i = index" [ngClass]="sesion.estado_asistencia">
+                        <!-- Top status line -->
+                        <div class="sheet-status-bar"></div>
+                        
                         <div class="s-header">
-                            <div class="s-num">{{ i + 1 }}</div>
-                            <div class="status-tag" [ngClass]="sesion.estado_asistencia">
-                                {{ sesion.estado_asistencia === 'proxima' ? 'Agendada' : (sesion.estado_asistencia === 'completada' ? 'Completada' : 'Planificada') }}
+                            <div class="sheet-id">S-{{ (i + 1) | number:'2.0' }}</div>
+                            <div class="status-badge-mini" [ngClass]="sesion.estado_asistencia">
+                                {{ sesion.estado_asistencia === 'proxima' ? 'Agendada' : (sesion.estado_asistencia === 'completada' ? 'OK' : 'Pte') }}
                             </div>
                         </div>
 
                         <div class="s-content">
-                            <h3>{{ sesion.titulo }}</h3>
-                            <ul class="obj-list" *ngIf="sesion.lista_objetivos?.length > 0">
-                                <li *ngFor="let obj of sesion.lista_objetivos | slice:0:3">{{ obj }}</li>
-                            </ul>
-                            <p class="no-obj" *ngIf="!sesion.lista_objetivos || sesion.lista_objetivos.length === 0">Sin objetivos específicos definidos.</p>
+                            <div class="sheet-main-row">
+                                <h3 class="session-title">{{ sesion.titulo }}</h3>
+                                <span class="mesh-badge-mini">{{ selectedPack?.activeMesh?.malla_nombre || 'Plan' }}</span>
+                            </div>
+                            
+                            <div class="objectives-list-compact" *ngIf="sesion.lista_objetivos?.length > 0">
+                                <div class="obj-item-mini" *ngFor="let obj of sesion.lista_objetivos | slice:0:2">
+                                    <span class="dot"></span> {{ obj }}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="s-footer">
-                            <div class="s-date">
-                                <span class="d-top">Próxima Cita</span>
-                                <span class="d-val">{{ sesion.fecha ? (sesion.fecha | date:'EEEE d MMMM') : 'Pendiente' }}</span>
+                        <div class="s-footer-compact">
+                            <div class="date-info-mini">
+                                <span class="v">{{ sesion.fecha ? (sesion.fecha | date:'d/MM') : '??/??' }}</span>
+                                <span class="v time-m" *ngIf="sesion.hora">@{{ sesion.hora | slice:0:5 }}</span>
                             </div>
-                            <button class="btn-view" (click)="abrirPanelDetalle(sesion)">
-                                Ficha Técnica →
+                            
+                            <button class="btn-sheet-mini" (click)="abrirPanelDetalle(sesion)">
+                                Ficha →
                             </button>
                         </div>
                     </div>
