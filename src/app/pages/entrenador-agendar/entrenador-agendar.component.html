@@ -43,6 +43,7 @@
                             <div class="time-label">{{ hour }}</div>
                             <div *ngFor="let day of displayDates" 
                                  class="slot-cell"
+                                 [class.past]="isPast(day, hour)"
                                  [class.available]="getSlotData(day, hour) && !getSlotData(day, hour).ocupado"
                                  [class.booked]="getSlotData(day, hour)?.ocupado"
                                  [class.is-manana]="getSlotData(day, hour)?.ocupado && getTimeOfDay(hour) === 'manana'"
@@ -73,6 +74,7 @@
                         <div *ngFor="let day of displayDates" 
                              class="month-day-cell" 
                              [class.today]="isToday(day)"
+                             [class.past]="isPastDay(day)"
                              [class.other-month]="day.getMonth() !== currentDate.getMonth()">
                             <span class="m-num">{{ day | date:'d' }}</span>
                             <div class="m-status-dots" *ngIf="getReservasCount(day) > 0">

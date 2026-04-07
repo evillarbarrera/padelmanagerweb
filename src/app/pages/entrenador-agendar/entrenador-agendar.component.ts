@@ -230,6 +230,22 @@ export class EntrenadorAgendarComponent implements OnInit {
             date.getFullYear() === today.getFullYear();
     }
 
+    isPast(date: Date, hour: string): boolean {
+        const now = new Date();
+        const [hours, minutes] = hour.split(':');
+        const slotDate = new Date(date);
+        slotDate.setHours(parseInt(hours), parseInt(minutes), 0);
+        return slotDate < now;
+    }
+
+    isPastDay(date: Date): boolean {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const compareDate = new Date(date);
+        compareDate.setHours(0, 0, 0, 0);
+        return compareDate < today;
+    }
+
     getCalendarTitle(): string {
         const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         if (this.viewMode === 'month') {
