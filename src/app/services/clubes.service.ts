@@ -28,6 +28,15 @@ export class ClubesService {
         });
     }
 
+    getClubHomeStats(adminId: number, clubId?: number): Observable<any> {
+        let url = `${this.apiUrl}/clubes/get_home_stats.php?admin_id=${adminId}`;
+        if (clubId) url += `&club_id=${clubId}`;
+        
+        return this.http.get<any>(url, {
+            headers: this.getHeaders()
+        });
+    }
+
     addClub(clubData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/clubes/add_club.php`, clubData, {
             headers: this.getHeaders()
@@ -102,8 +111,10 @@ export class ClubesService {
         });
     }
 
-    getTorneosAdmin(adminId: number): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_torneos_admin.php?admin_id=${adminId}`, {
+    getTorneosAdmin(adminId: number, clubId?: number): Observable<any[]> {
+        let url = `${this.apiUrl}/torneos/get_torneos_admin.php?admin_id=${adminId}`;
+        if (clubId) url += `&club_id=${clubId}`;
+        return this.http.get<any[]>(url, {
             headers: this.getHeaders()
         });
     }
@@ -167,8 +178,12 @@ export class ClubesService {
         });
     }
 
-    getUsers(): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/user/get_users.php`, {
+    getUsers(rol?: string, search?: string): Observable<any[]> {
+        let url = `${this.apiUrl}/user/get_users.php?1=1`;
+        if (rol) url += `&rol=${rol}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        return this.http.get<any[]>(url, {
             headers: this.getHeaders()
         });
     }
@@ -257,14 +272,34 @@ export class ClubesService {
         });
     }
 
-    getTorneosAdminV2(adminId: number): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_torneos_admin_v2.php?admin_id=${adminId}`, {
+    getTorneosAdminV2(adminId: number, clubId?: number): Observable<any[]> {
+        let url = `${this.apiUrl}/torneos/get_torneos_admin_v2.php?admin_id=${adminId}`;
+        if (clubId) url += `&club_id=${clubId}`;
+        return this.http.get<any[]>(url, {
             headers: this.getHeaders()
         });
     }
 
     getCategoriasTorneo(torneoId: number): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/torneos/get_categorias.php?torneo_id=${torneoId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    updateCategoria(id: number, data: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/update_categoria.php`, { id, ...data }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    addCategoria(torneoId: number, data: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/add_categoria.php`, { torneo_id: torneoId, ...data }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    deleteCategoria(id: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/delete_categoria.php`, { id }, {
             headers: this.getHeaders()
         });
     }
@@ -326,6 +361,12 @@ export class ClubesService {
         });
     }
 
+    getPartidosTorneoV2(torneoId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/torneos/get_partidos_torneo_v2.php?torneo_id=${torneoId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
     updateMatchResultV2(matchData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/torneos/update_match_result.php`, matchData, {
             headers: this.getHeaders()
@@ -334,6 +375,37 @@ export class ClubesService {
 
     saveSchedule(programacion: any[]): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/torneos/save_schedule.php`, { programacion }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // STAFF
+    getClubStaff(clubId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/clubes/get_staff.php?club_id=${clubId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    addClubStaff(staffData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/clubes/add_staff.php`, staffData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    deleteClubStaff(usuarioId: number, clubId: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/clubes/delete_staff.php`, { usuario_id: usuarioId, club_id: clubId }, {
+            headers: this.getHeaders()
+        });
+    }
+    // REPORTES
+    getReporteVentas(clubId: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/reportes/get_reporte_ventas.php?club_id=${clubId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    getReporteReservas(clubId: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/reportes/get_reporte_reservas.php?club_id=${clubId}`, {
             headers: this.getHeaders()
         });
     }

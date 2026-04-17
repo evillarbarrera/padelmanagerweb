@@ -1,0 +1,226 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="club-ventas">
+    </app-sidebar>
+
+    <main class="main-content">
+        <!-- CLUB TABS NAV (Reservas Style) -->
+        <nav class="club-tabs-nav animate-in" *ngIf="clubes.length > 0">
+            <div class="tabs-scroll-container">
+                <!-- Global Tab only for multi-club admins (Hidden for STAFF) -->
+                <button class="club-tab-btn" 
+                        [class.active]="selectedClubId === 0" 
+                        (click)="selectClub(0)"
+                        *ngIf="clubes.length > 1 && !isStaff">
+                    <span class="tab-icon">🌐</span>
+                    <span class="tab-name">Vista Global</span>
+                    <span class="tab-badge" *ngIf="selectedClubId === 0">Activo</span>
+                </button>
+                
+                <button *ngFor="let club of clubes" 
+                        class="club-tab-btn" 
+                        [class.active]="selectedClubId === club.club_id"
+                        (click)="selectClub(club.club_id)">
+                    <span class="tab-icon">🏢</span>
+                    <span class="tab-name">{{club.club_nombre}}</span>
+                    <span class="tab-badge" *ngIf="selectedClubId === club.club_id">Activo</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="sales-container">
+            <!-- Summary -->
+            <div class="summary-grid">
+                <div class="summary-card total">
+                    <label>Total Recaudado ({{fechaFiltro}})</label>
+                    <span class="value">{{ (selectedClubId === 0 ? globalStats.total : totalRecaudado) | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+                </div>
+                <div class="summary-card cash">
+                    <label>Efectivo</label>
+                    <span class="value">{{ (selectedClubId === 0 ? globalStats.cash : totalEfectivo) | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+                </div>
+                <div class="summary-card reserve">
+                    <label>Reservas / Otros</label>
+                    <span class="value">{{ (selectedClubId === 0 ? globalStats.reserve : totalReservas) | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+                </div>
+                <div class="summary-card card">
+                    <label>Tarjeta / Transf.</label>
+                    <span class="value">{{ (selectedClubId === 0 ? globalStats.card : totalTarjetas) | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+                </div>
+                <div class="summary-card">
+                    <label>Ventas Realizadas</label>
+                    <span class="value">{{ selectedClubId === 0 ? globalStats.ops : ventas.length}} ops.</span>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-row">
+                <div class="date-filter">
+                    <label>Ver día:</label>
+                    <input type="date" [(ngModel)]="fechaFiltro" (change)="loadVentas()">
+                </div>
+                <div style="flex: 1"></div>
+                
+                <button class="btn-primary" (click)="openNewSale()" *ngIf="selectedClubId !== 0" style="margin-right: 20px; background: #ccff00; color: #000; padding: 10px 20px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer;">
+                    <i class="fas fa-plus"></i> Nueva Venta
+                </button>
+
+                <button class="btn-refresh" (click)="loadVentas()" style="all: unset; cursor: pointer; color: #3b82f6; font-size: 14px; font-weight: 800;">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+
+            <!-- List -->
+            <div class="sales-list" *ngIf="selectedClubId !== 0">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Vendedor</th>
+                            <th>Productos / Detalle</th>
+                            <th>Método</th>
+                            <th style="text-align: right;">Total</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let v of ventas">
+                            <td class="time">{{v.fecha | date:'HH:mm'}}</td>
+                            <td>{{v.vendedor || 'Staff'}}</td>
+                            <td>
+                                <div *ngFor="let item of v.items" class="item-badge">
+                                    {{item.cantidad}}x <b>{{item.producto_nombre}}</b>
+                                </div>
+                            </td>
+                            <td><span class="method">{{v.metodo_pago}}</span></td>
+                            <td class="total-val" style="text-align: right;">{{v.total | currency:'CLP':'symbol-narrow':'1.0-0'}}</td>
+                            <td style="text-align: center;">
+                                <button class="btn-icon delete" (click)="anularVenta(v.id)" title="Anular venta" style="all: unset; cursor: pointer; color: #cbd5e1; transition: 0.2s;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr *ngIf="ventas.length === 0">
+                            <td colspan="6" style="text-align: center; padding: 50px; color: #94a3b8;">
+                                <i class="fas fa-receipt" style="font-size: 32px; display: block; margin-bottom: 10px;"></i>
+                                No se registraron ventas para esta fecha.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- POS MODAL (Redesigned) -->
+<div class="modal-overlay" *ngIf="showSaleModal">
+    <div class="modal-content pos-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-cart-arrow-down"></i> Generar Nueva Venta</h3>
+            <button class="btn-close" (click)="showSaleModal = false">&times;</button>
+        </div>    <!-- 🌐 TRADITIONAL WEB MODAL: GENERAR VENTA -->
+    <div class="modal-overlay" *ngIf="showSaleModal">
+        <div class="premium-modal animate-in">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-cart-arrow-down"></i> Generar Nueva Venta
+                </h3>
+                <button class="close-modal" (click)="showSaleModal = false">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body-split">
+                <!-- COL IZQUIERDA: Descubrimiento de productos -->
+                <div class="selection-area">
+                    <!-- 1. Buscador Cliente -->
+                    <div class="search-field-premium">
+                        <i class="fas fa-search"></i>
+                        <input type="text" [(ngModel)]="playerSearchTerm" (input)="searchPlayers()" placeholder="Buscar cliente por nombre o email...">
+                        <div class="search-drop" *ngIf="filteredPlayers.length > 0">
+                            <div *ngFor="let p of filteredPlayers" class="drop-item" (click)="selectPlayer(p)">
+                                <div class="u-info">{{p.nombre}}</div>
+                                <small>{{p.email}}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Categorías (Pills) -->
+                    <div class="category-nav-pills">
+                        <button *ngFor="let cat of ['Todas', 'Bebidas', 'Pelotas', 'Indumentaria', 'Otros']" 
+                                class="p-btn"
+                                [class.active]="selectedCategory === cat"
+                                (click)="selectedCategory = cat">
+                            {{cat}}
+                        </button>
+                    </div>
+
+                    <!-- 3. Showcase de Productos -->
+                    <div class="product-showcase">
+                        <div *ngFor="let p of filteredAvailableProducts" class="product-card-v2" (click)="addToCart(p)">
+                            <span class="name">{{p.nombre}}</span>
+                            <span class="price">{{p.precio_venta | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+                            <span class="stock" [class.low]="p.stock_actual < 5">Stock: {{p.stock_actual}}</span>
+                            <div class="add-pill">+ AGREGAR</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COL DERECHA: Checkout y Totales -->
+                <div class="summary-checkout-area">
+                    <label style="font-size: 11px; font-weight: 950; color: #94a3b8; text-transform: uppercase;">Resumen de Venta</label>
+                    
+                    <div class="cart-listing-premium">
+                        <div *ngFor="let item of cart" class="cart-item-row">
+                            <div class="i-info">
+                                <span class="n">{{item.nombre}}</span>
+                                <span class="q">{{item.cantidad}} un. x {{item.precio_venta | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+                            </div>
+                            <span class="i-price">{{item.precio_venta * item.cantidad | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+                            <button class="btn-remove-p" (click)="removeFromCart(item.id)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="empty-cart-v2" *ngIf="cart.length === 0">
+                            <i class="fas fa-shopping-basket"></i>
+                            <p>Carrito vacío...</p>
+                        </div>
+                    </div>
+
+                    <!-- Método de Pago -->
+                    <div class="payment-method-strip">
+                        <label>Selecciona Pago</label>
+                        <div class="meth-grid">
+                            <button [class.active]="metodoPago === 'Efectivo'" (click)="metodoPago = 'Efectivo'">
+                                <i class="fas fa-money-bill-wave"></i> Efectivo
+                            </button>
+                            <button [class.active]="metodoPago === 'Tarjeta'" (click)="metodoPago = 'Tarjeta'">
+                                <i class="fas fa-credit-card"></i> Tarjeta
+                            </button>
+                            <button [class.active]="metodoPago === 'Transferencia'" (click)="metodoPago = 'Transferencia'">
+                                <i class="fas fa-university"></i> Transf.
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card de Total -->
+                    <div class="total-billing-card">
+                        <label>TOTAL NETO</label>
+                        <div class="total-val">{{cartTotal | currency:'CLP':'symbol-narrow':'1.0-0'}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-footer">
+                <button class="btn-close-web" (click)="showSaleModal = false">Cerrar</button>
+                <div style="flex:1"></div>
+                <button class="btn-finish-web" [disabled]="cart.length === 0" (click)="finalizarVenta()">
+                    <i class="fas fa-check-circle"></i> CONFIRMAR VENTA
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>

@@ -4,8 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { ClubesService } from '../../services/clubes.service';
+import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
+import { AssetService } from '../../services/asset.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -125,7 +128,9 @@ export class PerfilComponent implements OnInit {
     private mysqlService: MysqlService,
     private clubesService: ClubesService,
     private router: Router,
-    private popupService: PopupService
+    private authService: AuthService,
+    private popupService: PopupService,
+    private assetService: AssetService
   ) { }
 
   ngOnInit(): void {
@@ -155,7 +160,7 @@ export class PerfilComponent implements OnInit {
 
   vincularMP(): void {
     const clientId = '1989199016593068';
-    const redirectUri = encodeURIComponent('https://api.padelmanager.cl/pagos/mp_callback.php');
+    const redirectUri = encodeURIComponent(`${environment.apiUrl}/pagos/mp_callback.php`);
     const authUrl = `https://auth.mercadopago.cl/authorization?client_id=${clientId}&response_type=code&platform_id=mp&redirect_uri=${redirectUri}&state=${this.userId}`;
     window.location.href = authUrl;
   }
@@ -172,11 +177,7 @@ export class PerfilComponent implements OnInit {
           const p1 = res.user.foto_perfil;
           const p2 = res.user.foto;
           let fotoRaw = p1 || p2;
-          let finalFoto = "";
-
-          if (fotoRaw && fotoRaw.length > 5 && !fotoRaw.includes('imagen_defecto')) {
-            finalFoto = fotoRaw.startsWith('http') ? fotoRaw : `https://api.padelmanager.cl/${fotoRaw.startsWith('/') ? fotoRaw.substring(1) : fotoRaw}`;
-          }
+          let finalFoto = this.assetService.getAssetUrl(fotoRaw, 'perfil');
 
           this.profile = { ...this.profile, ...res.user, foto_perfil: finalFoto };
           this.userRole = res.user.rol;
@@ -211,24 +212,54 @@ export class PerfilComponent implements OnInit {
     if (file) {
       this.uploadPhoto(file);
     }
+    // Reset the input so the same file can be selected again if needed
+    event.target.value = '';
   }
 
   uploadPhoto(file: File): void {
-    if (!this.userId) return;
+    if (!this.userId) {
+      this.popupService.error('Error', 'No se ha detectado tu sesión de usuario. Por favor, reasocia tu cuenta o inicia sesión de nuevo.');
+      return;
+    }
+    if (this.isLoading) return; // Prevent double trigger
+
     this.isLoading = true;
+    Swal.fire({
+      title: 'Subiendo imagen...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     this.mysqlService.subirFoto(this.userId, file).subscribe({
       next: (res) => {
         this.isLoading = false;
+        Swal.close();
         if (res.success) {
           // Robust update of the local photo URL
-          this.profile.foto_perfil = res.foto_url;
+          const fotoRaw = res.foto_url || res.foto || res.url;
+          if (fotoRaw) {
+            this.profile.foto_perfil = this.assetService.getAssetUrl(fotoRaw, 'perfil');
+
+            // Sync with AuthService and localStorage
+            const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            storedUser.foto_perfil = fotoRaw;
+            this.authService.setCurrentUser(storedUser); // This triggers subscribers
+
+            this.popupService.success('¡Éxito!', 'La foto de perfil se ha actualizado.');
+          } else {
+            this.popupService.error('Error', 'El servidor no devolvió la URL de la foto.');
+          }
+        } else {
+          this.popupService.error('Error', res.mensaje || 'No se pudo subir la foto.');
         }
       },
       error: (err: any) => {
         this.isLoading = false;
+        Swal.close();
         console.error('Error uploading photo:', err);
-        this.popupService.error('Error', 'Hubo un problema al subir la foto.');
+        this.popupService.error('Error', 'Hubo un problema de conexión al subir la foto.');
       }
     });
   }
@@ -338,7 +369,7 @@ export class PerfilComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         // Redirigir a la URL de eliminación proporcionada por Apple/Cliente
-        window.location.href = `https://api.padelmanager.cl/delete-account?user_id=${this.userId}`;
+        window.location.href = `${environment.apiUrl}/delete-account?user_id=${this.userId}`;
       }
     });
   }

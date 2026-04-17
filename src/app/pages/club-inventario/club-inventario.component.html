@@ -1,0 +1,166 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="club-inventario">
+    </app-sidebar>
+    
+    <main class="main-content">
+        <!-- CLUB TABS NAV (Reservas Style) -->
+        <nav class="club-tabs-nav animate-in" *ngIf="clubes.length > 0">
+            <div class="tabs-scroll-container">
+                <!-- Global Tab only for multi-club users -->
+                <button class="club-tab-btn" 
+                        [class.active]="selectedClubId === 0" 
+                        (click)="selectClub(0)"
+                        *ngIf="clubes.length > 1 && !isStaff">
+                    <span class="tab-icon">🌐</span>
+                    <span class="tab-name">Vista Global</span>
+                    <span class="tab-badge" *ngIf="selectedClubId === 0">Activo</span>
+                </button>
+                
+                <button *ngFor="let club of clubes" 
+                        class="club-tab-btn" 
+                        [class.active]="selectedClubId === club.club_id"
+                        (click)="selectClub(club.club_id)">
+                    <span class="tab-icon">🏢</span>
+                    <span class="tab-name">{{club.club_nombre}}</span>
+                    <span class="tab-badge" *ngIf="selectedClubId === club.club_id">Activo</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="inventory-container">
+            <!-- Hero Stats -->
+    <div class="stats-grid">
+        <div class="stat-card highlight">
+            <div class="icon-box"><i class="fas fa-box"></i></div>
+            <div class="data">
+                <label>Total Productos</label>
+                <span>{{ selectedClubId === 0 ? globalStats.total : productos.length}}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon-box"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="data">
+                <label>Stock Bajo</label>
+                <span>{{ selectedClubId === 0 ? globalStats.lowStock : lowStockCount}}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon-box"><i class="fas fa-dollar-sign"></i></div>
+            <div class="data">
+                <label>Valor Inventario</label>
+                <span>{{ (selectedClubId === 0 ? globalStats.totalValue : totalInventoryValue) | currency:'CLP':'symbol-narrow':'1.0-0'}}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls (Only if NOT Global) -->
+    <div class="controls-row" *ngIf="selectedClubId !== 0">
+        <div class="search-input">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar producto por nombre..." [(ngModel)]="searchTerm">
+        </div>
+        <div class="actions">
+            <button class="btn-add" (click)="openAddModal()">
+                <i class="fas fa-plus"></i> Nuevo Producto
+            </button>
+        </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="products-card" *ngIf="selectedClubId !== 0">
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Stock</th>
+                    <th>Precio Venta</th>
+                    <th style="text-align: right;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let p of filteredProductos">
+                    <td>
+                        <div class="prod-info">
+                            <span class="name">{{p.nombre}}</span>
+                        </div>
+                    </td>
+                    <td><span class="cat-pill">{{p.categoria}}</span></td>
+                    <td>
+                        <div class="stock-badge" [class.low]="p.stock_actual <= p.stock_minimo" [class.ok]="p.stock_actual > p.stock_minimo">
+                            {{p.stock_actual}} / {{p.stock_minimo}}
+                        </div>
+                    </td>
+                    <td><span class="price">{{p.precio_venta | currency:'CLP':'symbol-narrow':'1.0-0'}}</span></td>
+                    <td class="actions-cell">
+                        <button class="btn-edit" (click)="editarProducto(p)" style="margin-right: 5px;" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-edit btn-delete-row" (click)="eliminarProducto(p)" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr *ngIf="filteredProductos.length === 0">
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">
+                        <i class="fas fa-box-open" style="font-size: 32px; display: block; margin-bottom: 10px;"></i>
+                        No se encontraron productos en el inventario.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Agregar/Editar Producto -->
+<div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>{{isEditing ? 'Editar' : 'Nuevo'}} Producto</h2>
+            <button class="btn-close" (click)="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form>
+                <div class="input-group">
+                    <label>Nombre del Producto</label>
+                    <input type="text" [(ngModel)]="editingProd.nombre" name="nombre" placeholder="Ej: Coca Cola 500ml">
+                </div>
+                <div class="row-inputs">
+                    <div class="input-group">
+                        <label>Categoría</label>
+                        <select [(ngModel)]="editingProd.categoria" name="categoria">
+                            <option value="Bebidas">Bebidas</option>
+                            <option value="Pelotas">Pelotas</option>
+                            <option value="Indumentaria">Indumentaria</option>
+                            <option value="Accesorios">Accesorios</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Precio Venta</label>
+                        <input type="number" [(ngModel)]="editingProd.precio_venta" name="precio_venta">
+                    </div>
+                </div>
+                <div class="row-inputs">
+                    <div class="input-group">
+                        <label>Stock Actual</label>
+                        <input type="number" [(ngModel)]="editingProd.stock_actual" name="stock_actual">
+                    </div>
+                    <div class="input-group">
+                        <label>Stock Mínimo</label>
+                        <input type="number" [(ngModel)]="editingProd.stock_minimo" name="stock_minimo">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeModal()">Cancelar</button>
+            <button class="btn-save" (click)="saveProducto()" [disabled]="isLoading">
+                {{isLoading ? 'Guardando...' : 'Guardar Producto'}}
+            </button>
+        </div>
+    </div>
+</div>
+    </main>
+</div>

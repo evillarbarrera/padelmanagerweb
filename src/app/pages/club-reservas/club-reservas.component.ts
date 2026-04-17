@@ -6,6 +6,7 @@ import { ClubesService } from '../../services/clubes.service';
 import { ApiService } from '../../services/api.service';
 import Swal from 'sweetalert2';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { InventarioService } from '../../services/inventario.service';
 
 @Component({
     selector: 'app-club-reservas',
@@ -49,7 +50,9 @@ export class ClubReservasComponent implements OnInit {
         hora_fin: '',
         precio: 0,
         pagado: 1,
-        estado: 'Confirmada'
+        estado: 'Confirmada',
+        metodo_pago: 'total', // 'total' o 'proporcional'
+        pagos: { p1: true, p2: false, p3: false, p4: false } // Estado de pago por jugador
     };
 
     activeDragReserva: any = null;
@@ -64,10 +67,17 @@ export class ClubReservasComponent implements OnInit {
     isTVMode: boolean = false;
     refreshInterval: any;
     currentTime: string = '';
+    // Consumption feature
+    showConsumoModal: boolean = false;
+    activeReservaConsumo: any = null;
+    activePlayerN: number = 0;
+    productos: any[] = [];
+    currentConsumos: any[] = [];
 
     constructor(
         private clubesService: ClubesService,
         private apiService: ApiService,
+        private inventarioService: InventarioService,
         private router: Router
     ) { }
 
@@ -76,7 +86,16 @@ export class ClubReservasComponent implements OnInit {
         const storedUserId = localStorage.getItem('userId');
         const storedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
-        if (!storedUserId || (!storedRole.toLowerCase().includes('admin') && !storedRole.toLowerCase().includes('administrador'))) {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+        if (!currentUser) {
+            this.router.navigate(['/login']);
+            return;
+        }
+
+        this.userId = currentUser.id;
+        this.userRole = currentUser.rol || 'administrador_club';
+        if (!storedUserId || (!storedRole.toLowerCase().includes('admin') && !storedRole.toLowerCase().includes('staff'))) {
             this.router.navigate(['/login']);
             return;
         }
@@ -85,8 +104,6 @@ export class ClubReservasComponent implements OnInit {
         this.userName = storedUser?.nombre || '';
         this.userFoto = storedUser?.foto_perfil || null;
         this.userRole = storedUser?.rol || storedRole;
-
-        // Fetch fresh profile data
         this.apiService.getPerfil(this.userId!).subscribe({
             next: (res) => {
                 if (res.success && res.user) {
@@ -105,7 +122,9 @@ export class ClubReservasComponent implements OnInit {
             this.clubesService.getClubes(this.userId).subscribe(res => {
                 this.clubes = res;
                 if (this.clubes.length > 0) {
-                    this.selectClub(this.clubes[0]);
+                    const currentClubId = currentUser?.club_id;
+                    const matchedClub = this.clubes.find(c => Number(c.id) === Number(currentClubId));
+                    this.selectClub(matchedClub || this.clubes[0]);
                 }
             });
         }
@@ -189,8 +208,71 @@ export class ClubReservasComponent implements OnInit {
         if (!this.selectedClub) return;
         this.clubesService.getCanchas(this.selectedClub.id).subscribe(res => {
             this.canchas = res;
-            if (this.canchas.length > 0) this.newReserva.cancha_id = this.canchas[0].id;
+            if (this.canchas.length > 0) {
+                if (!this.newReserva.cancha_id) this.newReserva.cancha_id = this.canchas[0].id;
+                this.updateCanchaPrice();
+            }
         });
+    }
+
+    getCanchaName(id: number): string {
+        const c = this.canchas.find(x => x.id === id);
+        return c ? c.nombre : 'Cancha ' + id;
+    }
+
+    updateCanchaPrice() {
+        if (!this.newReserva.cancha_id) return;
+        const cancha = this.canchas.find(c => c.id === this.newReserva.cancha_id);
+        if (cancha) {
+            const duration = Number(this.newReserva.duracion);
+            if (duration === 60) this.newReserva.precio = cancha.precio_60;
+            else if (duration === 90) this.newReserva.precio = cancha.precio_90;
+            else if (duration === 120) this.newReserva.precio = cancha.precio_120;
+        }
+    }
+
+    get montoPorPersona(): number {
+        const total = this.newReserva.precio || 0;
+        let count = 1;
+        if (this.newReserva.nombre_externo2 || this.newReserva.jugador2_id) count++;
+        if (this.newReserva.nombre_externo3 || this.newReserva.jugador3_id) count++;
+        if (this.newReserva.nombre_externo4 || this.newReserva.jugador4_id) count++;
+        return Math.round(total / count);
+    }
+
+    getPaymentStatus(res: any): 'total' | 'parcial' | 'pendiente' {
+        const metodo = res.metodo_pago || 'total';
+        
+        if (metodo === 'total') {
+            return Number(res.pagado) === 1 ? 'total' : 'pendiente';
+        }
+        
+        // Lógica Proporcional: Verificar cada jugador activo
+        let jugadoresActivos = 0;
+        let jugadoresPagados = 0;
+
+        if (res.nombre_externo || res.jugador_id || res.usuario_id) {
+            jugadoresActivos++;
+            if (Number(res.pago_p1) === 1) jugadoresPagados++;
+        }
+        if (res.nombre_externo2 || res.jugador2_id) {
+            jugadoresActivos++;
+            if (Number(res.pago_p2) === 1) jugadoresPagados++;
+        }
+        if (res.nombre_externo3 || res.jugador3_id) {
+            jugadoresActivos++;
+            if (Number(res.pago_p3) === 1) jugadoresPagados++;
+        }
+        if (res.nombre_externo4 || res.jugador4_id) {
+            jugadoresActivos++;
+            if (Number(res.pago_p4) === 1) jugadoresPagados++;
+        }
+
+        if (jugadoresActivos === 0) return 'pendiente';
+        if (jugadoresPagados === jugadoresActivos) return 'total';
+        if (jugadoresPagados > 0) return 'parcial';
+        
+        return 'pendiente';
     }
 
     loadReservas() {
@@ -202,10 +284,11 @@ export class ClubReservasComponent implements OnInit {
 
     getReservaInSlot(canchaId: number, hora: string) {
         const [h, m] = hora.split(':').map(Number);
-        const slotMinutes = h * 60 + m;
+        const slotMinutes = h * 60 + (m || 0);
+        const slotEnd = slotMinutes + 60; // Each slot represents 1 hour
 
         return this.reservas.find(r => {
-            if (r.cancha_id !== canchaId) return false;
+            if (Number(r.cancha_id) !== Number(canchaId)) return false;
             if (r.estado === 'Cancelada') return false;
 
             const [hStart, mStart] = r.hora_inicio.split(':').map(Number);
@@ -214,20 +297,35 @@ export class ClubReservasComponent implements OnInit {
             const [hEnd, mEnd] = r.hora_fin.split(':').map(Number);
             const endMinutes = hEnd * 60 + mEnd;
 
-            return slotMinutes >= startMinutes && slotMinutes < endMinutes;
+            // Overlap: reservation overlaps with this slot's hour
+            return startMinutes < slotEnd && endMinutes > slotMinutes;
         });
     }
 
     isStartOfReserva(res: any, hora: string): boolean {
-        const [hSlot] = hora.split(':').map(Number);
-        const [hRes] = res.hora_inicio.split(':').map(Number);
-        return hSlot === hRes;
+        const [hSlot, mSlot] = hora.split(':').map(Number);
+        const slotMinutes = hSlot * 60 + (mSlot || 0);
+        const slotEnd = slotMinutes + 60;
+
+        const [hRes, mRes] = res.hora_inicio.split(':').map(Number);
+        const startMinutes = hRes * 60 + mRes;
+
+        // The reservation starts within this slot's hour range
+        return startMinutes >= slotMinutes && startMinutes < slotEnd;
     }
 
     getReservaClass(res: any): string {
         if (res.estado === 'Bloqueada') return 'blocked-slot';
-        if (!res.usuario_id && res.nombre_externo) return 'admin-reserva';
-        return 'player-reserva';
+        
+        let classes = '';
+        if ((!res.usuario_id || res.usuario_id === 0) && res.nombre_externo) {
+            classes = 'admin-reserva';
+        } else {
+            classes = 'player-reserva';
+        }
+
+        const status = this.getPaymentStatus(res);
+        return `${classes} status-${status}`;
     }
 
     getReservaStyle(res: any): any {
@@ -257,20 +355,55 @@ export class ClubReservasComponent implements OnInit {
         this.newReserva.cancha_id = canchaId;
         this.newReserva.hora_inicio = hora;
         this.newReserva.fecha = this.selectedFecha;
+        this.updateCanchaPrice();
         this.showAddForm = true;
     }
 
     editarReserva(res: any) {
-        this.newReserva = { ...res };
-        // Si viene con segundos del mysql, los quitamos
+        // Saneamiento agresivo del método de pago
+        let metodo = (res.metodo_pago || 'total').toString().toLowerCase().trim();
+        if (metodo !== 'total' && metodo !== 'proporcional') {
+            metodo = 'total';
+        }
+
+        this.newReserva = { 
+            ...res,
+            jugador_id: res.usuario_id,
+            jugador2_id: res.jugador2_id || 0,
+            jugador3_id: res.jugador3_id || 0,
+            jugador4_id: res.jugador4_id || 0,
+            metodo_pago: metodo,
+            pagos: {
+                p1: Number(res.pago_p1) === 1,
+                p2: Number(res.pago_p2) === 1,
+                p3: Number(res.pago_p3) === 1,
+                p4: Number(res.pago_p4) === 1
+            }
+        };
+
+        // Si es proporcional, rellenamos con nombres ficticios los espacios vacíos para dividir por 4
+        if (this.newReserva.metodo_pago === 'proporcional') {
+            if (!this.newReserva.nombre_externo2 && !this.newReserva.jugador2_id) this.newReserva.nombre_externo2 = 'Jugador 2';
+            if (!this.newReserva.nombre_externo3 && !this.newReserva.jugador3_id) this.newReserva.nombre_externo3 = 'Jugador 3';
+            if (!this.newReserva.nombre_externo4 && !this.newReserva.jugador4_id) this.newReserva.nombre_externo4 = 'Jugador 4';
+        }
+
+        // Forzar actualización de UI para que los botones se marquen
+        setTimeout(() => {
+            this.newReserva.metodo_pago = metodo;
+            this.updateCanchaPrice();
+        }, 0);
+
+        // Limpiar formatos de hora
         this.newReserva.hora_inicio = res.hora_inicio.substring(0, 5);
         this.newReserva.hora_fin = res.hora_fin.substring(0, 5);
 
-        // Calcular duracion para el selector
         const [hS, mS] = this.newReserva.hora_inicio.split(':').map(Number);
         const [hE, mE] = this.newReserva.hora_fin.split(':').map(Number);
         this.newReserva.duracion = (hE * 60 + mE) - (hS * 60 + mS);
-
+        
+        this.updateCanchaPrice();
+        this.loadConsumos(res.id);
         this.showAddForm = true;
     }
 
@@ -318,11 +451,13 @@ export class ClubReservasComponent implements OnInit {
     searchUsers() {
         let term = '';
         if (this.activePlayerSlot === 1) term = this.newReserva.nombre_externo;
-        if (this.activePlayerSlot === 2) term = this.newReserva.nombre_externo2;
-        if (this.activePlayerSlot === 3) term = this.newReserva.nombre_externo3;
-        if (this.activePlayerSlot === 4) term = this.newReserva.nombre_externo4;
+        else if (this.activePlayerSlot === 2) term = this.newReserva.nombre_externo2;
+        else if (this.activePlayerSlot === 3) term = this.newReserva.nombre_externo3;
+        else if (this.activePlayerSlot === 4) term = this.newReserva.nombre_externo4;
 
-        if (!term || !term.trim()) {
+        console.log('Searching for term:', term, 'in slot:', this.activePlayerSlot);
+
+        if (!term || term.length < 2) {
             this.filteredUsers = [];
             return;
         }
@@ -333,28 +468,38 @@ export class ClubReservasComponent implements OnInit {
         if (this.activePlayerSlot === 3) this.newReserva.jugador3_id = 0;
         if (this.activePlayerSlot === 4) this.newReserva.jugador4_id = 0;
 
-        const lowTerm = term.toLowerCase();
-        this.filteredUsers = this.allUsers.filter(u =>
-            u.nombre?.toLowerCase().includes(lowTerm) || u.usuario?.toLowerCase().includes(lowTerm)
-        ).slice(0, 5);
+        // Buscamos sin filtrar por rol estrictamente para probar
+        this.clubesService.getUsers('any', term).subscribe({
+            next: (res) => {
+                console.log('Users found:', res);
+                this.filteredUsers = res.slice(0, 5);
+            },
+            error: (err) => console.error('Error on search:', err)
+        });
     }
 
     selectUser(user: any) {
         if (this.activePlayerSlot === 1) {
             this.newReserva.jugador_id = user.id;
             this.newReserva.nombre_externo = user.nombre;
+            this.newReserva.categoria1 = user.categoria;
         } else if (this.activePlayerSlot === 2) {
             this.newReserva.jugador2_id = user.id;
             this.newReserva.nombre_externo2 = user.nombre;
+            this.newReserva.categoria2 = user.categoria;
         } else if (this.activePlayerSlot === 3) {
             this.newReserva.jugador3_id = user.id;
             this.newReserva.nombre_externo3 = user.nombre;
+            this.newReserva.categoria3 = user.categoria;
         } else if (this.activePlayerSlot === 4) {
             this.newReserva.jugador4_id = user.id;
             this.newReserva.nombre_externo4 = user.nombre;
+            this.newReserva.categoria4 = user.categoria;
         }
         this.filteredUsers = [];
     }
+
+    isSaving: boolean = false;
 
     crearReserva() {
         if (!this.newReserva.cancha_id || !this.newReserva.hora_inicio) {
@@ -378,7 +523,7 @@ export class ClubReservasComponent implements OnInit {
             return;
         }
 
-        // Para bloqueos administrativos, nos aseguramos que no cargue datos de jugadores previos
+        // Para bloqueos administrativos
         if (this.newReserva.estado === 'Bloqueada') {
             this.newReserva.nombre_externo = 'BLOQUEO ADMINISTRATIVO';
             this.newReserva.jugador_id = null;
@@ -388,33 +533,114 @@ export class ClubReservasComponent implements OnInit {
             this.newReserva.precio = 0;
         }
 
-        // Calculate end time based on duration
+        // Calcular hora_fin
         const [h, m] = this.newReserva.hora_inicio.split(':');
         let totalMinutes = parseInt(h) * 60 + parseInt(m) + Number(this.newReserva.duracion);
         let endH = Math.floor(totalMinutes / 60);
         let endM = totalMinutes % 60;
         this.newReserva.hora_fin = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
 
-        const action = this.newReserva.id ? this.clubesService.updateReserva(this.newReserva) : this.clubesService.addReserva(this.newReserva);
+        this.isSaving = true;
+        
+        // Recalcular el estado 'pagado' global de forma estricta
+        let isFullyPaid = Number(this.newReserva.pagado) === 1;
+        if (this.newReserva.metodo_pago === 'proporcional') {
+            let activos = 0;
+            let pagadosCount = 0;
+            
+            if (this.newReserva.nombre_externo || this.newReserva.jugador_id) { activos++; if(this.newReserva.pagos.p1) pagadosCount++; }
+            if (this.newReserva.nombre_externo2 || this.newReserva.jugador2_id) { activos++; if(this.newReserva.pagos.p2) pagadosCount++; }
+            if (this.newReserva.nombre_externo3 || this.newReserva.jugador3_id) { activos++; if(this.newReserva.pagos.p3) pagadosCount++; }
+            if (this.newReserva.nombre_externo4 || this.newReserva.jugador4_id) { activos++; if(this.newReserva.pagos.p4) pagadosCount++; }
 
-        action.subscribe(res => {
-            Swal.fire({
-                title: '¡Éxito!',
-                text: 'La reserva se ha guardado correctamente.',
-                icon: 'success',
-                confirmButtonColor: '#111',
-                timer: 2000
-            });
-            this.loadReservas();
-            this.showAddForm = false;
-            this.resetForm();
-        }, err => {
-            Swal.fire({
-                title: 'Error',
-                text: err.error?.error || 'No se pudo guardar la reserva',
-                icon: 'error',
-                confirmButtonColor: '#111'
-            });
+            isFullyPaid = (activos > 0 && pagadosCount === activos);
+        }
+
+        const reservaData = {
+            ...this.newReserva,
+            pagado: isFullyPaid ? 1 : 0,
+            pago_p1: this.newReserva.pagos.p1 ? 1 : 0,
+            pago_p2: this.newReserva.pagos.p2 ? 1 : 0,
+            pago_p3: this.newReserva.pagos.p3 ? 1 : 0,
+            pago_p4: this.newReserva.pagos.p4 ? 1 : 0
+        };
+
+        const action = this.newReserva.id ? this.clubesService.updateReserva(reservaData) : this.clubesService.addReserva(reservaData);
+
+        action.subscribe({
+            next: (res) => {
+                if (res.success) {
+                    if (res.warning) {
+                        Swal.fire({
+                            title: 'Reserva Guardada',
+                            text: 'La reserva se guardó, pero hubo un detalle con el inventario: ' + res.warning,
+                            icon: 'warning',
+                            confirmButtonColor: '#0f172a'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: this.newReserva.id ? 'Reserva actualizada correctamente' : 'Reserva creada correctamente',
+                            icon: 'success',
+                            confirmButtonColor: '#0f172a'
+                        });
+                    }
+                    this.showAddForm = false;
+                    this.loadReservas();
+                }
+                this.isSaving = false;
+                this.resetForm();
+            },
+            error: (err) => {
+                this.isSaving = false;
+                console.error('Error capturado:', err);
+                
+                let message = 'No se pudo guardar la reserva';
+                if (err.status === 409) {
+                    message = 'La cancha ya se encuentra reservada en este intervalo.';
+                    Swal.fire('Choque de Horario', message, 'error');
+                } else {
+                    // Extraer mensaje de error de forma segura
+                    if (typeof err.error === 'string') {
+                        message = err.error;
+                    } else if (err.error && err.error.error) {
+                        message = err.error.error;
+                    } else if (err.message) {
+                        message = err.message;
+                    }
+                    Swal.fire('Error', String(message), 'error');
+                }
+            }
+        });
+    }
+
+    eliminarReserva() {
+        if (!this.newReserva.id) return;
+
+        Swal.fire({
+            title: '¿Eliminar reserva?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ef4444'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.isSaving = true;
+                this.clubesService.cancelReserva(this.newReserva.id).subscribe({
+                    next: () => {
+                        this.isSaving = false;
+                        this.showAddForm = false;
+                        this.loadReservas();
+                        Swal.fire('Eliminada', 'La reserva ha sido eliminada', 'success');
+                    },
+                    error: () => {
+                        this.isSaving = false;
+                        Swal.fire('Error', 'No se pudo eliminar', 'error');
+                    }
+                });
+            }
         });
     }
 
@@ -435,32 +661,14 @@ export class ClubReservasComponent implements OnInit {
             hora_inicio: '',
             hora_fin: '',
             precio: 0,
-            pagado: 1,
-            estado: 'Confirmada'
+            pagado: 0, // Inicia en 0 (Debe)
+            estado: 'Confirmada',
+            metodo_pago: 'total',
+            pagos: { p1: false, p2: false, p3: false, p4: false } // Todos en Debe
         };
+        this.updateCanchaPrice();
         this.userSearchTerm = '';
         this.activePlayerSlot = 1;
-    }
-
-    cancelarReserva(id: number) {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Esta acción no se puede deshacer",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#111',
-            confirmButtonText: 'Sí, cancelar',
-            cancelButtonText: 'No'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                this.clubesService.cancelReserva(id).subscribe(res => {
-                    Swal.fire('¡Cancelada!', 'La reserva ha sido eliminada.', 'success');
-                    this.loadReservas();
-                    this.showAddForm = false;
-                });
-            }
-        });
     }
 
     onFechaChange() {
@@ -472,5 +680,85 @@ export class ClubReservasComponent implements OnInit {
     selectWeekDay(day: string) {
         this.selectedFecha = day;
         this.onFechaChange();
+    }
+    setPaymentMethod(metodo: 'total' | 'proporcional') {
+        this.newReserva.metodo_pago = metodo;
+        if (metodo === 'proporcional') {
+            if (!this.newReserva.nombre_externo2 && !this.newReserva.jugador2_id) this.newReserva.nombre_externo2 = 'Jugador 2';
+            if (!this.newReserva.nombre_externo3 && !this.newReserva.jugador3_id) this.newReserva.nombre_externo3 = 'Jugador 3';
+            if (!this.newReserva.nombre_externo4 && !this.newReserva.jugador4_id) this.newReserva.nombre_externo4 = 'Jugador 4';
+        }
+    }
+
+    // CONSUMOS METHODS
+    openConsumo(reserva: any, playerN: number) {
+        this.activeReservaConsumo = reserva;
+        this.activePlayerN = playerN;
+        this.loadProductos();
+        this.loadConsumos(reserva.id);
+        this.showConsumoModal = true;
+    }
+
+    loadProductos() {
+        if (!this.selectedClub) return;
+        this.inventarioService.getProductos(this.selectedClub.id).subscribe(res => {
+            if (res.success) this.productos = res.productos;
+        });
+    }
+
+    loadConsumos(reservaId: number) {
+        this.inventarioService.getConsumosReserva(reservaId).subscribe(res => {
+            if (res.success) this.currentConsumos = res.consumos;
+        });
+    }
+
+    addConsumo(producto: any) {
+        if (!this.activeReservaConsumo) return;
+        
+        const data = {
+            reserva_id: this.activeReservaConsumo.id,
+            jugador_n: this.activePlayerN,
+            producto_id: producto.id,
+            cantidad: 1
+        };
+
+        this.inventarioService.addConsumoReserva(data).subscribe(res => {
+            if (res.success) {
+                this.loadConsumos(this.activeReservaConsumo.id);
+                // Mini feedback (Toast) o nada para que sea fluido
+            }
+        });
+    }
+
+    removeConsumo(consumoId: number) {
+        Swal.fire({
+            title: '¿Quitar este consumo?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, quitar',
+            cancelButtonText: 'No'
+        }).then(result => {
+            if (result.isConfirmed) {
+                this.inventarioService.deleteConsumo(consumoId).subscribe(res => {
+                    if (res.success) {
+                        this.loadConsumos(this.activeReservaConsumo.id);
+                    }
+                });
+            }
+        });
+    }
+
+    getJugadorTotalConsumo(playerN: number): number {
+        return this.currentConsumos
+            .filter(c => Number(c.jugador_n) === Number(playerN))
+            .reduce((sum, c) => sum + Number(c.subtotal), 0);
+    }
+
+    getReservaTotalConsumo(): number {
+        return this.currentConsumos.reduce((sum, c) => sum + Number(c.subtotal), 0);
+    }
+
+    getConsumosByPlayer(playerN: number): any[] {
+        return this.currentConsumos.filter(c => Number(c.jugador_n) === Number(playerN));
     }
 }

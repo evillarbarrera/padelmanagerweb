@@ -22,6 +22,7 @@ import { ClubReservasComponent } from './pages/club-reservas/club-reservas.compo
 import { TorneoGestionComponent } from './pages/torneo-gestion/torneo-gestion.component';
 import { TorneoJugadorComponent } from './pages/torneo-jugador/torneo-jugador.component';
 import { EntrenadorCuponesComponent } from './pages/entrenador-cupones/entrenador-cupones.component';
+import { ClubHomeComponent } from './pages/club-home/club-home.component';
 
 export const routes: Routes = [
   { path: 'unete', component: AceptarInvitacionComponent },
@@ -55,7 +56,11 @@ export const routes: Routes = [
     path: 'planificacion-mallas',
     loadComponent: () => import('./pages/planificacion-mallas/planificacion-mallas.component').then(m => m.PlanificacionMallasComponent)
   },
+  { path: 'club-home', component: ClubHomeComponent },
   { path: 'admin-club', component: ClubAdminComponent },
+  { path: 'club-inventario', loadComponent: () => import('./pages/club-inventario/club-inventario.component').then(m => m.ClubInventarioComponent) },
+  { path: 'club-ventas', loadComponent: () => import('./pages/club-ventas/club-ventas.component').then(m => m.ClubVentasComponent) },
+  { path: 'club-reportes', loadComponent: () => import('./pages/club-reportes/club-reportes.component').then(m => m.ClubReportesComponent) },
   { path: 'crear-americano', component: TorneoAmericanoComponent },
   { path: 'torneos', component: TorneoGestionComponent },
   {

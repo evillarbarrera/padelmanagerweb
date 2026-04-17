@@ -118,7 +118,7 @@ export class AuthService {
     const role = (updatedUser.rol || '').toLowerCase();
     let targetRoute = '/jugador-home';
     if (role.includes('admin')) {
-      targetRoute = '/admin-club';
+      targetRoute = '/club-home';
     } else if (role.includes('entrenador')) {
       targetRoute = '/entrenador-home';
     }

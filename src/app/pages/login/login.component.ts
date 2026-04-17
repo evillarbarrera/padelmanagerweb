@@ -128,13 +128,20 @@ export class LoginComponent implements OnInit, AfterViewInit {
       next: (response: any) => {
         this.isLoading = false;
         if (response.id) {
-          // Filtrar perfiles para excluir administrador_club (Pedido cliente: "sacar perfil admin club")
-          const filteredProfiles = (response.perfiles || []).filter((p: any) => p.rol !== 'administrador_club');
+          // Incluir todos los perfiles disponibles
+          const filteredProfiles = response.perfiles || [];
 
           if (filteredProfiles.length > 1) {
-            this.authService.setCurrentUser(response); // Guardamos user base
+            this.authService.setCurrentUser(response);
             this.availableProfiles = filteredProfiles;
-            this.showProfileSelector = true;
+            
+            // Si el perfil principal o el primero es administrador_club, pasamos directo
+            const firstRole = filteredProfiles[0].rol.toLowerCase();
+            if (firstRole.includes('administrador_club')) {
+              this.finalizeLogin(response, filteredProfiles[0]);
+            } else {
+              this.showProfileSelector = true;
+            }
           } else {
             // Caso único perfil (o legacy)
             const perfil = (filteredProfiles.length > 0) ? filteredProfiles[0] : null;
@@ -172,10 +179,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
     // Redirige según el rol
     const userRole = (finalUser.rol || 'jugador').toLowerCase();
 
-    if (userRole === 'administrador') {
+    if (userRole.includes('administrador_club') || userRole.includes('staff_club')) {
+      this.router.navigate(['/club-home']);
+    } else if (userRole === 'administrador' || userRole.includes('admin')) {
       this.router.navigate(['/admin-dashboard']);
-    } else if (userRole.includes('administrador') || userRole.includes('admin')) {
-      this.router.navigate(['/admin-club']);
     } else if (userRole.includes('entrenador')) {
       this.router.navigate(['/entrenador-home']);
     } else if (userRole.includes('jugador') || userRole.includes('alumno')) {

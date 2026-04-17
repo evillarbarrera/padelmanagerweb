@@ -38,6 +38,7 @@ export class TorneoAmericanoComponent implements OnInit {
     userName: string = '';
     userFoto: string | null = null;
     userRole: any = 'administrador_club';
+    clubId: number | null = null;
 
     // Tab State
     activeTab: 'create' | 'list' | 'history' = 'list';
@@ -81,8 +82,18 @@ export class TorneoAmericanoComponent implements OnInit {
             this.userName = currentUser.nombre || 'Usuario';
             this.userRole = currentUser.rol || 'administrador_club';
             this.userFoto = currentUser.foto || null;
+            this.clubId = currentUser.club_id || null;
 
-            this.loadTorneos(this.userId);
+            const isStaff = this.userRole.toLowerCase().includes('staff');
+            const isAdmin = this.userRole.toLowerCase().includes('admin');
+            
+            // 🔐 SEGURIDAD: Solo Admin y Staff pueden gestionar americanos
+            if (!isStaff && !isAdmin) {
+                this.router.navigate(['/login']);
+                return;
+            }
+
+                this.loadTorneos(this.userId, this.clubId);
             this.clubesService.getUsers().subscribe(res => this.allUsers = res);
             this.clubesService.getClubes(this.userId).subscribe(res => {
                 this.clubes = res;
@@ -110,7 +121,16 @@ export class TorneoAmericanoComponent implements OnInit {
                 this.userRole = user.rol || 'administrador_club';
                 this.userFoto = user.foto || null;
 
-                this.loadTorneos(this.userId);
+                const isStaff = this.userRole.toLowerCase().includes('staff');
+                const isAdmin = this.userRole.toLowerCase().includes('admin');
+                
+                // 🔐 SEGURIDAD: Solo Admin y Staff pueden gestionar americanos
+                if (!isStaff && !isAdmin) {
+                    this.router.navigate(['/login']);
+                    return;
+                }
+
+                this.loadTorneos(this.userId, this.clubId);
                 this.clubesService.getUsers().subscribe(res => this.allUsers = res);
                 this.clubesService.getClubes(this.userId).subscribe(res => {
                     this.clubes = res;
@@ -134,8 +154,8 @@ export class TorneoAmericanoComponent implements OnInit {
         }
     }
 
-    loadTorneos(adminId: number) {
-        this.clubesService.getTorneosAdmin(adminId).subscribe((res: any) => {
+    loadTorneos(adminId: number, clubId: number | null = null) {
+        this.clubesService.getTorneosAdmin(adminId, clubId || undefined).subscribe((res: any) => {
             this.torneos = res;
             // Sync selectedTorneo if it exists
             if (this.selectedTorneo) {

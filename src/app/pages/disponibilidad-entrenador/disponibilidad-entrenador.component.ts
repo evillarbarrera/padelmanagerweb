@@ -6,6 +6,7 @@ import { EntrenamientoService } from '../../services/entrenamientos.service';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
+import Swal from 'sweetalert2';
 
 interface BloqueHorario {
   fecha: string;
@@ -618,6 +619,64 @@ onMonthChange() {
   /* =============================
      HELPERS
   ============================== */
+
+  abrirModalNuevoClub() {
+    Swal.fire({
+      title: 'Registrar nuevo Recinto',
+      html: `
+        <div class="swal-form" style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+          <div>
+            <label style="font-size: 12px; color: #666;">Nombre del Club</label>
+            <input id="swal-nombre" class="swal2-input" placeholder="Nombre" style="margin: 5px 0; width: 100%;">
+          </div>
+          <div>
+            <label style="font-size: 12px; color: #666;">Comuna</label>
+            <input id="swal-comuna" class="swal2-input" placeholder="Comuna" style="margin: 5px 0; width: 100%;">
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Crear y Seleccionar',
+      confirmButtonColor: '#ccff00',
+      customClass: {
+        confirmButton: 'swal-btn-confirm'
+      },
+      preConfirm: () => {
+        const nombre = (document.getElementById('swal-nombre') as HTMLInputElement).value;
+        const comuna = (document.getElementById('swal-comuna') as HTMLInputElement).value;
+        if (!nombre) return Swal.showValidationMessage('El nombre es obligatorio');
+        return { nombre, comuna };
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isLoading = true;
+        const clubData = {
+          nombre: result.value.nombre,
+          comuna: result.value.comuna,
+          admin_id: this.userId,
+          rol: 'entrenador' // IMPORTANTE: El entrenador crea el club pero mantiene su rol
+        };
+
+        this.mysqlService.postApi('clubes/add_club.php', clubData).subscribe({
+          next: (res: any) => {
+            if (res.success) {
+              this.popupService.success('¡Éxito!', 'Club creado y vinculado a tu perfil de entrenador.');
+              this.selectedClubId = res.id;
+              this.cargarClubes(); // Recargar lista
+            } else {
+              this.isLoading = false;
+              this.popupService.error('Error', res.error || 'No se pudo crear el club');
+            }
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.popupService.error('Error', 'Error de conexión');
+            console.error(err);
+          }
+        });
+      }
+    });
+  }
 
   private formatTime(date: Date): string {
     return date.toTimeString().slice(0, 8); // "HH:MM:SS"

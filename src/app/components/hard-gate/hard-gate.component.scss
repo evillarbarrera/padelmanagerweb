@@ -11,6 +11,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(0,0,0,0.8); // Darker backdrop for focus
+    -webkit-backdrop-filter: blur(15px) saturate(160%);
     backdrop-filter: blur(15px) saturate(160%);
     -webkit-backdrop-filter: blur(15px) saturate(160%);
     animation: fadeIn 0.5s ease-out;

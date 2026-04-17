@@ -1,0 +1,79 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="club-home">
+    </app-sidebar>
+
+    <main class="main-content">
+        <div class="dashboard-container">
+            <h1 class="welcome-title">Bienvenido, {{ userName | titlecase }} 👋</h1>
+            <p class="welcome-subtitle">Aquí tienes el resumen operativo de tus clubes para hoy.</p>
+
+            <div class="dashboard-stats-view animate-in">
+                <div class="kpi-grid">
+                    <div class="kpi-card glass-card">
+                        <div class="kpi-icon ocupacion">🎾</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Ocupación Hoy</span>
+                            <h3 class="kpi-value">{{ stats.ocupacion }}</h3>
+                            <span class="kpi-trend up">↑ 5% vs ayer</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card glass-card">
+                        <div class="kpi-icon ingresos">💰</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Ingresos de Hoy</span>
+                            <h3 class="kpi-value">${{ stats.ingresos_dia | number }}</h3>
+                            <span class="kpi-trend">Hoy: 12 arriendos</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card glass-card">
+                        <div class="kpi-icon alumnos">👥</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Alumnos Activos</span>
+                            <h3 class="kpi-value">{{ stats.alumnos_mensuales }}</h3>
+                            <span class="kpi-trend">En todos tus clubes</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card glass-card">
+                        <div class="kpi-icon torneos">🏆</div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Torneos Activos</span>
+                            <h3 class="kpi-value">{{ stats.torneos_activos }}</h3>
+                            <button class="btn-micro" (click)="navigate('/torneos')">Ver Torneos</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-lower-grid">
+                    <div class="activity-section card">
+                        <div class="section-header">
+                            <h4>Actividad Reciente</h4>
+                            <span class="view-all">Ver todos</span>
+                        </div>
+                        <div class="activity-list" *ngIf="!isLoading">
+                            <div class="activity-item" *ngFor="let act of actividadReciente">
+                                <div class="activity-dot" [ngClass]="act.tipo || 'blue'"></div>
+                                <div class="activity-content">
+                                    <p><strong>{{ act.titulo }}:</strong> {{ act.descripcion }}</p>
+                                    <span class="time">{{ act.tiempo }}</span>
+                                </div>
+                            </div>
+                            <div class="empty-state-mini" *ngIf="actividadReciente.length === 0">
+                                <p>No hay actividad reciente.</p>
+                            </div>
+                        </div>
+                        <div class="loader-container" *ngIf="isLoading">
+                            <p>Cargando actividad...</p>
+                        </div>
+                    </div>
+
+                    <div class="status-summary-card" *ngIf="!isStaff">
+                        <h5>Sugerencia UX del Experto</h5>
+                        <p>Optimiza tus horarios de menor ocupación (14:00 - 16:00) creando cupones de descuento flash para alumnos nuevos.</p>
+                        <button class="btn-primary-mini" (click)="navigate('/entrenador-cupones')">Ver Cupones</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

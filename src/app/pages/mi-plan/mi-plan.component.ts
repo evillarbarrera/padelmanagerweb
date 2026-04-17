@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { environment } from '../../../environments/environment';
 import { CurrencyService } from '../../services/currency.service';
+import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -20,16 +21,30 @@ export class MiPlanComponent implements OnInit {
   coachId: number = 0;
   coachNombre: string = '';
   coachFoto: string = '';
+  userRole: 'jugador' | 'entrenador' | 'administrador_club' | 'administrador' | 'staff_club' = 'entrenador';
 
   // Currency & Location
   isInternational = false;
   currencySymbol = '$';
   currencyCode = 'CLP';
 
-  constructor(public currencyService: CurrencyService) { }
+  constructor(
+    public currencyService: CurrencyService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
-    this.coachId = Number(localStorage.getItem('userId'));
+    const storedRole = localStorage.getItem('userRole') || '';
+    const storedUserId = localStorage.getItem('userId');
+    
+    // 🔐 SEGURIDAD: Los usuarios de Staff no pueden gestionar el plan/pago
+    if (!storedUserId || storedRole.toLowerCase().includes('staff')) {
+        this.router.navigate(['/club-home']);
+        return;
+    }
+
+        this.userRole = storedRole as any;
+        this.coachId = Number(storedUserId);
     this.coachNombre = localStorage.getItem('userName') || 'Mi Academia';
     this.coachFoto = localStorage.getItem('userFoto') || '';
     this.detectCurrency();

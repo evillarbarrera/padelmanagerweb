@@ -24,14 +24,17 @@
     <nav class="sidebar-nav">
         <!-- Photo Widget -->
         <div class="sidebar-player-widget" *ngIf="userId">
-            <img [src]="jugadorFoto || 'assets/images/placeholder_avatar.png'" class="avatar-img-large" alt="Perfil">
+            <img [src]="jugadorFoto ? jugadorFoto : 'assets/images/placeholder_avatar.png'" 
+                 class="avatar-img-large" 
+                 alt="Perfil"
+                 (error)="jugadorFoto = 'assets/images/placeholder_avatar.png'">
         </div>
 
         <!-- PROFILE SWITCHER -->
         <div class="profile-switcher">
             <button class="current-profile-btn" (click)="toggleSwitchMenu()">
                 <div class="info">
-                    <span class="role-label">{{ computedRole | titlecase }}</span>
+                    <span class="role-label">{{ displayRoleName }}</span>
                     <span class="club-label" style="font-size: 0.75rem; opacity: 0.7;">
                         {{ availableProfiles.length > 1 ? 'Cambiar Perfil' : 'Gestionar Perfil' }}
                     </span>
@@ -73,6 +76,9 @@
                 <a class="nav-item" [class.active]="activePage === 'reservas'" (click)="navigate('/jugador-reservas')">
                     <span class="icon">🎾</span> <span>Reservar Clase</span>
                 </a>
+                <a class="nav-item" [class.active]="activePage === 'reservar-cancha'" (click)="navigate('/clubes-reservar')">
+                    <span class="icon">🏟️</span> <span>Reservar Cancha</span>
+                </a>
                 <a class="nav-item" [class.active]="activePage === 'habilidades'" (click)="navigate('/mis-habilidades')">
                     <span class="icon">📈</span> <span>Mis Habilidades</span>
                 </a>
@@ -113,6 +119,73 @@
                 </a>
                 <a class="nav-item" [class.active]="activePage === 'mi-plan'" (click)="navigate('/mi-plan')">
                     <span class="icon">💎</span> <span>Mi Plan</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
+                    <span class="icon">👤</span> <span>Mi Perfil</span>
+                </a>
+            </ng-container>
+
+            <!-- CLUB ADMIN MENU -->
+            <ng-container *ngIf="computedRole === 'administrador_club'">
+                <div class="menu-divider">Principal</div>
+                <a class="nav-item" [class.active]="activePage === 'club-home'" (click)="navigate('/club-home')">
+                    <span class="icon">📊</span> <span>Dashboard</span>
+                </a>
+                <div class="menu-divider">Gestión Club</div>
+                <a class="nav-item" [class.active]="activePage === 'club-admin'" (click)="navigate('/admin-club')">
+                    <span class="icon">🏢</span> <span>Mis Clubes</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'club-reservas'" (click)="navigate('/club-reservas')">
+                    <span class="icon">📅</span> <span>Reservas Club</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'club-ventas'" (click)="navigate('/club-ventas')">
+                    <span class="icon">📊</span> <span>Ventas</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'club-reportes'" (click)="navigate('/club-reportes')">
+                    <span class="icon">📈</span> <span>Reportes</span>
+                </a>
+                <div class="menu-divider">Competición</div>
+                <a class="nav-item" [class.active]="activePage === 'torneos'" (click)="navigate('/torneos')">
+                    <span class="icon">🏆</span> <span>Mis Torneos</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'crear-americano'" (click)="navigate('/crear-americano')">
+                    <span class="icon">🎾</span> <span>Crear Americano</span>
+                </a>
+                <div class="menu-divider">Configuración</div>
+                <a class="nav-item" [class.active]="activePage === 'club-inventario'" (click)="navigate('/club-inventario')">
+                    <span class="icon">📦</span> <span>Inventario</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
+                    <span class="icon">👤</span> <span>Mi Perfil</span>
+                </a>
+            </ng-container>
+
+            <!-- STAFF CLUB MENU -->
+            <ng-container *ngIf="computedRole === 'staff_club'">
+                <div class="menu-divider">Principal</div>
+                <a class="nav-item" [class.active]="activePage === 'club-home'" (click)="navigate('/club-home')">
+                    <span class="icon">📊</span> <span>Dashboard</span>
+                </a>
+                <div class="menu-divider">Gestión Club</div>
+                <a class="nav-item" [class.active]="activePage === 'club-reservas'" (click)="navigate('/club-reservas')">
+                    <span class="icon">📅</span> <span>Reservas Club</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'club-ventas'" (click)="navigate('/club-ventas')">
+                    <span class="icon">📊</span> <span>Ventas</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'club-reportes'" (click)="navigate('/club-reportes')">
+                    <span class="icon">📈</span> <span>Reportes</span>
+                </a>
+                <div class="menu-divider">Competición</div>
+                <a class="nav-item" [class.active]="activePage === 'torneos'" (click)="navigate('/torneos')">
+                    <span class="icon">🏆</span> <span>Mis Torneos</span>
+                </a>
+                <a class="nav-item" [class.active]="activePage === 'crear-americano'" (click)="navigate('/crear-americano')">
+                    <span class="icon">🎾</span> <span>Crear Americano</span>
+                </a>
+                <div class="menu-divider">Configuración</div>
+                <a class="nav-item" [class.active]="activePage === 'club-inventario'" (click)="navigate('/club-inventario')">
+                    <span class="icon">📦</span> <span>Inventario</span>
                 </a>
                 <a class="nav-item" [class.active]="activePage === 'perfil'" (click)="navigate('/perfil')">
                     <span class="icon">👤</span> <span>Mi Perfil</span>

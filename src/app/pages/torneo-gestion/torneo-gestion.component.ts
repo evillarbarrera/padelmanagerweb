@@ -71,6 +71,161 @@ export class TorneoGestionComponent implements OnInit {
 
     matchDuration: number = 90; // Default match duration in minutes
 
+    // UI & Features State
+    activeConfigIndex: number = 0;
+    simSubTab: 'agenda' | 'grupos' = 'agenda';
+    viewMode: 'day' | 'week' = 'day';
+    presetCategories: any[] = [
+        { nombre: '1ra Varones', type: 'varones', color: '#1e40af' },
+        { nombre: '2da Varones', type: 'varones', color: '#1d4ed8' },
+        { nombre: '3ra Varones', type: 'varones', color: '#2563eb' },
+        { nombre: '4ta Varones', type: 'varones', color: '#3b82f6' },
+        { nombre: '5ta Varones', type: 'varones', color: '#60a5fa' },
+        { nombre: '6ta Varones', type: 'varones', color: '#93c5fd' },
+        { nombre: 'Damas A', type: 'damas', color: '#be185d' },
+        { nombre: 'Damas B', type: 'damas', color: '#db2777' },
+        { nombre: 'Damas C', type: 'damas', color: '#e91e63' },
+        { nombre: 'Damas D', type: 'damas', color: '#f06292' },
+        { nombre: 'Damas E', type: 'damas', color: '#f48fb1' }
+    ];
+
+    simulatedGroupsSummary: any[] = [];
+    selectedBracketCategoryId: number | null = null;
+
+    onTabChange(tab: any) {
+        this.activeDetailTab = tab;
+        
+        // Always DEFAULT to "All Tournament" when entering these tabs
+        if (tab === 'generar' || tab === 'resumen' || tab === 'programacion') {
+            const previousCat = this.selectedCategoria;
+            this.selectedCategoria = null;
+            
+            // If we previously had a filter, we must reload all inscriptions and stats
+            if (previousCat && this.selectedTorneo) {
+                this.loadCategorias(this.selectedTorneo.id);
+            } else {
+                this.calculateStats();
+            }
+        }
+    }
+
+    isCategorySelected(name: string): boolean {
+        return this.newTorneo.categorias.some((c: any) => c.nombre === name);
+    }
+
+    toggleCategory(p: any) {
+        const index = this.newTorneo.categorias.findIndex((c: any) => c.nombre === p.nombre);
+        if (index > -1) {
+            this.newTorneo.categorias.splice(index, 1);
+        } else {
+            this.newTorneo.categorias.push({
+                nombre: p.nombre,
+                max_parejas: 16,
+                puntos_repartir: 100
+            });
+            this.activeConfigIndex = this.newTorneo.categorias.length - 1;
+        }
+    }
+
+    getCategoryColor(name: string): string {
+        if (!name) return '#64748b';
+        
+        const normalized = name.toLowerCase().trim();
+        
+        // 1. Try to find in presets
+        const cat = this.presetCategories.find(p => 
+            p.nombre.toLowerCase().trim() === normalized || 
+            normalized.includes(p.nombre.toLowerCase().trim())
+        );
+        if (cat) return cat.color;
+
+        // 2. Dynamic Fallback: Use the Golden Ratio to maximize visual distance
+        let hash = 0;
+        for (let i = 0; i < normalized.length; i++) {
+            hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        // Golden ratio constant (~0.618) helps distribute values as far as possible
+        const goldenRatio = 0.618033988749895;
+        let h = (Math.abs(hash) * goldenRatio) % 1;
+        const hue = Math.floor(h * 360);
+        
+        // Return professional HSL (Saturation 75%, Lightness 50% for vibrancy)
+        return `hsl(${hue}, 75%, 50%)`;
+    }
+
+    getVisibleHours(): number[] {
+        return this.gridHours;
+    }
+
+    getMatchScore(m: any, teamNum: number): string {
+        if (!m.resultado_json) return '';
+        try {
+            const results = typeof m.resultado_json === 'string' ? JSON.parse(m.resultado_json) : m.resultado_json;
+            return results.map((set: any) => teamNum === 1 ? set.p1 : set.p2).join(' ');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    selectBracketCategory(id: number) {
+        this.selectedBracketCategoryId = id;
+        
+        // Priority 1: If we have simulated matches, use them
+        const simMatches = this.matchesToSchedule.filter(m => m.categoryId == id && m.id < -1000);
+        
+        if (simMatches.length > 0) {
+            this.playoffMatches = simMatches;
+            this.organizeBracket(simMatches);
+        } else {
+            // Priority 2: Fallback to real data
+            this.loadPlayoffs(id);
+        }
+    }
+
+    anadirNuevaCategoria() {
+        this.newTorneo.categorias.push({
+            nombre: 'Nueva Categoría',
+            max_parejas: 16,
+            puntos_repartir: 100
+        });
+        this.activeConfigIndex = this.newTorneo.categorias.length - 1;
+    }
+
+    eliminarCategoria(id: number, event: any) {
+        event.stopPropagation();
+        Swal.fire({
+            title: '¿Eliminar Categoría?',
+            text: 'Se eliminarán también las inscripciones de esta categoría. Esta acción es irreversible.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar categoría',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ef4444', // Red for danger
+            cancelButtonColor: '#f1f5f9'
+        }).then(result => {
+            if (result.isConfirmed) {
+                this.clubesService.deleteCategoria(id).subscribe(() => {
+                    this.loadCategorias(this.selectedTorneo.id);
+                });
+            }
+        });
+    }
+
+    editCategoriaCapacidad(cat: any) {
+        Swal.fire({
+            title: 'Editar Capacidad',
+            input: 'number',
+            inputValue: cat.max_parejas,
+            showCancelButton: true
+        }).then(res => {
+            if (res.isConfirmed) {
+                cat.max_parejas = res.value;
+                this.clubesService.updateCategoria(cat.id, cat).subscribe();
+            }
+        });
+    }
+
     hasFictionalMatches(): boolean {
         return this.matchesToSchedule.some(m => m.id < 0 || m.dummy);
     }
@@ -112,8 +267,13 @@ export class TorneoGestionComponent implements OnInit {
             this.clubesService.getInscripciones(cat.id)
         );
 
-        if (observables.length === 0) {
-            Swal.fire('Atención', 'No hay categorías definidas en este torneo.', 'warning');
+        if (this.categorias.length === 0) {
+            Swal.fire({
+                title: 'Atención',
+                text: 'No hay categorías definidas en este torneo.',
+                icon: 'warning',
+                confirmButtonColor: '#0f172a'
+            });
             return;
         }
 
@@ -135,24 +295,95 @@ export class TorneoGestionComponent implements OnInit {
                         title: 'Calendario Generado',
                         text: 'Se han calculado los grupos y partidos automáticamente.',
                         icon: 'success',
-                        timer: 2000,
-                        showConfirmButton: false
+                        confirmButtonColor: '#0f172a'
                     });
                 } catch (e) {
                     console.error('Error during schedule processing', e);
-                    Swal.close();
-                    Swal.fire('Error', 'Ocurrió un error al procesar el calendario: ' + (e as any).message, 'error');
+                    Swal.fire({
+                        title: 'Error de Proyección',
+                        text: 'Ocurrió un error al procesar el calendario: ' + (e as any).message,
+                        icon: 'error',
+                        confirmButtonColor: '#0f172a'
+                    });
                 }
             },
             error: (err) => {
                 console.error('Error fetching inscriptions', err);
-                Swal.close();
-                Swal.fire('Error', 'No se pudieron obtener las inscripciones o el servidor no responde.', 'error');
+                Swal.fire({
+                    title: 'Error de Conexión',
+                    text: 'No se pudieron obtener las inscripciones o el servidor no responde.',
+                    icon: 'error',
+                    confirmButtonColor: '#0f172a'
+                });
             }
         });
     }
 
+    simulateTournamentAtCapacity() {
+        if (!this.selectedTorneo) return;
 
+        Swal.fire({
+            title: 'Simulación a Capacidad Máxima',
+            text: '¿Deseas proyectar el torneo usando el máximo de parejas configurado en cada categoría?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, simular todo',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0f172a',
+            cancelButtonColor: '#f1f5f9'
+        }).then(result => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Simulando...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const simulationData = this.categorias.map((cat, index) => {
+                    const max = cat.max_parejas || 12;
+                    let dummies = [];
+                    for (let i = 1; i <= max; i++) {
+                        dummies.push({
+                            id: -(index + 1) * 1000 - i,
+                            nombre_pareja: `Pareja Sim ${i} (${cat.nombre})`,
+                            categoria_id: cat.id,
+                            categoria_nombre: cat.nombre,
+                            dummy: true
+                        });
+                    }
+                    return dummies;
+                });
+
+                this.inscripciones = simulationData.flat();
+                
+                // Initialize grid if empty
+                if (this.gridDays.length === 0) {
+                    this.initAvailabilityGrid();
+                }
+
+                // Execute the processing
+                this.processSchedule(simulationData);
+                this.calculateStats();
+                this.organizeCalendar(); // CRITICAL: Updates the view data
+
+                // Switch to simulation view
+                this.activeDetailTab = 'generar';
+                this.simSubTab = 'agenda';
+
+                Swal.close();
+                Swal.fire({
+                    title: 'Proyección Lista',
+                    text: 'Se ha generado el calendario simulado a capacidad máxima.',
+                    icon: 'success',
+                    showConfirmButton: true,
+                    showCancelButton: false,
+                    showDenyButton: false,
+                    confirmButtonText: 'Ver Agenda',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
+        });
+    }
 
     ngOnInit(): void {
         const currentUser = this.apiService.getCurrentUser();
@@ -263,124 +494,121 @@ export class TorneoGestionComponent implements OnInit {
 
         // Sort slots by time
         slots.sort((a, b) => a.timestamp - b.timestamp);
-
         let slotIndex = 0;
+        const allGroupMatches: any[] = [];
+        
+        // Use a map to collect playoff matches by round across ALL categories
+        const playoffRoundsMap: { [key: string]: any[] } = {
+            'Dieciseisavos': [],
+            'Octavos': [],
+            'Cuartos': [],
+            'Semi': [],
+            'Final': []
+        };
 
-        // 2. Generate Matches per Category
+        // 2. Collection Phase
         this.categorias.forEach((cat, index) => {
             let inscritos = [...(allInscripciones[index] || [])];
-
-            // NEW LOGIC: Always fill categories to their max_parejas or at least 4 pairs for full visualization
             const targetTotal = (cat.max_parejas && cat.max_parejas > 0) ? cat.max_parejas : (inscritos.length > 0 ? inscritos.length : 4);
             const remainder = targetTotal % 4;
             const fullTarget = remainder === 0 ? targetTotal : targetTotal + (4 - remainder);
             let needed = fullTarget - inscritos.length;
 
             for (let i = 0; i < needed; i++) {
-                const dummyIndex = inscritos.length + 1;
-                const dummyId = -(index + 1) * 100 - dummyIndex;
                 inscritos.push({
-                    id: dummyId,
-                    nombre_jugador_1: `Jugador Ficticio ${dummyIndex}`,
-                    nombre_jugador_2: `Pareja Ficticia ${dummyIndex}`,
+                    id: -(index + 1) * 100 - (inscritos.length + 1),
+                    nombre_jugador_1: `Jugador Ficticio`,
+                    nombre_jugador_2: `Pareja Ficticia`,
                     dummy: true
                 });
             }
 
-            console.log(`Category ${cat.nombre}: ${inscritos.length} pairs (Total after filling with Ficticios)`);
-
-            // Creates Groups (Chunks of 4)
-            const groups = [];
+            // Groups
             for (let i = 0; i < inscritos.length; i += 4) {
-                groups.push(inscritos.slice(i, i + 4));
-            }
-
-            // Generate Group Matches (Round Robin)
-            groups.forEach((group, gIdx) => {
-                const groupName = String.fromCharCode(65 + gIdx); // A, B, C...
-
-                for (let i = 0; i < group.length; i++) {
-                    for (let j = i + 1; j < group.length; j++) {
-                        // Create Match Object
-                        const p1 = group[i];
-                        const p2 = group[j];
-
-                        const match: any = {
-                            id: -1, // Temporary ID for simulated matches
+                const group = inscritos.slice(i, i + 4);
+                const groupName = String.fromCharCode(65 + Math.floor(i / 4));
+                for (let x = 0; x < group.length; x++) {
+                    for (let y = x + 1; y < group.length; y++) {
+                        allGroupMatches.push({
+                            id: -1,
                             category: cat.nombre,
                             categoryId: cat.id,
                             ronda: `Grupo ${groupName}`,
-                            team1: p1,
-                            team2: p2,
-                            pareja1_nombre: p1.nombre_jugador_1 ? `${p1.nombre_jugador_1} ${p1.nombre_jugador_2 ? '/ ' + p1.nombre_jugador_2 : ''}` : (p1.nombre_pareja || 'Pareja TBD'),
-                            pareja2_nombre: p2.nombre_jugador_1 ? `${p2.nombre_jugador_1} ${p2.nombre_jugador_2 ? '/ ' + p2.nombre_jugador_2 : ''}` : (p2.nombre_pareja || 'Pareja TBD'),
-                            tempDate: 'Sin Cupo',
-                            tempTime: '--:--',
-                            court: 'Pendiente',
+                            team1: group[x],
+                            team2: group[y],
+                            pareja1_nombre: group[x].nombre_jugador_1 ? `${group[x].nombre_jugador_1} / ${group[x].nombre_jugador_2}` : (group[x].nombre_pareja || 'TBD'),
+                            pareja2_nombre: group[y].nombre_jugador_1 ? `${group[y].nombre_jugador_1} / ${group[y].nombre_jugador_2}` : (group[y].nombre_pareja || 'TBD'),
                             duration: this.matchDuration
-                        };
-
-                        // Assign Slot
-                        if (slotIndex < slots.length) {
-                            const slot = slots[slotIndex];
-                            match.tempDate = slot.date;
-                            match.tempTime = `${slot.hour}:00`;
-                            match.court = slot.courtName;
-                            slotIndex++;
-                        }
-
-                        this.matchesToSchedule.push(match);
+                        });
                     }
                 }
+            }
+
+            // Playoffs
+            const numPairs = inscritos.length;
+            let rounds: string[] = [];
+            if (numPairs >= 32) rounds = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semi', 'Final'];
+            else if (numPairs >= 16) rounds = ['Octavos', 'Cuartos', 'Semi', 'Final'];
+            else if (numPairs >= 8) rounds = ['Cuartos', 'Semi', 'Final'];
+            else if (numPairs >= 4) rounds = ['Semi', 'Final'];
+
+            rounds.forEach(round => {
+                const matchCount = round === 'Dieciseisavos' ? 16 : (round === 'Octavos' ? 8 : (round === 'Cuartos' ? 4 : (round === 'Semi' ? 2 : 1)));
+                for (let i = 0; i < matchCount; i++) {
+                    playoffRoundsMap[round].push({
+                        id: -2000 - (index * 1000) - (rounds.indexOf(round) * 100) - i,
+                        category: cat.nombre,
+                        categoryId: cat.id,
+                        ronda: round,
+                        pareja1_nombre: `Clasificado ${i * 2 + 1}`,
+                        pareja2_nombre: `Clasificado ${i * 2 + 2}`,
+                        duration: this.matchDuration,
+                        dummy: true
+                    });
+                }
             });
-
-            // 3. Generate Simulated Playoff Structure (Fictional)
-            // This is for visualization of the complete tournament path
-            const generateSimulatedPlayoffs = (numPairs: number) => {
-                let eliminationRounds: string[] = [];
-                if (numPairs >= 32) eliminationRounds = ['Octavos de Final', 'Cuartos de Final', 'Semifinal', 'Final'];
-                else if (numPairs >= 16) eliminationRounds = ['Cuartos de Final', 'Semifinal', 'Final'];
-                else if (numPairs >= 8) eliminationRounds = ['Semifinal', 'Final'];
-                else if (numPairs >= 4) eliminationRounds = ['Final'];
-
-                eliminationRounds.forEach(round => {
-                    const matchCount = round === 'Octavos de Final' ? 8 : (round === 'Cuartos de Final' ? 4 : (round === 'Semifinal' ? 2 : 1));
-                    for (let i = 0; i < matchCount; i++) {
-                        const match: any = {
-                            id: -2000 - (eliminationRounds.indexOf(round) * 10) - i, // Unique simulated ID
-                            category: cat.nombre,
-                            categoryId: cat.id,
-                            ronda: round,
-                            pareja1_nombre: round === 'Octavos de Final' ? `Clasificado G${(i * 2 + 1)}` : `Ganador M${i * 2 + 10}`,
-                            pareja2_nombre: round === 'Octavos de Final' ? `Clasificado G${(i * 2 + 2)}` : `Ganador M${i * 2 + 11}`,
-                            tempDate: 'Sin Cupo',
-                            tempTime: '--:--',
-                            court: 'Pendiente',
-                            duration: this.matchDuration,
-                            dummy: true
-                        };
-
-                        // Assign Slot
-                        if (slotIndex < slots.length) {
-                            const slot = slots[slotIndex];
-                            match.tempDate = slot.date;
-                            match.tempTime = `${slot.hour}:00`;
-                            match.court = slot.courtName;
-                            slotIndex++;
-                        }
-                        this.matchesToSchedule.push(match);
-                    }
-                });
-            };
-
-            generateSimulatedPlayoffs(inscritos.length);
         });
 
-        console.log('Matches generated (Groups + Simulated Playoffs):', this.matchesToSchedule);
+        // 3. Sequential Phased Scheduling with Mixed Categories
+        // Order: Groups -> Dieciseisavos -> Octavos -> Cuartos -> Semi -> Final
+        
+        const scheduleBatch = (batch: any[]) => {
+            // SHUFFLE the batch to interleave categories within the same round
+            const shuffled = batch.sort(() => Math.random() - 0.5);
+            shuffled.forEach(m => {
+                if (slotIndex < slots.length) {
+                    const slot = slots[slotIndex++];
+                    m.tempDate = slot.date;
+                    m.tempTime = `${slot.hour}:00`;
+                    m.court = slot.courtName;
+                    this.matchesToSchedule.push(m);
+                }
+            });
+        };
 
-        // Update playoffRounds locally for the "Cuadro Final" tab view
-        const simulatedPlayoffs = this.matchesToSchedule.filter(m => m.id < -1000);
-        this.organizeBracket(simulatedPlayoffs);
+        // Clear current schedule to avoid duplicates
+        this.matchesToSchedule = [];
+
+        // Execution of phases
+        scheduleBatch(allGroupMatches);
+        scheduleBatch(playoffRoundsMap['Dieciseisavos']);
+        scheduleBatch(playoffRoundsMap['Octavos']);
+        scheduleBatch(playoffRoundsMap['Cuartos']);
+        scheduleBatch(playoffRoundsMap['Semi']);
+        scheduleBatch(playoffRoundsMap['Final']);
+
+        console.log('Matches scheduled in logical order and mixed by category.');
+
+        // 4. Update Views
+        // Update the bracket backing array so *ngIf="playoffMatches.length > 0" passes
+        this.playoffMatches = this.matchesToSchedule.filter(m => m.id < -1000);
+        
+        // Auto-select first category if none selected to show visual content immediately
+        if (this.categorias.length > 0 && !this.selectedBracketCategoryId) {
+            this.selectedBracketCategoryId = this.categorias[0].id;
+        }
+
+        this.organizeBracket(this.playoffMatches);
     }
 
     // ...
@@ -410,7 +638,12 @@ export class TorneoGestionComponent implements OnInit {
         }).subscribe({
             next: (results) => {
                 console.log('Update results:', results);
-                Swal.fire('Guardado', 'Fechas y horarios del torneo actualizados correctamente', 'success');
+                Swal.fire({
+                    title: '¡Guardado!',
+                    text: 'Fechas y horarios del torneo actualizados correctamente',
+                    icon: 'success',
+                    confirmButtonColor: '#0f172a'
+                });
             },
             error: (err) => {
                 console.error('Error saving tournament data:', err);
@@ -422,7 +655,12 @@ export class TorneoGestionComponent implements OnInit {
                     msg += ' Error al actualizar horarios.';
                 }
 
-                Swal.fire('Error', msg, 'error');
+                Swal.fire({
+                    title: 'Error',
+                    text: msg,
+                    icon: 'error',
+                    confirmButtonColor: '#0f172a'
+                });
             }
         });
     }
@@ -480,7 +718,11 @@ export class TorneoGestionComponent implements OnInit {
         });
     }
 
-    playoffRounds: any = { octavos: [], cuartos: [], semi: [], final: [] };
+    playoffRounds: any = {
+        left: { dieciseisavos: [], octavos: [], cuartos: [], semi: [] },
+        right: { dieciseisavos: [], octavos: [], cuartos: [], semi: [] },
+        final: null
+    };
 
     loadPlayoffs(catId: number) {
         this.clubesService.getPartidosRonda(catId, '').subscribe(res => {
@@ -490,20 +732,38 @@ export class TorneoGestionComponent implements OnInit {
     }
 
     organizeBracket(matches: any[]) {
-        this.playoffRounds = { octavos: [], cuartos: [], semi: [], final: [] };
-        matches.forEach(m => {
-            const r = (m.ronda || '').toLowerCase();
-            if (r.includes('octavos') || r.includes('16')) this.playoffRounds.octavos.push(m);
-            else if (r.includes('cuartos') || r.includes('quarter')) this.playoffRounds.cuartos.push(m);
-            else if (r.includes('semi')) this.playoffRounds.semi.push(m);
-            else if (r.includes('final')) this.playoffRounds.final.push(m);
-        });
+        // Reset structure
+        this.playoffRounds = {
+            left: { dieciseisavos: [], octavos: [], cuartos: [], semi: [] },
+            right: { dieciseisavos: [], octavos: [], cuartos: [], semi: [] },
+            final: null
+        };
 
-        // Sort matches to ensure they align in the bracket visually if needed
-        // This is a naive sort, a real bracket sort requires knowing the draw positions
-        this.playoffRounds.octavos.sort((a: any, b: any) => a.id - b.id);
-        this.playoffRounds.cuartos.sort((a: any, b: any) => a.id - b.id);
-        this.playoffRounds.semi.sort((a: any, b: any) => a.id - b.id);
+        if (!matches || matches.length === 0) return;
+
+        // 1. Separate Final
+        this.playoffRounds.final = matches.find(m => (m.ronda || '').toLowerCase().includes('final')) || null;
+
+        // 2. Helper to distribute rounds
+        const distributeRound = (roundMatches: any[], targetKey: string) => {
+            roundMatches.sort((a,b) => a.id - b.id);
+            const mid = Math.ceil(roundMatches.length / 2);
+            this.playoffRounds.left[targetKey] = roundMatches.slice(0, mid);
+            this.playoffRounds.right[targetKey] = roundMatches.slice(mid);
+        };
+
+        // 3. Process each round
+        const r16 = matches.filter(m => (m.ronda || '').toLowerCase().includes('dieciseis') || (m.ronda || '').includes('16'));
+        const r8 = matches.filter(m => (m.ronda || '').toLowerCase().includes('octavos') || (m.ronda || '').includes(' 8'));
+        const r4 = matches.filter(m => (m.ronda || '').toLowerCase().includes('cuartos') || (m.ronda || '').includes(' 4'));
+        const r2 = matches.filter(m => (m.ronda || '').toLowerCase().includes('semi'));
+
+        distributeRound(r16, 'dieciseisavos');
+        distributeRound(r8, 'octavos');
+        distributeRound(r4, 'cuartos');
+        distributeRound(r2, 'semi');
+
+        console.log('Bracket organized bilateral:', this.playoffRounds);
     }
 
     cerrarGrupos() {
@@ -519,12 +779,22 @@ export class TorneoGestionComponent implements OnInit {
             if (result.isConfirmed) {
                 this.clubesService.cerrarFaseGrupos(this.selectedCategoria.id).subscribe({
                     next: (res) => {
-                        Swal.fire('¡Éxito!', res.mensaje, 'success');
+                        Swal.fire({
+                            title: '¡Listo!',
+                            text: res.mensaje,
+                            icon: 'success',
+                            confirmButtonColor: '#0f172a'
+                        });
                         this.activeDetailTab = 'playoffs';
                         this.loadPlayoffs(this.selectedCategoria.id);
                     },
                     error: (err) => {
-                        Swal.fire('Error', err.error?.error || 'No se pudo cerrar la fase de grupos', 'error');
+                        Swal.fire({
+                            title: 'Error',
+                            text: err.error?.error || 'No se pudo cerrar la fase de grupos',
+                            icon: 'error',
+                            confirmButtonColor: '#0f172a'
+                        });
                     }
                 });
             }
@@ -536,7 +806,12 @@ export class TorneoGestionComponent implements OnInit {
             next: () => {
                 ins.validado = ins.validado ? 0 : 1;
                 ins.pagado = ins.validado;
-                Swal.fire('Actualizado', 'Estado de inscripción cambiado.', 'success');
+                Swal.fire({
+                    title: 'Actualizado',
+                    text: 'Estado de inscripción cambiado.',
+                    icon: 'success',
+                    confirmButtonColor: '#0f172a'
+                });
             }
         });
     }
@@ -617,7 +892,6 @@ export class TorneoGestionComponent implements OnInit {
         const groups: { [key: string]: any[] } = {};
 
         this.matchesToSchedule.forEach(m => {
-            // Use tempDate if set, otherwise 'Sin Programar'
             const dateKey = m.tempDate || 'Sin Programar';
             if (!groups[dateKey]) {
                 groups[dateKey] = [];
@@ -627,15 +901,29 @@ export class TorneoGestionComponent implements OnInit {
 
         // Convert to array and sort
         this.calendarDays = Object.keys(groups).sort().map(date => {
+            const dayMatches = groups[date];
+            
+            // Group by hour for the timeline-v3 view
+            const hourGroupsMap: { [key: string]: any[] } = {};
+            dayMatches.forEach((m: any) => {
+                const hour = m.tempTime || '09:00'; // Fallback to 09:00 if not set
+                if (!hourGroupsMap[hour]) hourGroupsMap[hour] = [];
+                hourGroupsMap[hour].push(m);
+            });
+
+            const hourGroups = Object.keys(hourGroupsMap).sort((a,b) => a.localeCompare(b)).map(h => ({
+                hour: h,
+                matches: hourGroupsMap[h]
+            }));
+
             return {
                 date: date,
-                matches: groups[date].sort((a: any, b: any) => {
-                    return (a.tempTime || '').localeCompare(b.tempTime || '');
-                })
+                matches: dayMatches.sort((a: any, b: any) => (a.tempTime || '').localeCompare(b.tempTime || '')),
+                hourGroups: hourGroups
             };
         });
 
-        // Reset selected day index
+        // Reset selected day index to show the first day available
         this.selectedDayIndex = 0;
     }
 
@@ -654,12 +942,22 @@ export class TorneoGestionComponent implements OnInit {
             if (this.clubCanchas.length > 0) {
                 this.planParams.selectedCanchasIds = this.clubCanchas.map(c => c.id);
             } else {
-                Swal.fire('Error', 'No hay canchas cargadas para este club. Por favor, asegúrate de que el club tenga canchas configuradas.', 'error');
+                Swal.fire({
+                    title: 'Error de Configuración',
+                    text: 'No hay canchas cargadas para este club. Por favor, asegúrate de que el club tenga canchas configuradas.',
+                    icon: 'error',
+                    confirmButtonColor: '#0f172a'
+                });
                 return;
             }
         }
         if (!this.planParams.startDate || !this.planParams.endDate) {
-            Swal.fire('Error', 'Selecciona fecha de inicio y fin', 'error');
+            Swal.fire({
+                title: 'Fechas Requeridas',
+                text: 'Selecciona fecha de inicio y fin para la programación.',
+                icon: 'error',
+                confirmButtonColor: '#0f172a'
+            });
             return;
         }
 
@@ -680,7 +978,12 @@ export class TorneoGestionComponent implements OnInit {
         let pending = this.matchesToSchedule.filter(m => !m.tempTime || m.tempTime === '');
 
         if (pending.length === 0) {
-            Swal.fire('Info', 'No hay partidos pendientes de programar', 'info');
+            Swal.fire({
+                title: 'Sin Pendientes',
+                text: 'No hay partidos pendientes de programar en esta selección.',
+                icon: 'info',
+                confirmButtonColor: '#0f172a'
+            });
             return;
         }
 
@@ -770,9 +1073,21 @@ export class TorneoGestionComponent implements OnInit {
         this.organizeCalendar();
 
         if (pending.length > 0) {
-            Swal.fire('Atención', `Se programaron ${scheduledCount} partidos, pero quedaron ${pending.length} sin asignar.`, 'warning');
+            Swal.fire({
+                title: 'Programación Parcial',
+                text: `Se programaron ${scheduledCount} partidos, pero quedaron ${pending.length} sin asignar por falta de cupos.`,
+                icon: 'warning',
+                confirmButtonColor: '#0f172a'
+            });
         } else {
-            Swal.fire('Planificado', `Se han propuesto horarios para ${scheduledCount} partidos exitosamente.`, 'success');
+            Swal.fire({
+                title: 'Planificación Exitosa',
+                text: `Se han propuesto horarios para ${scheduledCount} partidos exitosamente.`,
+                icon: 'success',
+                showCancelButton: false,
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#0f172a'
+            });
         }
     }
 
@@ -784,8 +1099,18 @@ export class TorneoGestionComponent implements OnInit {
         }));
 
         this.clubesService.saveSchedule(changes).subscribe({
-            next: () => Swal.fire('Guardado', 'La programación se ha actualizado.', 'success'),
-            error: () => Swal.fire('Error', 'No se pudo guardar.', 'error')
+            next: () => Swal.fire({
+                title: 'Planificación Guardada',
+                text: 'La programación oficial se ha actualizado correctamente.',
+                icon: 'success',
+                confirmButtonColor: '#0f172a'
+            }),
+            error: () => Swal.fire({
+                title: 'Error de Guardado',
+                text: 'No se pudo sincronizar la programación con el servidor.',
+                icon: 'error',
+                confirmButtonColor: '#0f172a'
+            })
         });
     }
 
@@ -801,7 +1126,12 @@ export class TorneoGestionComponent implements OnInit {
         if (s.s3p1 !== '' && s.s3p2 !== '') sets.push({ p1: s.s3p1, p2: s.s3p2 });
 
         if (sets.length === 0) {
-            Swal.fire('Atención', 'Ingresa al menos el resultado del primer set', 'warning');
+            Swal.fire({
+                title: 'Marcador Vacío',
+                text: 'Ingresa al menos el resultado del primer set para guardar.',
+                icon: 'warning',
+                confirmButtonColor: '#0f172a'
+            });
             return;
         }
 
@@ -847,25 +1177,45 @@ export class TorneoGestionComponent implements OnInit {
             },
             error: (err) => {
                 console.error('Error saving score:', err);
-                Swal.fire('Error', 'No se pudo guardar el resultado', 'error');
+                Swal.fire({
+                    title: 'Error de Guardado',
+                    text: 'No se pudo registrar el resultado en el servidor.',
+                    icon: 'error',
+                    confirmButtonColor: '#0f172a'
+                });
             }
         });
     }
 
     crearTorneo() {
         if (!this.newTorneo.nombre || !this.newTorneo.fecha_inicio) {
-            Swal.fire('Atención', 'Nombre y Fecha son obligatorios', 'warning');
+            Swal.fire({
+                title: 'Datos Incompletos',
+                text: 'El nombre del torneo y la fecha de inicio son campos obligatorios.',
+                icon: 'warning',
+                confirmButtonColor: '#0f172a'
+            });
             return;
         }
 
         this.clubesService.createTorneoV2({ ...this.newTorneo, creator_id: this.userId }).subscribe({
             next: (res) => {
-                Swal.fire('¡Éxito!', 'Torneo principal creado. Ahora configura las categorías.', 'success');
+                Swal.fire({
+                    title: '¡Torneo Creado!',
+                    text: 'El torneo principal se ha registrado. Procede a configurar las categorías.',
+                    icon: 'success',
+                    confirmButtonColor: '#0f172a'
+                });
                 this.loadInitialData();
                 this.selectTorneo(res.torneo); // Assuming backend returns the created object
             },
             error: (err) => {
-                Swal.fire('Error', 'No se pudo crear el torneo', 'error');
+                Swal.fire({
+                    title: 'Error de Registro',
+                    text: 'No se pudo crear el torneo. Verifica los datos e intenta nuevamente.',
+                    icon: 'error',
+                    confirmButtonColor: '#0f172a'
+                });
             }
         });
     }
@@ -886,7 +1236,14 @@ export class TorneoGestionComponent implements OnInit {
             { nombre: 'Damas D', max_parejas: 24, puntos_repartir: 50 },
             { nombre: 'Damas E', max_parejas: 24, puntos_repartir: 25 }
         ];
-        Swal.fire('Cargadas', 'Se han cargado las categorías estándar (Varones 1-6, Damas A-E)', 'success');
+        Swal.fire({
+            title: 'Plantillas Cargadas',
+            text: 'Se han generado las categorías estándar (Varones 1-6, Damas A-E).',
+            icon: 'success',
+            showCancelButton: false,
+            confirmButtonText: 'Genial',
+            confirmButtonColor: '#0f172a'
+        });
     }
 
     // INSCRIPCIÓN MANUAL CON BÚSQUEDA
@@ -960,7 +1317,12 @@ export class TorneoGestionComponent implements OnInit {
         const j2Name = this.manualInscripcion.jugador2_nombre;
 
         if (!j1Name || !j2Name) {
-            Swal.fire('Atención', 'Ambos nombres de jugadores son obligatorios', 'warning');
+            Swal.fire({
+                title: 'Nombres Requeridos',
+                text: 'Debes ingresar el nombre de ambos jugadores para registrar la pareja.',
+                icon: 'warning',
+                confirmButtonColor: '#0f172a'
+            });
             return;
         }
 
@@ -976,7 +1338,12 @@ export class TorneoGestionComponent implements OnInit {
 
         this.clubesService.inscribirParejaV2(payload).subscribe({
             next: () => {
-                Swal.fire('¡Inscrito!', 'Pareja añadida correctamente.', 'success');
+                Swal.fire({
+                    title: '¡Inscrito!',
+                    text: 'Pareja añadida correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#0f172a'
+                });
                 this.loadInscripciones(this.selectedCategoria.id);
                 // Reset form
                 this.manualInscripcion = {
@@ -985,7 +1352,14 @@ export class TorneoGestionComponent implements OnInit {
                     nombre_pareja: ''
                 };
             },
-            error: (err) => Swal.fire('Error', err.error?.error || 'No se pudo inscribir', 'error')
+            error: (err) => {
+                Swal.fire({
+                    title: 'Error de Inscripción',
+                    text: err.error?.error || 'No se pudo realizar la inscripción. Revisa los datos.',
+                    icon: 'error',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
         });
     }
 
@@ -1041,12 +1415,22 @@ export class TorneoGestionComponent implements OnInit {
             if (result.isConfirmed) {
                 this.clubesService.generarGrupos(this.selectedCategoria.id).subscribe({
                     next: () => {
-                        Swal.fire('¡Listo!', 'Grupos generados exitosamente.', 'success');
+                        Swal.fire({
+                            title: '¡Listo!',
+                            text: 'Grupos generados exitosamente.',
+                            icon: 'success',
+                            confirmButtonColor: '#0f172a'
+                        });
                         this.loadGroupData(this.selectedCategoria.id); // Refresh group data immediately
                         this.activeDetailTab = 'grupos';
                     },
                     error: (err) => {
-                        Swal.fire('Error', err.error?.error || 'No se pudieron generar los grupos', 'error');
+                        Swal.fire({
+                            title: 'Error',
+                            text: err.error?.error || 'No se pudieron generar los grupos',
+                            icon: 'error',
+                            confirmButtonColor: '#0f172a'
+                        });
                     }
                 });
             }
@@ -1059,7 +1443,12 @@ export class TorneoGestionComponent implements OnInit {
 
     initAvailabilityGrid() {
         if (!this.planParams.startDate || !this.planParams.endDate) {
-            Swal.fire('Info', 'Define primero las fechas de inicio y fin en la pestaña de categorías o configuración.', 'info');
+            Swal.fire({
+                title: 'Configuración Requerida',
+                text: 'Define primero las fechas de inicio y fin en la pestaña de categorías o configuración.',
+                icon: 'info',
+                confirmButtonColor: '#0f172a'
+            });
             return;
         }
 
@@ -1200,10 +1589,22 @@ export class TorneoGestionComponent implements OnInit {
             if (result.isConfirmed) {
                 this.clubesService.eliminarPareja(inscripcionId).subscribe({
                     next: () => {
-                        Swal.fire('Eliminado', 'Pareja eliminada.', 'success');
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: 'Pareja eliminada correctamente.',
+                            icon: 'success',
+                            confirmButtonColor: '#0f172a'
+                        });
                         if (this.selectedCategoria) this.loadInscripciones(this.selectedCategoria.id);
                     },
-                    error: (err) => Swal.fire('Error', 'No se pudo eliminar', 'error')
+                    error: (err) => {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'No se pudo eliminar la pareja.',
+                            icon: 'error',
+                            confirmButtonColor: '#0f172a'
+                        });
+                    }
                 });
             }
         });

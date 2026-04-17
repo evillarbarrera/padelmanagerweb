@@ -1,0 +1,103 @@
+<div class="admin-layout">
+    <app-sidebar [userId]="userId" [jugadorNombre]="userName" [jugadorFoto]="userFoto" [role]="userRole"
+        activePage="club-reportes">
+    </app-sidebar>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-title">
+                <h1>Reportes y Analítica</h1>
+                <div class="header-subtitle">
+                    <p>Monitorea el rendimiento del club en tiempo real</p>
+                    <div class="time-badge">
+                        <span class="pulse"></span> SISTEMA EN VIVO
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="club-select-wrapper" *ngIf="clubes.length > 1">
+                    <label>Seleccionar Club</label>
+                    <select [(ngModel)]="clubId" (change)="onClubChange()" class="club-dropdown">
+                        <option *ngFor="let c of clubes" [value]="c.id">{{ c.nombre }}</option>
+                    </select>
+                </div>
+                <div class="club-info-single" *ngIf="clubes.length <= 1 && clubes.length > 0">
+                    <span class="club-label">
+                        🏢 {{ clubes[0].nombre }}
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <div class="reports-container">
+            <!-- TAB NAVIGATION -->
+            <div class="tabs-nav">
+                <button [class.active]="activeTab === 'ventas'" (click)="switchTab('ventas')">
+                    <span class="icon">💰</span> Ventas
+                </button>
+                <button [class.active]="activeTab === 'reservas'" (click)="switchTab('reservas')">
+                    <span class="icon">🎾</span> Reservas
+                </button>
+            </div>
+
+            <!-- SALES SECTION -->
+            <div class="tab-content" *ngIf="activeTab === 'ventas'">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <label>Ventas Hoy</label>
+                        <div class="value">${{ getLatest(salesData.daily) | number:'1.0-0' }}</div>
+                        <span class="trend">Último cierre</span>
+                    </div>
+                    <div class="stat-card">
+                        <label>Ventas esta Semana</label>
+                        <div class="value">${{ getTotal(salesData.weekly) | number:'1.0-0' }}</div>
+                        <span class="trend">Acumulado 7 días</span>
+                    </div>
+                    <div class="stat-card">
+                        <label>Ventas este Mes</label>
+                        <div class="value">${{ getTotal(salesData.monthly) | number:'1.0-0' }}</div>
+                        <span class="trend">Proyectado vs Mes Ant.</span>
+                    </div>
+                </div>
+
+                <div class="chart-container-large">
+                    <div class="chart-header">
+                        <h3>Comparativa Mensual de Ventas</h3>
+                        <p>Visualización del histórico de ingresos de los últimos 12 meses</p>
+                    </div>
+                    <canvas #salesChart></canvas>
+                </div>
+            </div>
+
+            <!-- RESERVATIONS SECTION -->
+            <div class="tab-content" *ngIf="activeTab === 'reservas'">
+                <div class="stats-grid">
+                    <div class="stat-card res">
+                        <label>Reservas Hoy</label>
+                        <div class="value">{{ getLatest(resData.daily) }}</div>
+                        <span class="trend">Uso de canchas</span>
+                    </div>
+                    <div class="stat-card res">
+                        <label>Reservas esta Semana</label>
+                        <div class="value">{{ getTotal(resData.weekly) }}</div>
+                        <span class="trend">Flujo semanal</span>
+                    </div>
+                    <div class="stat-card res">
+                        <label>Reservas este Mes</label>
+                        <div class="value">{{ getTotal(resData.monthly) }}</div>
+                        <span class="trend">Demanda mensual</span>
+                    </div>
+                </div>
+
+                <div class="chart-container-large">
+                    <div class="chart-header">
+                        <h3>Tendencia de Reservas Diarias</h3>
+                        <p>Ocupación de canchas durante los últimos 30 días</p>
+                    </div>
+                    <canvas #resChart></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

@@ -65,20 +65,31 @@
       <p class="subtitle-small">Tienes múltiples roles asociados a esta cuenta.</p>
 
       <div class="profiles-list">
-        <button *ngFor="let p of availableProfiles" class="profile-btn" (click)="selectProfile(p)">
+        <button *ngFor="let p of availableProfiles" 
+                class="profile-btn" 
+                [class.is-admin]="p.rol === 'administrador_club' || p.rol === 'administrador'"
+                [class.is-staff]="p.rol === 'staff_club'"
+                [class.is-entrenador]="p.rol === 'entrenador'"
+                [class.is-jugador]="p.rol === 'jugador'"
+                (click)="selectProfile(p)">
           <div class="p-icon">
-            {{ p.rol === 'administrador_club' ? '🏢' : (p.rol === 'entrenador' ? '🎾' : '👤') }}
+            {{ p.rol === 'administrador_club' || p.rol === 'administrador' ? '🏢' : (p.rol === 'entrenador' ? '🎾' : (p.rol === 'staff_club' ? '👤' : '👤')) }}
           </div>
           <div class="p-info">
-            <span class="p-club">{{ p.club_nombre || 'Sin Club' }}</span>
-            <span class="p-rol">{{ p.rol | titlecase }}</span>
+            <span class="p-club">{{ p.club_nombre || 'Perfil Global' }}</span>
+            <span class="p-rol">
+               {{ p.rol === 'administrador_club' ? 'Administrador' : 
+                  (p.rol === 'staff_club' ? 'Personal del Club' : 
+                  (p.rol === 'entrenador' ? 'Entrenador' : 
+                  (p.rol === 'administrador' ? 'Super Admin' : 'Jugador'))) }}
+            </span>
           </div>
           <div class="p-arrow">➜</div>
         </button>
       </div>
 
       <div class="register-prompt">
-        <a (click)="showProfileSelector = false">Volver</a>
+        <a (click)="showProfileSelector = false">Volver al inicio</a>
       </div>
     </div>
 

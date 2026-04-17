@@ -808,6 +808,7 @@
         font-weight: 900;
         text-transform: uppercase;
         z-index: 5;
+        -webkit-backdrop-filter: blur(4px);
         backdrop-filter: blur(4px);
     }
 }
@@ -1358,6 +1359,7 @@
         background: #fff;
         color: #1e293b;
         transition: all 0.2s ease;
+        -webkit-appearance: none;
         appearance: none;
         background-image: none;
 

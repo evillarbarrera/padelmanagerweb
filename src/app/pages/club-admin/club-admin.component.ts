@@ -23,9 +23,20 @@ export class ClubAdminComponent implements OnInit {
     userName: string = '';
     userFoto: string | null = null;
     userRole: any = 'administrador_club';
-
     activeTab: 'list' | 'create' = 'list';
     isLoading: boolean = false;
+    searchTerm: string = '';
+    showClubModal: boolean = false;
+    showCanchaModal: boolean = false;
+    showStaffModal: boolean = false;
+
+    staff: any[] = [];
+    newStaff = {
+        nombre: '',
+        email: '',
+        password: '',
+        rol: 'administrador_club'
+    };
 
     newClub = {
         nombre: '',
@@ -83,17 +94,19 @@ export class ClubAdminComponent implements OnInit {
         nombre: '',
         tipo: 'Outdoor',
         superficie: 'Césped Sintético',
-        precio_hora: 0
+        precio_60: 0,
+        precio_90: 0,
+        precio_120: 0
     };
 
-    updateComunas(): void {
+    updateComunas(reset: boolean = true): void {
         const selectedRegion = this.regions.find(r => r.name === this.newClub.region);
         if (selectedRegion) {
             this.filteredComunas = this.allComunas[selectedRegion.id] || [];
-            this.newClub.comuna = '';
+            if (reset) this.newClub.comuna = '';
         } else {
             this.filteredComunas = [];
-            this.newClub.comuna = '';
+            if (reset) this.newClub.comuna = '';
         }
     }
 
@@ -108,8 +121,16 @@ export class ClubAdminComponent implements OnInit {
         const storedUserId = localStorage.getItem('userId');
         const storedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
-        if (!storedUserId || (!storedRole.toLowerCase().includes('admin') && !storedRole.toLowerCase().includes('administrador'))) {
+        if (!storedUserId || (!storedRole.toLowerCase().includes('admin') && 
+                             !storedRole.toLowerCase().includes('administrador') && 
+                             !storedRole.toLowerCase().includes('staff'))) {
             this.router.navigate(['/login']);
+            return;
+        }
+
+        // 🔐 SEGURIDAD: Los usuarios de Staff no pueden ver "Mis Clubes" (Página de gestión global del club)
+        if (storedRole.toLowerCase().includes('staff')) {
+            this.router.navigate(['/club-home']);
             return;
         }
 
@@ -143,11 +164,20 @@ export class ClubAdminComponent implements OnInit {
 
     // ... existing properties ...
 
+    get filteredClubes() {
+        if (!this.searchTerm) return this.clubes;
+        return this.clubes.filter(c => 
+            c.nombre.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+            c.comuna.toLowerCase().includes(this.searchTerm.toLowerCase())
+        );
+    }
+
     selectClub(club: any) {
         this.selectedClub = club;
         this.cancelEditCancha(); // Reset form
         this.newCancha.club_id = club.id;
         this.loadCanchas(club.id);
+        this.loadStaff(club.id);
     }
 
     loadCanchas(clubId: number) {
@@ -156,16 +186,83 @@ export class ClubAdminComponent implements OnInit {
         });
     }
 
-    editClub(club: any, event: Event) {
-        event.stopPropagation();
-        this.editingClubId = club.id;
-        this.newClub = {
-            ...club,
-            admin_id: this.userId || 0
+    loadStaff(clubId: number) {
+        this.clubesService.getClubStaff(clubId).subscribe(res => {
+            this.staff = res;
+        });
+    }
+
+    openStaffModal() {
+        this.newStaff = {
+            nombre: '',
+            email: '',
+            password: '',
+            rol: 'administrador_club'
         };
-        this.updateComunas(); // To load the correct comunas for the region
-        this.newClub.comuna = club.comuna; // Re-set because updateComunas might clear it
-        this.activeTab = 'create';
+        this.showStaffModal = true;
+    }
+
+    createStaff() {
+        if (!this.newStaff.nombre || !this.newStaff.email || !this.newStaff.password) {
+            Swal.fire('Error', 'Todos los campos son obligatorios', 'warning');
+            return;
+        }
+
+        this.isLoading = true;
+        const payload = { ...this.newStaff, club_id: this.selectedClub.id };
+        
+        this.clubesService.addClubStaff(payload).subscribe({
+            next: () => {
+                Swal.fire('Éxito', 'Usuario creado y asociado al club', 'success');
+                this.loadStaff(this.selectedClub.id);
+                this.showStaffModal = false;
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('Error creating staff:', err);
+                Swal.fire('Error', err.error?.error || 'No se pudo crear el usuario', 'error');
+                this.isLoading = false;
+            }
+        });
+    }
+
+    deleteStaff(usuarioId: number) {
+        Swal.fire({
+            title: '¿Eliminar acceso?',
+            text: 'El usuario ya no podrá gestionar este club',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.isLoading = true;
+                this.clubesService.deleteClubStaff(usuarioId, this.selectedClub.id).subscribe({
+                    next: () => {
+                        Swal.fire('Eliminado', 'El acceso ha sido revocado', 'success');
+                        this.loadStaff(this.selectedClub.id);
+                        this.isLoading = false;
+                    },
+                    error: () => {
+                        Swal.fire('Error', 'No se pudo eliminar el acceso', 'error');
+                        this.isLoading = false;
+                    }
+                });
+            }
+        });
+    }
+
+    openCreateModal() {
+        this.cancelEditClub(); // This resets everything and hides the modal
+        this.showClubModal = true;
+    }
+
+    editClub(club: any, event?: Event) {
+        if (event) event.stopPropagation();
+        this.editingClubId = club.id;
+        this.newClub = { ...club };
+        this.updateComunas(false); 
+        this.showClubModal = true;
     }
 
     cancelEditClub() {
@@ -180,6 +277,7 @@ export class ClubAdminComponent implements OnInit {
             email: '',
             admin_id: this.userId || 0
         };
+        this.showClubModal = false;
         this.activeTab = 'list';
     }
 
@@ -259,15 +357,16 @@ export class ClubAdminComponent implements OnInit {
         });
     }
 
+    openCanchaModal() {
+        this.cancelEditCancha(); 
+        this.newCancha.club_id = this.selectedClub!.id;
+        this.showCanchaModal = true;
+    }
+
     editCancha(cancha: any) {
         this.editingCanchaId = cancha.id;
-        this.newCancha = { ...cancha, club_id: this.selectedClub.id };
-
-        // Scroll to form (optional UX)
-        setTimeout(() => {
-            const form = document.querySelector('.cancha-form-section');
-            if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+        this.newCancha = { ...cancha };
+        this.showCanchaModal = true;
     }
 
     cancelEditCancha() {
@@ -277,8 +376,11 @@ export class ClubAdminComponent implements OnInit {
             nombre: '',
             tipo: 'Outdoor',
             superficie: 'Césped Sintético',
-            precio_hora: 0
+            precio_60: 0,
+            precio_90: 0,
+            precio_120: 0
         };
+        this.showCanchaModal = false;
     }
 
     saveCancha() {

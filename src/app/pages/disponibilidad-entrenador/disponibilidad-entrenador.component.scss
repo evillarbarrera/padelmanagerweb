@@ -633,6 +633,7 @@
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -855,4 +856,39 @@
       margin-top: 8px;
     }
   }
+}
+
+.club-selector-web {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .btn-add-club-mini {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(204, 255, 0, 0.1);
+        border: 1px dashed rgba(204, 255, 0, 0.3);
+        color: #ccff00;
+        font-size: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+            background: rgba(204, 255, 0, 0.2);
+            border-style: solid;
+            transform: scale(1.05);
+        }
+    }
+}
+
+.swal-btn-confirm {
+    background-color: #ccff00 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    padding: 12px 30px !important;
 }

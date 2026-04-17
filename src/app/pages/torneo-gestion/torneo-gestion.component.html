@@ -16,32 +16,48 @@
             </div>
         </header>
 
-        <!-- TABS PRINCIPALES (SÓLO SI NO HAY TORNEO SELECCIONADO PARA EVITAR SOLAPE) -->
-        <div class="tabs-nav" *ngIf="!selectedTorneo"
-            style="display: flex; gap: 5px; background: #f1f5f9; padding: 5px; border-radius: 12px; margin-bottom: 25px; width: fit-content;">
-            <button [class.active]="activeTab === 'list'" (click)="activeTab = 'list'"
-                style="padding: 10px 20px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; transition: all 0.2s;"
-                [style.background]="activeTab === 'list' ? '#fff' : 'transparent'"
-                [style.boxShadow]="activeTab === 'list' ? '0 4px 6px rgba(0,0,0,0.05)' : 'none'"
-                [style.color]="activeTab === 'list' ? '#0f172a' : '#64748b'">Mis Torneos</button>
-            <button [class.active]="activeTab === 'create'" (click)="activeTab = 'create'"
-                style="padding: 10px 20px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; transition: all 0.2s;"
-                [style.background]="activeTab === 'create' ? '#fff' : 'transparent'"
-                [style.boxShadow]="activeTab === 'create' ? '0 4px 6px rgba(0,0,0,0.05)' : 'none'"
-                [style.color]="activeTab === 'create' ? '#0f172a' : '#64748b'">Configurar Nuevo</button>
+        <!-- TABS PRINCIPALES -->
+        <div class="tabs-nav-modern" *ngIf="!selectedTorneo">
+            <button [class.active]="activeTab === 'list'" (click)="activeTab = 'list'">
+                Mis Torneos
+            </button>
+            <button [class.active]="activeTab === 'create'" (click)="activeTab = 'create'">
+                Configurar Nuevo
+            </button>
         </div>
 
         <!-- LISTADO DE TORNEOS -->
         <section class="torneos-list" *ngIf="activeTab === 'list' && !selectedTorneo">
-            <div class="torneo-card" *ngFor="let t of torneos" (click)="selectTorneo(t)">
-                <div class="card-status" [attr.data-status]="t.estado">{{ t.estado }}</div>
-                <div class="card-info">
-                    <h3>{{ t.nombre }}</h3>
-                    <p><span class="icon">📅</span> {{ t.fecha_inicio | date:'dd MMM, yyyy' }}</p>
-                    <p><span class="icon">🏆</span> {{ t.tipo }}</p>
+            <div class="torneo-card animate-up" *ngFor="let t of torneos; let i = index" 
+                 [style.animationDelay]="(i * 0.1) + 's'"
+                 (click)="selectTorneo(t)">
+                <div class="card-status-badge" [attr.data-status]="t.estado">{{ t.estado }}</div>
+                
+                <div class="torneo-card-header">
+                    <div class="torneo-icon-box">
+                        <i class="fas fa-trophy"></i>
+                    </div>
                 </div>
-                <div class="card-action">
-                    <button class="btn-outline">Gestionar</button>
+
+                <div class="torneo-card-body">
+                    <h3>{{ t.nombre }}</h3>
+                    
+                    <div class="torneo-meta-grid">
+                        <div class="meta-item">
+                            <span class="m-icon">📅</span>
+                            <span class="m-text">{{ t.fecha_inicio | date:'dd MMM, yyyy' }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="m-icon">🎮</span>
+                            <span class="m-text">{{ t.tipo }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="torneo-card-footer">
+                    <button class="btn-manage-torneo">
+                        Gestionar <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
 
@@ -79,38 +95,104 @@
                     </div>
                 </div>
 
-                <!-- CATEGORIAS A REPARTIR -->
+                <!-- CATEGORÍAS PREDEFINIDAS (UX SELECTION) -->
                 <div class="categories-setup" style="margin-top: 30px;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h3
-                            style="font-size: 14px; font-weight: 800; color: #888; text-transform: uppercase; margin: 0;">
-                            Categorías y Puntos</h3>
-                        <button class="btn-outline" (click)="cargarCategoriasStandard()"
-                            style="font-size: 11px; padding: 5px 10px;">Cargar Estándar (CL)</button>
-                    </div>
-                    <div class="cat-setup-grid" style="display: grid; gap: 10px; margin-top: 15px;">
-                        <div class="cat-setup-row" *ngFor="let cat of newTorneo.categorias; let i = index"
-                            style="display: grid; grid-template-columns: 2fr 1fr 1fr 50px; gap: 10px; align-items: end;">
-                            <div class="form-group">
-                                <label *ngIf="i === 0">Nombre Categoría</label>
-                                <input type="text" [(ngModel)]="cat.nombre" placeholder="Ej: 5ta">
+                    <h3 style="font-size: 14px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 15px;">
+                        Selecciona las Categorías del Torneo
+                    </h3>
+                    
+                    <div class="preset-groups" style="display: grid; gap: 20px;">
+                        <!-- VARONES -->
+                        <div class="preset-group">
+                            <h4 style="font-size: 12px; color: #64748b; margin-bottom: 10px;">VARONES</h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <ng-container *ngFor="let p of presetCategories">
+                                    <div *ngIf="p.type === 'varones'"
+                                         [class.selected]="isCategorySelected(p.nombre)"
+                                         (click)="toggleCategory(p)"
+                                         class="cat-chip">
+                                         <span class="chip-check" *ngIf="isCategorySelected(p.nombre)">✓</span>
+                                         {{ p.nombre }}
+                                    </div>
+                                </ng-container>
                             </div>
-                            <div class="form-group">
-                                <label *ngIf="i === 0">Parejas Máx</label>
-                                <input type="number" [(ngModel)]="cat.max_parejas">
+                        </div>
+
+                        <!-- DAMAS -->
+                        <div class="preset-group">
+                            <h4 style="font-size: 12px; color: #64748b; margin-bottom: 10px;">DAMAS</h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <ng-container *ngFor="let p of presetCategories">
+                                    <div *ngIf="p.type === 'damas'"
+                                         [class.selected]="isCategorySelected(p.nombre)"
+                                         (click)="toggleCategory(p)"
+                                         class="cat-chip">
+                                         <span class="chip-check" *ngIf="isCategorySelected(p.nombre)">✓</span>
+                                         {{ p.nombre }}
+                                    </div>
+                                </ng-container>
                             </div>
-                            <div class="form-group">
-                                <label *ngIf="i === 0">Puntos Repartir</label>
-                                <input type="number" [(ngModel)]="cat.puntos_repartir">
-                            </div>
-                            <button class="btn-mini danger" (click)="newTorneo.categorias.splice(i, 1)"
-                                style="margin-bottom: 5px;">X</button>
                         </div>
                     </div>
-                    <button class="btn-outline"
-                        (click)="newTorneo.categorias.push({nombre:'', max_parejas:16, puntos_repartir:0})"
-                        style="margin-top: 15px; font-size: 11px;">+ Añadir Otra Categoría</button>
+
+                    <!-- DETALLES DE LAS SELECCIONADAS (UX TABULAR / PESTAÑAS) -->
+                    <div class="selected-details" *ngIf="newTorneo.categorias.length > 0" style="margin-top: 40px;">
+                        <header style="margin-bottom: 20px;">
+                            <h3 style="font-size: 14px; font-weight: 800; color: #1e293b; text-transform: uppercase; margin: 0; letter-spacing: 1px;">
+                                <i class="fas fa-edit" style="margin-right: 8px; color: #3b82f6;"></i> Configurar Puntos y Cupos
+                            </h3>
+                        </header>
+
+                        <!-- PESTAÑAS DE CATEGORÍAS -->
+                        <div class="category-tabs-nav">
+                            <div *ngFor="let cat of newTorneo.categorias; let i = index"
+                                 (click)="activeConfigIndex = i"
+                                 [class.active]="activeConfigIndex === i"
+                                 class="config-tab-btn"
+                                 [style.borderBottomColor]="activeConfigIndex === i ? getCategoryColor(cat.nombre) : 'transparent'">
+                                 <span class="cat-tab-dot" [style.background]="getCategoryColor(cat.nombre)"></span>
+                                 {{ cat.nombre || 'Sin nombre' }}
+                                 <button class="tab-remove-btn" (click)="$event.stopPropagation(); newTorneo.categorias.splice(i, 1); activeConfigIndex = 0;">×</button>
+                            </div>
+                        </div>
+
+                        <!-- CONTENIDO DE LA PESTAÑA ACTIVA -->
+                        <div class="tab-config-content" *ngIf="newTorneo.categorias[activeConfigIndex]">
+                            <div class="config-card">
+                                <div class="config-header" [style.borderLeft]="'4px solid ' + getCategoryColor(newTorneo.categorias[activeConfigIndex].nombre)">
+                                    <h4>Editando: {{ newTorneo.categorias[activeConfigIndex].nombre }}</h4>
+                                    <p>Ajusta los parámetros específicos para esta categoría.</p>
+                                </div>
+                                
+                                <div class="config-form-grid">
+                                    <div class="form-group">
+                                        <label>Nombre de la Categoría</label>
+                                        <input type="text" [(ngModel)]="newTorneo.categorias[activeConfigIndex].nombre" placeholder="Nombre..." class="styled-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Parejas Máximas</label>
+                                        <div class="input-icon-box">
+                                            <i class="fas fa-users"></i>
+                                            <input type="number" [(ngModel)]="newTorneo.categorias[activeConfigIndex].max_parejas" class="styled-input">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Puntos a Repartir</label>
+                                        <div class="input-icon-box">
+                                            <i class="fas fa-trophy"></i>
+                                            <input type="number" [(ngModel)]="newTorneo.categorias[activeConfigIndex].puntos_repartir" class="styled-input">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="custom-category-add" style="margin-top: 15px; text-align: right;">
+                        <button class="btn-text-action" (click)="newTorneo.categorias.push({nombre:'', max_parejas:16, puntos_repartir:0})">
+                            <i class="fas fa-plus-circle"></i> Añadir categoría personalizada no listada
+                        </button>
+                    </div>
                 </div>
 
                 <div class="form-group full-width" style="margin-top: 20px;">
@@ -125,16 +207,28 @@
 
         <!-- GESTIÓN DE TORNEO SELECCIONADO -->
         <section class="torneo-details" *ngIf="selectedTorneo">
-            <div class="details-header" style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
-                <button class="btn-outline" (click)="selectedTorneo = null" style="padding: 8px 15px;">←</button>
-                <h2 style="margin: 0; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">{{
-                    selectedTorneo.nombre }}</h2>
+            <div class="details-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="btn-outline" (click)="selectedTorneo = null" style="padding: 8px 15px;">←</button>
+                    <div>
+                        <h2 style="margin: 0; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; color: #0f172a;">{{ selectedTorneo.nombre }}</h2>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                            <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">
+                                {{ selectedCategoria ? 'FILTRADO: ' + selectedCategoria.nombre : 'VISTA GLOBAL DEL TORNEO' }}
+                            </span>
+                            <button *ngIf="selectedCategoria" (click)="selectCategoria(null)" 
+                                style="font-size: 10px; background: #f1f5f9; border: none; padding: 2px 8px; border-radius: 4px; font-weight: 900; color: #3b82f6; cursor: pointer; text-transform: uppercase;">
+                                Ver Todo
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="tournament-detail-tabs"
                 style="display: flex; gap: 5px; background: #fff; padding: 4px; border-bottom: 1px solid #e2e8f0; margin-bottom: 30px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
 
-                <button (click)="activeDetailTab = 'resumen'; calculateStats()"
+                <button (click)="onTabChange('resumen'); calculateStats()"
                     [class.active]="activeDetailTab === 'resumen'"
                     style="padding: 14px 24px; border: none; background: none; font-weight: 800; color: #64748b; cursor: pointer; transition: all 0.2s; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; position: relative; display: flex; align-items: center; gap: 8px;"
                     [style.color]="activeDetailTab === 'resumen' ? '#0f172a' : '#64748b'">
@@ -144,7 +238,7 @@
                     </div>
                 </button>
 
-                <button (click)="activeDetailTab = 'config'" [class.active]="activeDetailTab === 'config'"
+                <button (click)="onTabChange('config')" [class.active]="activeDetailTab === 'config'"
                     style="padding: 14px 24px; border: none; background: none; font-weight: 800; color: #64748b; cursor: pointer; transition: all 0.2s; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; position: relative; display: flex; align-items: center; gap: 8px;"
                     [style.color]="activeDetailTab === 'config' ? '#0f172a' : '#64748b'">
                     <span>👥</span> Inscritos / Categorías
@@ -153,7 +247,7 @@
                     </div>
                 </button>
 
-                <button (click)="activeDetailTab = 'programacion'; initAvailabilityGrid()"
+                <button (click)="onTabChange('programacion'); initAvailabilityGrid()"
                     [class.active]="activeDetailTab === 'programacion'"
                     style="padding: 14px 24px; border: none; background: none; font-weight: 800; color: #64748b; cursor: pointer; transition: all 0.2s; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; position: relative; display: flex; align-items: center; gap: 8px;"
                     [style.color]="activeDetailTab === 'programacion' ? '#0f172a' : '#64748b'">
@@ -163,7 +257,7 @@
                     </div>
                 </button>
 
-                <button (click)="activeDetailTab = 'generar'" [class.active]="activeDetailTab === 'generar'"
+                <button (click)="onTabChange('generar'); prepareScheduleData()" [class.active]="activeDetailTab === 'generar'"
                     style="padding: 14px 24px; border: none; background: none; font-weight: 800; color: #64748b; cursor: pointer; transition: all 0.2s; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; position: relative; display: flex; align-items: center; gap: 8px;"
                     [style.color]="activeDetailTab === 'generar' ? '#0f172a' : '#64748b'">
                     <span>⚡</span> Fase de Grupos
@@ -172,17 +266,18 @@
                     </div>
                 </button>
 
-                <button (click)="activeDetailTab = 'playoffs'" [class.active]="activeDetailTab === 'playoffs'"
+                <button (click)="onTabChange('playoffs'); loadPlayoffs(selectedCategoria?.id)" [class.active]="activeDetailTab === 'playoffs'"
                     style="padding: 14px 24px; border: none; background: none; font-weight: 800; color: #64748b; cursor: pointer; transition: all 0.2s; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; position: relative; display: flex; align-items: center; gap: 8px;"
                     [style.color]="activeDetailTab === 'playoffs' ? '#0f172a' : '#64748b'">
-                    <span>🏆</span> Cuadro Final
+                    <span>🏆</span> Cuadros
                     <div *ngIf="activeDetailTab === 'playoffs'"
                         style="position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: #000; border-radius: 4px;">
                     </div>
                 </button>
             </div>
 
-            <div class="details-content">
+            <div class="details-content no-sidebar">
+                <!-- CATEGORÍAS REMOVED AS PER USER REQUEST -->
 
                 <!-- TAB: CONFIGURACIÓN HORAS -->
                 <div *ngIf="activeDetailTab === 'programacion'">
@@ -200,6 +295,38 @@
                                         <p style="margin: 0; font-size: 13px; color: #64748b;">
                                             Define el rango de fechas y los horarios de juego para el torneo.
                                         </p>
+                                    </div>
+                                    
+                                    <!-- ENLARGED BALANCE MINI DASHBOARD -->
+                                    <div class="balance-mega-dashboard" *ngIf="gridDays.length > 0"
+                                        style="display: flex; gap: 15px; align-items: stretch; margin-bottom: 25px;">
+                                        
+                                        <!-- Mins/Part Definition -->
+                                        <div style="background: #0f172a; color: #fff; padding: 20px 30px; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; gap: 5px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+                                            <label style="font-size: 10px; font-weight: 950; opacity: 0.7; text-transform: uppercase; letter-spacing: 2px;">DURACIÓN PARTIDO</label>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <input type="number" [(ngModel)]="matchDuration" (change)="calculateStats()"
+                                                    style="background: transparent; border: none; border-bottom: 3px solid #3b82f6; color: #fff; width: 60px; font-size: 28px; font-weight: 1000; outline: none; text-align: center;">
+                                                <span style="font-size: 14px; font-weight: 900; color: #3b82f6; letter-spacing: 1px;">MINS</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Horas Balanza Stats - LARGE -->
+                                        <div style="background: #fff; border: 1px solid #e2e8f0; border-left: 8px solid #3b82f6; padding: 20px 35px; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; min-width: 280px; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
+                                            <label style="font-size: 10px; font-weight: 950; color: #64748b; text-transform: uppercase; letter-spacing: 2px;">BALANCE HORARIO (TOTAL)</label>
+                                            <div style="display: flex; align-items: baseline; gap: 12px;">
+                                                <span style="font-size: 36px; font-weight: 1000; letter-spacing: -1px;" [style.color]="tournamentStats.horasDisponibles >= tournamentStats.horasNecesarias ? '#16a34a' : '#ef4444'">
+                                                    {{ tournamentStats.horasDisponibles }}h
+                                                </span>
+                                                <span style="font-size: 18px; font-weight: 800; color: #94a3b8;">/ {{ tournamentStats.horasNecesarias | number:'1.0-1' }}h necesario</span>
+                                            </div>
+                                            <div *ngIf="tournamentStats.horasDisponibles < tournamentStats.horasNecesarias" style="font-size: 12px; color: #ef4444; font-weight: 900; margin-top: 5px; display: flex; align-items: center; gap: 6px;">
+                                                <span style="background: #fee2e2; padding: 2px 8px; border-radius: 4px;">⚠️ Faltan {{ (tournamentStats.horasNecesarias - tournamentStats.horasDisponibles) | number:'1.0-1' }}h por cubrir</span>
+                                            </div>
+                                            <div *ngIf="tournamentStats.horasDisponibles >= tournamentStats.horasNecesarias" style="font-size: 12px; color: #16a34a; font-weight: 900; margin-top: 5px; display: flex; align-items: center; gap: 6px;">
+                                                <span style="background: #dcfce7; padding: 2px 8px; border-radius: 4px;">✓ CAPACIDAD DISPONIBLE SUFICIENTE</span>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div
@@ -293,49 +420,44 @@
                 </div>
 
                 <!-- TAB: RESUMEN -->
-                <div *ngIf="activeDetailTab === 'resumen'">
+                <div *ngIf="activeDetailTab === 'resumen'" style="padding: 10px;">
                     <div class="stats-dashboard"
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 30px; margin-bottom: 50px;">
 
                         <div class="stat-card"
                             style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                             <div
                                 style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 5px;">
                                 Total Inscritos</div>
-                            <div style="font-size: 28px; font-weight: 900; color: #0f172a;">{{
-                                tournamentStats.totalInscritos }} <span
-                                    style="font-size: 14px; font-weight: 500; color: #94a3b8;">parejas</span></div>
+                            <div style="font-size: 28px; font-weight: 900; color: #0f172a;">
+                                {{ tournamentStats.totalInscritos }}
+                                <span style="font-size: 14px; font-weight: 500; color: #94a3b8;">/ {{ tournamentStats.maxEsperados }} parejas</span>
+                            </div>
                         </div>
 
                         <div class="stat-card"
                             style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                             <div
                                 style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 5px;">
-                                Partidos Estimados</div>
-                            <div style="font-size: 28px; font-weight: 900; color: #3b82f6;">~{{
-                                tournamentStats.totalPartidosEstimados }}</div>
+                                Partidos</div>
+                            <div style="font-size: 28px; font-weight: 900; color: #3b82f6;">
+                                {{ tournamentStats.partidosReales }}
+                                <span style="font-size: 14px; font-weight: 500; color: #94a3b8;">/ {{ tournamentStats.totalPartidosEstimados }} total</span>
+                            </div>
                         </div>
 
                         <div class="stat-card"
                             style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                             <div
                                 style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 5px;">
-                                Horas Necesarias</div>
-                            <div style="font-size: 28px; font-weight: 900; color: #f59e0b;">{{
-                                tournamentStats.horasNecesarias | number:'1.0-1' }}h</div>
-                        </div>
-
-                        <div class="stat-card"
-                            style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                            <div
-                                style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 5px;">
-                                Horas Disponibles</div>
+                                Horas Balanza</div>
                             <div style="font-size: 28px; font-weight: 900;"
                                 [style.color]="tournamentStats.horasDisponibles >= tournamentStats.horasNecesarias ? '#16a34a' : '#ef4444'">
                                 {{ tournamentStats.horasDisponibles }}h
+                                <span style="font-size: 14px; font-weight: 500; color: #94a3b8;">(Nec. {{ tournamentStats.horasNecesarias | number:'1.0-1' }}h)</span>
                             </div>
                             <div *ngIf="tournamentStats.horasDisponibles < tournamentStats.horasNecesarias"
-                                style="font-size: 11px; color: #ef4444; font-weight: 700;">
+                                style="font-size: 11px; color: #ef4444; font-weight: 700; margin-top: 5px;">
                                 ⚠️ Faltan {{ (tournamentStats.horasNecesarias - tournamentStats.horasDisponibles) |
                                 number:'1.0-1' }}h
                             </div>
@@ -351,8 +473,8 @@
                             <tr style="background: #f8fafc; text-align: left;">
                                 <th style="padding: 12px 20px; font-weight: 700; color: #475569;">Categoría</th>
                                 <th style="padding: 12px 20px; font-weight: 700; color: #475569;">Inscritos</th>
-                                <th style="padding: 12px 20px; font-weight: 700; color: #475569;">Partidos (Est.)
-                                </th>
+                                <th style="padding: 12px 20px; font-weight: 700; color: #475569;">Partidos (Est.)</th>
+                                <th style="padding: 12px 20px; font-weight: 700; color: #475569;">Horas (Est.)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -360,8 +482,17 @@
                                 <td style="padding: 12px 20px; font-weight: 600;">{{ c.nombre }}</td>
                                 <td style="padding: 12px 20px;">{{ c.inscritos }}</td>
                                 <td style="padding: 12px 20px;">{{ c.partidos }}</td>
+                                <td style="padding: 12px 20px; font-weight: 700; color: #3b82f6;">{{ c.horas | number:'1.1-1' }}h</td>
                             </tr>
                         </tbody>
+                        <tfoot style="background: #f8fafc; border-top: 2px solid #e2e8f0;">
+                            <tr>
+                                <td style="padding: 15px 20px; font-weight: 900; color: #0f172a; text-transform: uppercase;">TOTAL TORNEO</td>
+                                <td style="padding: 15px 20px; font-weight: 900; color: #0f172a;">{{ tournamentStats.totalInscritos }}</td>
+                                <td style="padding: 15px 20px; font-weight: 900; color: #3b82f6;">{{ tournamentStats.totalPartidosEstimados }}</td>
+                                <td style="padding: 15px 20px; font-weight: 950; color: #3b82f6; font-size: 15px;">{{ tournamentStats.horasNecesarias | number:'1.1-1' }}h</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
 
@@ -379,9 +510,11 @@
                                 <h3
                                     style="margin: 0; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #64748b;">
                                     Simulador Masivo</h3>
-                                <button (click)="generateSchedule()"
-                                    style="background: #0f172a; color: #fff; border: none; padding: 6px 15px; border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; margin-top: 5px;">
-                                    SIMULAR TORNEO COMPLETO ⚡
+                                <button (click)="generateSchedule()" class="btn-sim-primary">
+                                    SIMULAR TORNEO REAL ⚡
+                                </button>
+                                <button (click)="simulateTournamentAtCapacity()" class="btn-sim-primary" style="margin-left: 10px;">
+                                    SIMULAR A CAPACIDAD MÁXIMA 🚀
                                 </button>
                             </div>
                         </div>
@@ -393,8 +526,7 @@
                                 <h3
                                     style="margin: 0; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #16a34a;">
                                     Programación Real</h3>
-                                <button (click)="autoSchedule()"
-                                    style="background: #16a34a; color: #fff; border: none; padding: 6px 15px; border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; margin-top: 5px;">
+                                <button (click)="autoSchedule()" class="btn-sim-success">
                                     AUTO-PROGRAMAR REAL 📆
                                 </button>
                             </div>
@@ -403,7 +535,22 @@
                         <!-- CONFIG MINS -->
                         <div
                             style="display: flex; align-items: center; gap: 15px; margin-left: auto; background: #f8fafc; padding: 8px 15px; border-radius: 8px;">
-                            <div style="display: flex; align-items: center; gap: 5px;">
+                            <div style="display: flex; gap: 5px; background: #e2e8f0; padding: 4px; border-radius: 8px;">
+                                <button (click)="simSubTab = 'agenda'"
+                                    [style.background]="simSubTab === 'agenda' ? '#fff' : 'transparent'"
+                                    [style.boxShadow]="simSubTab === 'agenda' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'"
+                                    style="border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; cursor: pointer; text-transform: uppercase;">
+                                    CALENDARIO
+                                </button>
+                                <button (click)="simSubTab = 'grupos'"
+                                    [style.background]="simSubTab === 'grupos' ? '#fff' : 'transparent'"
+                                    [style.boxShadow]="simSubTab === 'grupos' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'"
+                                    style="border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; cursor: pointer; text-transform: uppercase;">
+                                    GRUPOS
+                                </button>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
                                 <label
                                     style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Mins/Part:</label>
                                 <input type="number" [(ngModel)]="matchDuration" min="15" step="15"
@@ -412,98 +559,427 @@
                         </div>
                     </div>
 
-                    <!-- RESULTADO DEL CALENDARIO -->
-                    <div class="calendar-schedule" *ngIf="calendarDays.length > 0">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px;">
-                            <h4
-                                style="margin: 0; font-weight: 900; text-transform: uppercase; font-size: 12px; color: #64748b; letter-spacing: 2px;">
-                                📅 Cronograma Calculado
-                            </h4>
-                            <button *ngIf="!hasFictionalMatches()" (click)="savePlanificacion()"
-                                style="background: #10b981; color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px;">
-                                💾 GUARDAR PLANIFICACIÓN REAL
-                            </button>
+                    <!-- SUB-CONTENT: AGENDA -->
+                    <div *ngIf="simSubTab === 'agenda'">
+                        
+                        <!-- PADELMANAGER CONFLICT ALERT PANEL -->
+                        <div *ngIf="tournamentStats.conflictos?.length > 0" 
+                             style="background: #fff1f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
+                                <span style="font-size: 24px;">⚠️</span>
+                                <h4 style="margin: 0; font-weight: 900; color: #991b1b; text-transform: uppercase; font-size: 13px;">
+                                    Conflictos de Programación ({{ tournamentStats.conflictos.length }})
+                                </h4>
+                            </div>
+                            <ul style="margin: 0; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px;">
+                                <li *ngFor="let msg of tournamentStats.conflictos" 
+                                    style="font-size: 11px; color: #b91c1c; font-weight: 600;">
+                                    {{ msg }}
+                                </li>
+                            </ul>
+                            <div style="margin-top: 15px; font-size: 10px; color: #991b1b; font-style: italic;">
+                                * Sugerencia: Aumenta el horario disponible o reduce las restricciones de los jugadores para resolver these conflictos.
+                            </div>
                         </div>
 
-                        <!-- Day Tabs (smaller and wrapped) -->
-                        <div class="day-tabs"
-                            style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 25px; justify-content: center;">
-                            <button *ngFor="let day of calendarDays; let i = index" (click)="selectedDayIndex = i"
-                                [style.background]="selectedDayIndex === i ? '#0f172a' : '#fff'"
-                                [style.color]="selectedDayIndex === i ? '#fff' : '#64748b'"
-                                [style.border]="selectedDayIndex === i ? '1px solid #0f172a' : '1px solid #e2e8f0'"
-                                style="padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: all 0.2s; min-width: 80px;">
-                                <span *ngIf="day.date !== 'Sin Programar'">{{ day.date | date:'EEE d' | uppercase
-                                    }}</span>
-                                <span *ngIf="day.date === 'Sin Programar'">PENDIENTE</span>
-                            </button>
+                        <!-- RESULTADO DEL CALENDARIO -->
+                        <div class="calendar-schedule" *ngIf="calendarDays.length > 0">
+                            
+                            <!-- BARRA DE FILTROS Y CONTROLES -->
+                            <div style="background: #fff; border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 0px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                <div style="display: flex; align-items: center; gap: 20px;">
+                                    <h4 style="margin: 0; font-weight: 900; text-transform: uppercase; font-size: 11px; color: #0f172a; letter-spacing: 1px;">
+                                        🕒 Visualización de Agenda
+                                    </h4>
+                                    
+                                    <!-- Toggle Day/Week -->
+                                    <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 0px; border: 1px solid #e2e8f0;">
+                                        <button (click)="viewMode = 'day'"
+                                            [style.background]="viewMode === 'day' ? '#0f172a' : 'transparent'"
+                                            [style.color]="viewMode === 'day' ? '#fff' : '#64748b'"
+                                            style="border: none; padding: 6px 15px; font-size: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: all 0.2s;">
+                                            VISTA DÍA
+                                        </button>
+                                        <button (click)="viewMode = 'week'"
+                                            [style.background]="viewMode === 'week' ? '#0f172a' : 'transparent'"
+                                            [style.color]="viewMode === 'week' ? '#fff' : '#64748b'"
+                                            style="border: none; padding: 6px 15px; font-size: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: all 0.2s;">
+                                            VISTA SEMANA
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button *ngIf="!hasFictionalMatches()" (click)="savePlanificacion()"
+                                    style="background: #10b981; color: #fff; border: none; padding: 8px 18px; border-radius: 0px; font-weight: 900; font-size: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    💾 GUARDAR PLANIFICACIÓN REAL
+                                </button>
+                            </div>
+
+                        <!-- NEW PADEL MANAGER STYLE AGENDA -->
+                        <div class="agenda-wrapper" *ngIf="viewMode === 'day' && calendarDays.length > 0">
+                            
+                            <!-- Date Tabs - INTEGRATED -->
+                            <div class="date-tabs-container" style="margin-bottom: 0;">
+                                <button *ngFor="let day of calendarDays; let i = index" 
+                                    (click)="selectedDayIndex = i"
+                                    [class.active]="selectedDayIndex === i"
+                                    class="date-tab">
+                                    <span class="day-name">{{ (day.date | date:'EEE' : 'UTC') || '?' }}</span>
+                                    <span class="day-number">{{ (day.date | date:'dd/MM' : 'UTC') || 'PEND' }}</span>
+                                </button>
+                            </div>
+
+                            <!-- CATEGORY LEGEND REFERENCE (NON-BUTTON) -->
+                            <div class="category-legend-bar" 
+                                style="background: #fff; border-bottom: 1px solid #f1f5f9; padding: 10px 20px; display: flex; gap: 15px; overflow-x: auto; white-space: nowrap;">
+                                <div *ngFor="let cat of categorias" 
+                                    style="display: flex; align-items: center; gap: 6px;">
+                                    <span [style.background]="getCategoryColor(cat.nombre)" 
+                                        style="width: 10px; height: 10px; border-radius: 50%;"></span>
+                                    <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ cat.nombre }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="day-content" *ngIf="calendarDays[selectedDayIndex]"
+                                style="background: #fff; border: none; padding: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.02); overflow: hidden;">
+                                
+                                <!-- Black Date Divider (Follows selection) -->
+                                <div class="date-divider">
+                                    <span>{{ calendarDays[selectedDayIndex].date === 'Sin Programar' ? 'PARTIDOS PENDIENTES' : (calendarDays[selectedDayIndex].date | date:'EEEE dd MMMM yyyy' | uppercase) }}</span>
+                                    <span style="font-size: 10px; opacity: 0.7;">CONTROL DE TORNEO</span>
+                                </div>
+
+                                <div class="timeline-v3">
+                                    <div class="time-slot" *ngFor="let group of calendarDays[selectedDayIndex].hourGroups">
+                                        <div class="time-label">{{ group.hour }}</div>
+                                        <div class="matches-container">
+                                            
+                                            <!-- PM STYLE MATCH CARD -->
+                                            <div class="match-card-pm" *ngFor="let m of group.matches" (click)="cargarResultado(m)"
+                                                [style.background]="getCategoryColor(m.category) + '33'"
+                                                [style.borderLeft]="'5px solid ' + getCategoryColor(m.category)">
+                                                
+                                                <div class="pm-header">
+                                                    <div class="pm-category" [style.color]="getCategoryColor(m.category)" style="font-weight: 900; letter-spacing: 1px;">
+                                                        CAT. {{ m.category | uppercase }}
+                                                    </div>
+                                                </div>
+
+                                                <div class="pm-details">
+                                                    <div class="pm-group" style="font-weight: 800; color: #0f172a; margin-bottom: 2px;">{{ m.ronda }}</div>
+                                                    <div class="pm-ronda" *ngIf="m.jornada" style="font-size: 10px; font-weight: 700;">{{ m.jornada }}</div>
+                                                    <div class="pm-ronda" *ngIf="!m.jornada && (m.ronda || '').toLowerCase().includes('grupo')" style="font-size: 10px; font-weight: 700;">JORNADA 1</div>
+                                                    <div class="pm-court" style="font-size: 10px; font-weight: 800; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                                        <span>🏟️</span> {{ m.court || 'Cancha TBD' }}
+                                                    </div>
+                                                </div>
+
+                                                <div class="pm-footer">
+                                                    <div class="pm-dots">
+                                                        <div class="dot" [class.green]="m.puntos_t1 != null"></div>
+                                                        <div class="dot" [class.green]="m.puntos_t1 != null"></div>
+                                                    </div>
+                                                    <div class="pm-time">{{ m.tempTime }}h</div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div> <!-- Closes agenda-wrapper (viewMode === 'day') -->
+
+                            <!-- GOOGLE CALENDAR PREMIUM WEEK VIEW -->
+                            <div class="week-view-container" *ngIf="viewMode === 'week'" 
+                                style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-top: 20px;">
+                                
+                                <div style="overflow-x: auto;">
+                                    <div class="calendar-grid" [style.grid-template-columns]="'80px repeat(' + calendarDays.length + ', minmax(220px, 1fr))'"
+                                        style="display: grid; min-width: 1200px; background: #fff;">
+                                        
+                                        <!-- Header: Days -->
+                                        <div style="background: #fdfdfd; border-bottom: 2px solid #f1f5f9; padding: 20px; position: sticky; left: 0; z-index: 10;"></div>
+                                        <div *ngFor="let day of calendarDays" 
+                                            style="background: #fdfdfd; border-bottom: 2px solid #f1f5f9; padding: 15px; text-align: center; border-left: 1px solid #f8fafc;">
+                                            <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">{{ day.date | date:'EEEE' }}</div>
+                                            <div style="font-size: 18px; font-weight: 900; color: #0f172a; margin-top: 2px;">{{ day.date | date:'dd' }} <span style="font-size: 12px; color: #64748b; font-weight: 700;">{{ day.date | date:'MMM' | uppercase }}</span></div>
+                                        </div>
+
+                                        <!-- Body: Only visible hours -->
+                                        <ng-container *ngFor="let h of getVisibleHours()">
+                                            <!-- Hour Column -->
+                                            <div style="background: #fdfdfd; border-bottom: 1px solid #f1f5f9; padding: 20px; display: flex; align-items: center; justify-content: center; position: sticky; left: 0; z-index: 5; border-right: 1px solid #f1f5f9;">
+                                                <span style="font-size: 14px; font-weight: 900; color: #0f172a;">{{ h < 10 ? '0' + h : h }}:00</span>
+                                            </div>
+
+                                            <!-- Day Cells -->
+                                            <div *ngFor="let day of calendarDays" 
+                                                style="border-bottom: 1px solid #f1f5f9; border-left: 1px solid #f8fafc; min-height: 100px; padding: 12px; background: #fff; position: relative;">
+                                                
+                                                <div class="matches-in-cell" style="display: flex; flex-direction: column; gap: 10px;">
+                                                    <ng-container *ngFor="let group of day.hourGroups">
+                                                        <ng-container *ngIf="group.hour === (h < 10 ? '0' + h : h) + ':00'">
+                                                            
+                                                            <div class="premium-match-card" *ngFor="let m of group.matches" (click)="cargarResultado(m)"
+                                                                [style.borderLeftColor]="getCategoryColor(m.category)"
+                                                                [style.background]="getCategoryColor(m.category) + '33'"
+                                                                style="border: 1px solid #e2e8f0; border-left-width: 5px; padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                                                
+                                                                <!-- Category Badge Floating -->
+                                                                <div [style.background]="getCategoryColor(m.category)" 
+                                                                    style="position: absolute; top: -8px; left: 10px; padding: 2px 8px; font-size: 8px; font-weight: 900; color: #fff; border-radius: 4px; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                                    {{ m.category }}
+                                                                </div>
+
+                                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; margin-top: 4px;">
+                                                                    <span style="font-size: 9px; font-weight: 800; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                                                                        <span>🏟️</span> {{ m.court }}
+                                                                    </span>
+                                                                    <span *ngIf="m.ronda" style="font-size: 8px; font-weight: 900; color: #94a3b8; background: #f1f5f9; padding: 20px 8px; border-radius: 100px; white-space: nowrap;">
+                                                                        CAT. {{ m.category }} - {{ m.ronda }}
+                                                                    </span>
+                                                                </div>
+
+                                                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                        <div style="font-size: 11px; font-weight: 800; color: #1e293b; text-transform: uppercase;">{{ m.pareja1_nombre }}</div>
+                                                                        <div *ngIf="m.puntos_t1 != null" style="font-size: 12px; font-weight: 900; color: #2563eb;">{{ m.puntos_t1 }}</div>
+                                                                    </div>
+                                                                    <div style="height: 1px; background: rgba(0,0,0,0.03);"></div>
+                                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                        <div style="font-size: 11px; font-weight: 800; color: #1e293b; text-transform: uppercase;">{{ m.pareja2_nombre }}</div>
+                                                                        <div *ngIf="m.puntos_t2 != null" style="font-size: 12px; font-weight: 900; color: #2563eb;">{{ m.puntos_t2 }}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                        </ng-container>
+                                                    </ng-container>
+                                                </div>
+                                            </div>
+                                        </ng-container>
+                                    </div>
+                                </div>
+                            </div> <!-- Closes week-view-container (viewMode === 'week') -->
+
+                        <!-- Footer/Legend de la Agenda -->
+                        <div style="background: #f8fafc; padding: 15px 25px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; gap: 20px;">
+                            <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">💡 Tip: Haz clic en un partido para cargar o editar el marcador.</span>
                         </div>
+                    </div> <!-- Closes calendar-schedule -->
+                </div> <!-- Closes agenda sub-tab (simSubTab === 'agenda') -->
 
-                        <!-- Selected Day Content -->
-                        <div class="day-content" *ngIf="calendarDays[selectedDayIndex]"
-                            style="background: #fff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.02);">
-                            <h4
-                                style="margin: 0 0 20px; font-size: 16px; font-weight: 900; text-transform: uppercase; color: #0f172a; text-align: center; border-bottom: 2px solid #f8fafc; padding-bottom: 12px; letter-spacing: 1px;">
-                                {{ calendarDays[selectedDayIndex].date === 'Sin Programar' ? 'Partidos Pendientes de
-                                Cupo' : (calendarDays[selectedDayIndex].date | date:'EEEE d MMMM yyyy') }}
-                            </h4>
-
-                            <div class="matches-grid"
-                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-                                <div class="match-card" *ngFor="let m of calendarDays[selectedDayIndex].matches"
-                                    style="padding: 15px; background: #fff; border-radius: 15px; border: 1px solid #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.02); position: relative; transition: all 0.3s; display: flex; flex-direction: column; justify-content: space-between;">
-
-                                    <div
-                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                        <div
-                                            style="display: flex; align-items: center; gap: 5px; font-weight: 800; color: #2563eb; background: #eff6ff; padding: 3px 10px; border-radius: 8px; font-size: 11px;">
-                                            <span>⏰</span> {{ m.tempTime }}
-                                        </div>
-                                        <div
-                                            style="font-size: 10px; font-weight: 700; color: #64748b; background: #f8fafc; padding: 3px 8px; border-radius: 8px;">
-                                            🏟️ {{ m.court || 'Pendiente' }}
-                                        </div>
-                                    </div>
-
-                                    <div style="margin-bottom: 12px; text-align: center;">
-                                        <div
-                                            style="font-weight: 700; color: #1e293b; font-size: 13px; line-height: 1.2;">
-                                            {{ m.pareja1_nombre }}
-                                        </div>
-                                        <div
-                                            style="font-size: 9px; color: #cbd5e1; font-weight: 900; margin: 4px 0; text-transform: uppercase;">
-                                            v/s</div>
-                                        <div
-                                            style="font-weight: 700; color: #1e293b; font-size: 13px; line-height: 1.2;">
-                                            {{ m.pareja2_nombre }}
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #f8fafc; margin-top: 5px;">
-                                        <div style="display: flex; flex-direction: column; gap: 2px;">
-                                            <span
-                                                style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                {{ m.category }} • {{ m.round }}
+                <!-- SUB-CONTENT: SIMULATED GROUPS -->
+                    <div *ngIf="simSubTab === 'grupos' && simulatedGroupsSummary.length > 0" class="animate-up" style="padding: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                            <div *ngFor="let cat of simulatedGroupsSummary" 
+                                style="background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                                <h3 style="margin-top: 0; color: #0f172a; font-weight: 900; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; text-transform: uppercase; font-size: 13px;">
+                                    🏆 {{ cat.category }}
+                                </h3>
+                                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+                                    <div *ngFor="let g of cat.groups" 
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border: 1px solid #f1f5f9;">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="background: #0f172a; color: #fff; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">
+                                                {{ g.name }}
                                             </span>
-                                            <span *ngIf="m.team1?.dummy || m.team2?.dummy"
-                                                style="font-size: 8px; font-weight: 900; color: #f59e0b; text-transform: uppercase;">⚠️
-                                                Ficticio</span>
+                                            <span style="font-weight: 700; color: #334155; font-size: 12px;">GRUPO {{ g.name }}</span>
                                         </div>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span *ngIf="m.resultado"
-                                                style="font-size: 11px; font-weight: 900; color: #166534; background: #dcfce7; padding: 2px 8px; border-radius: 6px;">{{
-                                                m.resultado }}</span>
-                                            <button (click)="cargarResultado(m)"
-                                                style="border: none; background: #f8fafc; color: #2563eb; font-size: 9px; font-weight: 900; cursor: pointer; padding: 4px 10px; border-radius: 6px; transition: all 0.2s;">
-                                                {{ m.resultado ? 'EDIT' : 'SCORE' }}
-                                            </button>
+                                        <div style="font-weight: 900; color: #0f172a; font-size: 11px;">
+                                            {{ g.matchCount }} PARTIDOS
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- EMPTY STATE FOR GROUPS VIEW -->
+                    <div *ngIf="simSubTab === 'grupos' && simulatedGroupsSummary.length === 0" style="text-align: center; padding: 80px 20px; color: #94a3b8;">
+                        <div style="font-size: 50px; margin-bottom: 20px;">📊</div>
+                        <h3 style="font-weight: 900; color: #0f172a; margin-bottom: 10px;">SIN DATOS DE SIMULACIÓN</h3>
+                        <p style="font-weight: 600; font-size: 13px;">Ejecuta el "Simulador Masivo" para ver la distribución de grupos.</p>
+                    </div>
+
+                </div>
+
+                <!-- TAB: CUADROS (EXPERT UX READY) -->
+                <div *ngIf="activeDetailTab === 'playoffs'" class="animate-up expert-ux-active">
+                    
+                    <!-- CATEGORY SELECTOR FOR BRACKETS -->
+                    <div class="category-tabs-bracket" style="margin-bottom: 40px; display: flex; gap: 10px; overflow-x: auto; padding: 5px 0 15px;">
+                        <button *ngFor="let cat of categorias" 
+                            (click)="selectBracketCategory(cat.id)"
+                            [style.background]="selectedBracketCategoryId === cat.id ? '#0f172a' : '#fff'"
+                            [style.color]="selectedBracketCategoryId === cat.id ? '#fff' : '#64748b'"
+                            [style.borderColor]="selectedBracketCategoryId === cat.id ? '#0f172a' : '#e2e8f0'"
+                            style="padding: 12px 24px; border: 1px solid; border-radius: 0px; font-weight: 950; font-size: 10px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 10px; letter-spacing: 1px;">
+                            <span [style.background]="getCategoryColor(cat.nombre)" style="width: 10px; height: 10px; border-radius: 50%;"></span>
+                            {{ cat.nombre }}
+                        </button>
+                    </div>
+
+                    <div class="bracket-elite-container" *ngIf="playoffMatches.length > 0">
+                        <div class="bracket-elite-layout">
+                            
+                            <!-- LEFT SIDE (Outward -> Inward) -->
+                            <div class="bracket-elite-side side-left">
+                                <div class="round-elite-col dieciseis-col" *ngIf="playoffRounds.left.dieciseisavos?.length > 0">
+                                    <div class="round-elite-header">1/16 Final</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.left.dieciseisavos" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="round-elite-col octavos-col" *ngIf="playoffRounds.left.octavos?.length > 0">
+                                    <div class="round-elite-header">Octavos</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.left.octavos" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="round-elite-col cuartos-col" *ngIf="playoffRounds.left.cuartos?.length > 0">
+                                    <div class="round-elite-header">Cuartos</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.left.cuartos" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="round-elite-col semi-col" *ngIf="playoffRounds.left.semi?.length > 0">
+                                    <div class="round-elite-header">Semifinal</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.left.semi" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CENTER -->
+                            <div class="bracket-elite-center">
+                                <div class="final-champion-card" *ngIf="playoffRounds.final" (click)="cargarResultado(playoffRounds.final)">
+                                    <div class="final-plate">
+                                        <i class="fas fa-trophy"></i>
+                                        <span>FINAL NACIONAL</span>
+                                        <i class="fas fa-trophy"></i>
+                                    </div>
+                                    <div class="champion-body">
+                                        <div class="team-hero" [class.winner]="playoffRounds.final.ganador_id === playoffRounds.final.pareja1_id">
+                                            <span class="hero-name">{{ playoffRounds.final.pareja1_nombre || 'Ganador Izq' }}</span>
+                                            <span class="hero-score">{{ getMatchScore(playoffRounds.final, 1) }}</span>
+                                        </div>
+                                        <div class="vs-ring">VS</div>
+                                        <div class="team-hero" [class.winner]="playoffRounds.final.ganador_id === playoffRounds.final.pareja2_id">
+                                            <span class="hero-name">{{ playoffRounds.final.pareja2_nombre || 'Ganador Der' }}</span>
+                                            <span class="hero-score">{{ getMatchScore(playoffRounds.final, 2) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="final-footer">
+                                        <span>{{ playoffRounds.final.tempTime || 'Estelar' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT SIDE -->
+                            <div class="bracket-elite-side side-right">
+                                <div class="round-elite-col semi-col" *ngIf="playoffRounds.right.semi?.length > 0">
+                                    <div class="round-elite-header">Semifinal</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.right.semi" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="round-elite-col cuartos-col" *ngIf="playoffRounds.right.cuartos?.length > 0">
+                                    <div class="round-elite-header">Cuartos</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.right.cuartos" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="round-elite-col octavos-col" *ngIf="playoffRounds.right.octavos?.length > 0">
+                                    <div class="round-elite-header">Octavos</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.right.octavos" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="round-elite-col dieciseis-col" *ngIf="playoffRounds.right.dieciseisavos?.length > 0">
+                                    <div class="round-elite-header">1/16 Final</div>
+                                    <div class="match-card-elite" *ngFor="let m of playoffRounds.right.dieciseisavos" (click)="cargarResultado(m)">
+                                        <div class="elite-meta">{{ m.court || 'Cancha TBD' }} • {{ m.tempTime || '--:--' }}</div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja1_id">
+                                            <span class="elite-name">{{ m.pareja1_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 1) }}</span>
+                                        </div>
+                                        <div class="elite-team" [class.winner]="m.ganador_id && m.ganador_id === m.pareja2_id">
+                                            <span class="elite-name">{{ m.pareja2_nombre || 'Clasif. TBD' }}</span>
+                                            <span class="elite-score">{{ getMatchScore(m, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EMPTY PLAYOFFS -->
+                    <div *ngIf="playoffMatches.length === 0" style="text-align: center; padding: 100px 40px;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">🏆</div>
+                        <h2 style="font-weight: 900; color: #0f172a; margin-bottom: 15px;">CUADRO DE ELIMINACIÓN GENERADO</h2>
+                        <p style="color: #64748b; font-size: 16px; max-width: 500px; margin: 0 auto 30px;">
+                            El cuadro se activará al simular o al finalizar los grupos.
+                        </p>
                     </div>
                 </div>
 
@@ -513,27 +989,42 @@
                         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px;">
                         <div class="categoria-item" *ngFor="let cat of categorias"
                             [class.selected]="selectedCategoria?.id === cat.id" (click)="selectCategoria(cat)"
-                            style="padding: 22px; border-radius: 16px; border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; background: #fff;"
+                            style="padding: 22px; border-radius: 0px; border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; background: #fff;"
                             [style.borderColor]="selectedCategoria?.id === cat.id ? '#0f172a' : '#f1f5f9'"
                             [style.boxShadow]="selectedCategoria?.id === cat.id ? '0 10px 25px -5px rgba(0,0,0,0.1)' : 'none'"
                             [style.transform]="selectedCategoria?.id === cat.id ? 'translateY(-4px)' : 'none'">
+
+                            <!-- Delete category button -->
+                            <button (click)="eliminarCategoria(cat.id, $event)" 
+                                    style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: #cbd5e1; cursor: pointer; transition: color 0.2s; z-index: 10;"
+                                    onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
 
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <h4 style="margin: 0; font-weight: 900; font-size: 20px; color: #0f172a;">{{ cat.nombre
                                     }}</h4>
                                 <div *ngIf="selectedCategoria?.id === cat.id"
-                                    style="background: #0f172a; color: #fff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+                                    style="background: #0f172a; color: #fff; width: 22px; height: 22px; border-radius: 0px; display: flex; align-items: center; justify-content: center; font-size: 10px;">
                                     ✓</div>
                             </div>
 
-                            <p
-                                style="font-size: 11px; color: #64748b; font-weight: 800; margin: 8px 0 0; text-transform: uppercase; letter-spacing: 0.5px;">
-                                {{ cat.max_parejas }} PAREJAS MÁX.</p>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0 0;">
+                                <p
+                                    style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">
+                                    {{ cat.max_parejas }} PAREJAS MÁX.
+                                </p>
+                                <button (click)="$event.stopPropagation(); editCategoriaCapacidad(cat)" 
+                                        style="background: none; border: none; padding: 4px; cursor: pointer; color: #94a3b8; font-size: 12px; transition: color 0.2s;"
+                                        title="Editar Capacidad">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </div>
 
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
                                 <div class="pts-badge"
-                                    style="font-size: 10px; color: #fff; background: #2563eb; padding: 4px 10px; border-radius: 6px; font-weight: 900;">
+                                    style="font-size: 10px; color: #fff; background: #2563eb; padding: 4px 10px; border-radius: 0px; font-weight: 900;">
                                     {{ cat.puntos_repartir }} PTS
                                 </div>
                                 <span
@@ -541,226 +1032,112 @@
                             </div>
                         </div>
 
-                        <button class="btn-add-cat"
-                            style="border: 2px dashed #cbd5e1; background: #f8fafc; border-radius: 16px; color: #94a3b8; font-weight: 800; font-size: 11px; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 120px; transition: all 0.2s;">
+                        <button class="btn-add-cat" (click)="anadirNuevaCategoria()"
+                            style="border: 2px dashed #cbd5e1; background: #f8fafc; border-radius: 0px; color: #94a3b8; font-weight: 800; font-size: 11px; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 120px; transition: all 0.2s;">
                             <span style="font-size: 20px;">+</span>
                             NUEVA CATEGORÍA
                         </button>
                     </div>
 
-                    <!-- INSCRIPCIONES DE LA CATEGORIA SELECCIONADA -->
-                    <div class="inscripciones-section" *ngIf="selectedCategoria"
-                        style="background: #fff; border-radius: 24px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+                    <!-- INSCRIPCIONES (CONSOLIDATED VIEW) -->
+                    <div class="inscripciones-section" *ngIf="activeDetailTab === 'config'"
+                        style="background: #fff; border-radius: 0px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
 
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
                             <div>
                                 <h3
                                     style="margin: 0; font-weight: 900; text-transform: uppercase; font-size: 15px; letter-spacing: 1px; color: #0f172a;">
-                                    Parejas Inscritas en <span style="color: #2563eb;">{{ selectedCategoria.nombre
-                                        }}</span>
+                                    <span *ngIf="!selectedCategoria">Todas las Inscripciones del Torneo</span>
+                                    <span *ngIf="selectedCategoria">Parejas Inscritas en <span style="color: #2563eb;">{{ selectedCategoria.nombre }}</span></span>
                                 </h3>
-                                <div style="font-size: 12px; color: #64748b; font-weight: 700; margin-top: 5px;">
-                                    {{ inscripciones.length }} parejas de un máximo de {{ selectedCategoria.max_parejas
-                                    }}
+                                <div style="font-size: 12px; color: #64748b; font-weight: 700; margin-top: 5px; display: flex; align-items: center; gap: 10px;">
+                                    <span>{{ inscripciones.length }} parejas inscritas en total</span>
+                                    <button *ngIf="selectedCategoria" class="btn-text-action" (click)="editCategoriaCapacidad(selectedCategoria)"
+                                        style="padding: 2px 8px; font-size: 10px;">
+                                        <i class="fas fa-edit"></i> Cambiar Límite
+                                    </button>
                                 </div>
                             </div>
-                            <button class="btn-primary" (click)="anadirParejaManual()"
-                                style="font-size: 11px; padding: 10px 20px; border-radius: 10px; background: #0f172a; color: #fff; border: none; font-weight: 800; cursor: pointer;">
-                                + AÑADIR PAREJA MANUAL
-                            </button>
+                            <div style="display: flex; gap: 10px;">
+                                <button *ngIf="!selectedCategoria" class="btn-outline" (click)="activeDetailTab = 'resumen'" style="font-size: 11px;">VER RESUMEN POR CAT.</button>
+                                <button *ngIf="selectedCategoria" class="btn-primary" (click)="anadirParejaManual()"
+                                    style="font-size: 11px; padding: 12px 24px; border-radius: 0px; background: #0f172a; color: #fff; border: none; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                                    + AÑADIR PAREJA MANUAL
+                                </button>
+                            </div>
                         </div>
 
                         <div class="inscripciones-list"
-                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px;">
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1px; background: #e2e8f0; border: 1px solid #e2e8f0;">
                             <div class="ins-card" *ngFor="let ins of inscripciones"
-                                style="background: #f8fafc; padding: 18px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; transition: all 0.2s;">
+                                style="background: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
                                 <div>
                                     <div
-                                        style="font-weight: 800; color: #0f172a; font-size: 15px; display: flex; align-items: center; gap: 10px;">
-                                        <span>🎾</span>
+                                        style="font-weight: 900; color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 10px; text-transform: uppercase;">
+                                        <span *ngIf="ins.es_semilla" 
+                                              style="background: #fbbf24; color: #000; font-size: 8px; font-weight: 900; padding: 2px 5px; border-radius: 2px;"
+                                              title="Cabeza de Serie">
+                                            SEED {{ ins.nro_siembra }}
+                                        </span>
+                                        <span *ngIf="!ins.es_semilla" style="font-size: 12px; opacity: 0.5;">●</span>
                                         {{ ins.nombre_jugador_1 }} / {{ ins.nombre_jugador_2 }}
                                     </div>
                                     <div
-                                        style="font-size: 11px; color: #64748b; font-weight: 700; margin-top: 6px; display: flex; gap: 15px;">
+                                        style="font-size: 11px; color: #94a3b8; font-weight: 800; margin-top: 6px; display: flex; gap: 15px; text-transform: uppercase;">
+                                        <span *ngIf="!selectedCategoria" [style.color]="getCategoryColor(ins.categoria_nombre)" style="border-right: 1px solid #eee; padding-right: 10px;">{{ ins.categoria_nombre }}</span>
                                         <span>ID: #{{ ins.id }}</span>
                                         <span>📅 {{ ins.fecha_inscripcion | date:'dd/MM/yyyy' }}</span>
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 12px; align-items: center;">
-                                    <div [style.background]="ins.validado ? '#dcfce7' : '#fee2e2'"
-                                        [style.color]="ins.validado ? '#166534' : '#991b1b'"
-                                        style="padding: 6px 12px; border-radius: 8px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <div [style.background]="ins.validado ? '#0f172a' : '#f1f5f9'"
+                                        [style.color]="ins.validado ? '#fff' : '#64748b'"
+                                        style="padding: 6px 12px; border-radius: 0px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">
                                         {{ ins.validado ? '✓ Validada' : '⏳ Pendiente' }}
                                     </div>
                                     <button class="btn-mini-danger" (click)="eliminarPareja(ins.id)"
-                                        style="background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 5px; filter: grayscale(1); opacity: 0.5; transition: all 0.2s;">🗑️</button>
+                                        style="background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 5px; opacity: 0.3; transition: all 0.2s;">🗑️</button>
                                 </div>
                             </div>
+                        </div>
 
-                            <div *ngIf="inscripciones.length === 0"
-                                style="padding: 60px 40px; text-align: center; color: #94a3b8; border: 2px dashed #e2e8f0; border-radius: 20px; grid-column: 1 / -1;">
-                                <div style="font-size: 40px; margin-bottom: 15px; opacity: 0.3;">📋</div>
+                        <div *ngIf="inscripciones.length === 0"
+                                style="padding: 80px 40px; text-align: center; color: #94a3b8; background: #fff; grid-column: 1 / -1;">
+                                <div style="font-size: 32px; margin-bottom: 20px; filter: grayscale(1); opacity: 0.2;">🎾</div>
                                 <h4
-                                    style="margin: 0; font-weight: 900; color: #64748b; text-transform: uppercase; font-size: 13px;">
-                                    Sin inscripciones</h4>
-                                <p style="margin: 8px 0 0; font-weight: 700; font-size: 12px;">Comienza a añadir parejas
-                                    manualmente o espera las inscripciones online.</p>
+                                    style="margin: 0; font-weight: 900; color: #0f172a; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
+                                    Bandeja de Entrada Vacía</h4>
+                                <p style="margin: 10px 0 0; font-weight: 700; font-size: 11px; text-transform: uppercase; color: #94a3b8;">Sin inscripciones activas actualmente.</p>
                             </div>
                         </div>
                     </div>
                 </div>
+            </section>
+        </main>
 
-
-
-                <!-- SECCIÓN DE GRUPOS ELIMINADA (CONSOLIDADA EN FASE DE GRUPOS) -->
-
-
-                <!-- PLAYOFFS -->
-                <div *ngIf="activeDetailTab === 'playoffs'">
-                    <div class="playoff-bracket">
-                        <div class="empty-state" *ngIf="playoffMatches.length === 0"
-                            style="padding: 80px; text-align: center;">
-                            <p style="color: #888; font-weight: 500;">Todavía no se ha generado el Cuadro Final
-                                (Octavos, Cuartos, Semi, Final).</p>
-                            <button class="btn-primary" (click)="activeDetailTab = 'generar'"
-                                style="margin-top: 20px;">IR A FASE DE GRUPOS</button>
-                        </div>
-
-                        <div class="bracket-container" *ngIf="playoffMatches.length > 0"
-                            style="display: flex; gap: 40px; overflow-x: auto; padding-bottom: 20px;">
-
-                            <!-- OCTAVOS -->
-                            <div class="round-column" *ngIf="playoffRounds.octavos.length > 0"
-                                style="display: flex; flex-direction: column; justify-content: space-around; min-width: 260px;">
-                                <h3
-                                    style="text-align: center; text-transform: uppercase; font-size: 14px; color: #888; margin-bottom: 20px;">
-                                    Octavos de Final</h3>
-                                <div class="match-card-bracket" *ngFor="let m of playoffRounds.octavos"
-                                    style="background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 4px solid #3b82f6; position: relative;">
-                                    <div class="teams" style="display: flex; flex-direction: column; gap: 8px;">
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja1_id ? '900' : '500'"
-                                            style="font-size: 13px; display: flex; justify-content: space-between;">
-                                            <span>{{ m.pareja1_nombre }}</span>
-                                            <span *ngIf="m.resultado" style="font-weight: 900; color: #3b82f6;">{{
-                                                m.resultado }}</span>
-                                        </div>
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja2_id ? '900' : '500'"
-                                            style="font-size: 13px; display: flex; justify-content: space-between;">
-                                            <span>{{ m.pareja2_nombre }}</span>
-                                        </div>
-                                    </div>
-                                    <button class="btn-mini-edit" (click)="cargarResultado(m)"
-                                        *ngIf="m.estado !== 'Finalizado'"
-                                        style="position: absolute; top: 5px; right: 5px; font-size: 10px; padding: 2px 6px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">✏️</button>
-                                </div>
-                            </div>
-
-                            <!-- CUARTOS -->
-                            <div class="round-column" *ngIf="playoffRounds.cuartos.length > 0"
-                                style="display: flex; flex-direction: column; justify-content: space-around; min-width: 260px;">
-                                <h3
-                                    style="text-align: center; text-transform: uppercase; font-size: 14px; color: #888; margin-bottom: 20px;">
-                                    Cuartos de Final</h3>
-                                <div class="match-card-bracket" *ngFor="let m of playoffRounds.cuartos"
-                                    style="background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 4px solid #8b5cf6; position: relative;">
-                                    <div class="teams" style="display: flex; flex-direction: column; gap: 8px;">
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja1_id ? '900' : '500'"
-                                            style="font-size: 13px; display: flex; justify-content: space-between;">
-                                            <span>{{ m.pareja1_nombre }}</span>
-                                            <span *ngIf="m.resultado" style="font-weight: 900; color: #8b5cf6;">{{
-                                                m.resultado }}</span>
-                                        </div>
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja2_id ? '900' : '500'"
-                                            style="font-size: 13px; display: flex; justify-content: space-between;">
-                                            <span>{{ m.pareja2_nombre }}</span>
-                                        </div>
-                                    </div>
-                                    <button class="btn-mini-edit" (click)="cargarResultado(m)"
-                                        *ngIf="m.estado !== 'Finalizado'"
-                                        style="position: absolute; top: 5px; right: 5px; font-size: 10px; padding: 2px 6px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">✏️</button>
-                                </div>
-                            </div>
-
-                            <!-- SEMIFINAL -->
-                            <div class="round-column" *ngIf="playoffRounds.semi.length > 0"
-                                style="display: flex; flex-direction: column; justify-content: space-around; min-width: 260px;">
-                                <h3
-                                    style="text-align: center; text-transform: uppercase; font-size: 14px; color: #888; margin-bottom: 20px;">
-                                    Semifinal</h3>
-                                <div class="match-card-bracket" *ngFor="let m of playoffRounds.semi"
-                                    style="background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 4px solid #ef4444; position: relative;">
-                                    <div class="teams" style="display: flex; flex-direction: column; gap: 8px;">
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja1_id ? '900' : '500'"
-                                            style="font-size: 13px; display: flex; justify-content: space-between;">
-                                            <span>{{ m.pareja1_nombre }}</span>
-                                            <span *ngIf="m.resultado" style="font-weight: 900; color: #ef4444;">{{
-                                                m.resultado }}</span>
-                                        </div>
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja2_id ? '900' : '500'"
-                                            style="font-size: 13px; display: flex; justify-content: space-between;">
-                                            <span>{{ m.pareja2_nombre }}</span>
-                                        </div>
-                                    </div>
-                                    <button class="btn-mini-edit" (click)="cargarResultado(m)"
-                                        *ngIf="m.estado !== 'Finalizado'"
-                                        style="position: absolute; top: 5px; right: 5px; font-size: 10px; padding: 2px 6px; background: #eee; border: none; border-radius: 4px; cursor: pointer;">✏️</button>
-                                </div>
-                            </div>
-
-                            <!-- FINAL -->
-                            <div class="round-column" *ngIf="playoffRounds.final.length > 0"
-                                style="display: flex; flex-direction: column; justify-content: center; min-width: 260px;">
-                                <h3
-                                    style="text-align: center; text-transform: uppercase; font-size: 18px; font-weight: 900; color: #fbbf24; margin-bottom: 20px;">
-                                    🏆 GRAN FINAL 🏆</h3>
-                                <div class="match-card-bracket" *ngFor="let m of playoffRounds.final"
-                                    style="background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.2); margin-bottom: 20px; border: 2px solid #fbbf24; position: relative; text-align: center;">
-                                    <div class="teams" style="display: flex; flex-direction: column; gap: 15px;">
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja1_id ? '900' : '500'"
-                                            style="font-size: 16px;">
-                                            {{ m.pareja1_nombre }}
-                                        </div>
-                                        <div style="font-size: 12px; color: #ccc;">VS</div>
-                                        <div class="team"
-                                            [style.font-weight]="m.ganador_id == m.pareja2_id ? '900' : '500'"
-                                            style="font-size: 16px;">
-                                            {{ m.pareja2_nombre }}
-                                        </div>
-                                        <div *ngIf="m.resultado"
-                                            style="margin-top: 10px; font-weight: 900; color: #fbbf24; font-size: 14px;">
-                                            {{ m.resultado }}</div>
-                                    </div>
-                                    <button class="btn-mini-edit" (click)="cargarResultado(m)"
-                                        *ngIf="m.estado !== 'Finalizado'"
-                                        style="position: absolute; top: 10px; right: 10px; font-size: 12px; padding: 4px 8px; background: #fef3c7; border: none; border-radius: 6px; cursor: pointer; color: #d97706;">Cargar
-                                        Resultado</button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PLANIFICACIÓN -->
-                <!-- Removed separate tab, now integrated in Calendario -->
-            </div>
-
-        </section>
-    </main>
     <!-- SCOREBOARD MODAL -->
     <div class="scoreboard-overlay" *ngIf="showScoreModal && currentMatchForScore">
         <div class="scoreboard-modal">
             <div class="scoreboard-header">
                 <h3>Resultado del Partido</h3>
                 <p>{{ currentMatchForScore.ronda || 'Fase de Grupos' }}</p>
+                
+                <div class="modal-match-meta" style="display: flex; gap: 15px; margin: 15px 0 5px; font-size: 11px; font-weight: 800; color: #475569; background: #f8fafc; padding: 10px 15px; border-radius: 4px; border: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <i class="far fa-calendar-alt" style="color: #94a3b8;"></i> 
+                        {{ (currentMatchForScore.tempDate || currentMatchForScore.fecha_programada) | date:'EEE d/MM' : 'UTC' }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; color: #2563eb;">
+                        <i class="far fa-clock"></i> 
+                        {{ currentMatchForScore.tempTime || currentMatchForScore.hora_programada }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; color: #0f172a;">
+                        <i class="fas fa-map-marker-alt" style="color: #94a3b8;"></i> 
+                        {{ currentMatchForScore.cancha_nombre || currentMatchForScore.court || 'Sin Cancha' }}
+                    </div>
+                </div>
+
                 <button class="close-modal-btn" (click)="closeScoreModal()"
                     style="position: absolute; top: 10px; right: 10px; border: none; background: transparent; font-size: 20px; cursor: pointer;">&times;</button>
             </div>

@@ -381,6 +381,7 @@
     opacity: 0;
     visibility: hidden;
     transition: all 0.4s ease;
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 
     &.active {

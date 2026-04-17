@@ -5,6 +5,7 @@ import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { EvaluacionService } from '../../services/evaluacion.service';
 import { PopupService } from '../../services/popup.service';
+import { AssetService } from '../../services/asset.service';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -35,7 +36,8 @@ export class JugadorHomeComponent implements OnInit {
     private mysqlService: MysqlService,
     private router: Router,
     private evaluacionService: EvaluacionService,
-    private popupService: PopupService
+    private popupService: PopupService,
+    public assetService: AssetService
   ) { }
 
   ngOnInit(): void {
@@ -177,6 +179,10 @@ export class JugadorHomeComponent implements OnInit {
 
   irACalendario(): void {
     this.router.navigate(['/jugador-calendario']);
+  }
+
+  irAReservarCancha(): void {
+    this.router.navigate(['/clubes-reservar']);
   }
 
   irAPacks(): void {

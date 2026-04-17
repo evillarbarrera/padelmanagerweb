@@ -6,9 +6,107 @@
   box-sizing: border-box;
 }
 
+/* ==========================================
+   CROSS-BROWSER COMPATIBILITY
+   Safari / iOS / Firefox fixes
+   ========================================== */
+
+/* 1. Font smoothing for Safari & macOS */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 2. Smooth scroll with fallback */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 body {
   margin: 0;
   padding: 0;
+}
+
+/* 3. Safari: appearance fix for ALL form elements */
+input, select, textarea, button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* 4. Safari: date input normalization */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  min-height: 44px; /* iOS touch target */
+}
+
+/* 5. Safari: Fix flexbox gap (older Safari <14.1) */
+@supports not (gap: 1px) {
+  .admin-layout > * + * {
+    margin-left: 0;
+  }
+}
+
+/* 6. Safari: backdrop-filter prefix (global fallback) */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  [style*="backdrop-filter"] {
+    -webkit-backdrop-filter: inherit;
+  }
+}
+
+/* 7. Custom scrollbar: WebKit (Chrome/Safari/Edge) + Firefox */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* 8. Safari: Fix input zoom on iOS (font-size < 16px triggers zoom) */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* 9. Safari: Fix 100vh issue on iOS */
+.admin-layout {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* 10. Safari: Fix transform flickering */
+.animate-up, .animate-fade {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .admin-layout {

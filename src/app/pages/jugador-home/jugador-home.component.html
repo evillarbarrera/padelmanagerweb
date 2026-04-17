@@ -62,7 +62,7 @@
             <div class="pack-coach-info">
               <div class="coach-avatar">
                 <img *ngIf="pack.entrenador_foto"
-                  [src]="pack.entrenador_foto.startsWith('http') ? pack.entrenador_foto : 'https://api.padelmanager.cl/' + pack.entrenador_foto"
+                  [src]="assetService.getAssetUrl(pack.entrenador_foto, 'perfil')"
                   alt="Coach" />
                 <span *ngIf="!pack.entrenador_foto" class="avatar-fallback">🎾</span>
               </div>
@@ -86,6 +86,15 @@
       <!-- Quick Actions Grid -->
       <h3 class="section-title">Acciones Rápidas</h3>
       <div class="actions-grid">
+        <div class="action-card primary highlight" (click)="irAReservarCancha()" style="background: #ccff00; color: #000; border: none; box-shadow: 0 10px 30px rgba(204, 255, 0, 0.2);">
+          <div class="card-content">
+            <span class="card-icon" style="background: rgba(0,0,0,0.05); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">🎾</span>
+            <h3 style="color: #000; font-weight: 950; margin-top: 15px;">Reservar Cancha</h3>
+            <p style="color: rgba(0,0,0,0.7); font-weight: 600;">Encuentra clubes y reserva hoy</p>
+          </div>
+          <span class="arrow-icon" style="color: #000; font-size: 24px;">→</span>
+        </div>
+
         <div class="action-card primary" (click)="irAReservas()">
           <div class="card-content">
             <span class="card-icon">📅</span>
@@ -103,7 +112,6 @@
           </div>
           <span class="arrow-icon">→</span>
         </div>
-
       </div>
 
     </div>

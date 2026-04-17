@@ -21,6 +21,9 @@
               <option [ngValue]="null" disabled selected>Selecciona un club...</option>
               <option *ngFor="let club of clubes" [value]="club.id">{{ club.nombre }}</option>
             </select>
+            <button class="btn-add-club-mini" (click)="abrirModalNuevoClub()" title="Registrar nuevo Recinto">
+              +
+            </button>
           </div>
           <button class="btn-secondary" (click)="openDefaultModal()">
             ⚙️ Semana Base

@@ -15,6 +15,7 @@
         position: absolute;
         inset: 0;
         background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 138, 0.75) 100%);
+        -webkit-backdrop-filter: blur(4px);
         backdrop-filter: blur(4px);
         z-index: 1;
     }
@@ -26,6 +27,7 @@
     width: 100%;
     max-width: 400px;
     background: rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -97,6 +99,135 @@
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
+
+        &.profile-selector {
+            gap: 1.25rem;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+            h3 {
+                color: #fff;
+                font-size: 1.25rem;
+                font-weight: 700;
+                margin: 0;
+                text-align: center;
+            }
+
+            .subtitle-small {
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.85rem;
+                text-align: center;
+                margin-top: -0.75rem;
+            }
+
+            .profiles-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                max-height: 280px;
+                overflow-y: auto;
+                padding-right: 4px;
+
+                &::-webkit-scrollbar {
+                    width: 4px;
+                }
+                &::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.05);
+                }
+                &::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 10px;
+                }
+
+                .profile-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    padding: 0.85rem 1rem;
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    text-align: left;
+                    position: relative;
+                    overflow: hidden;
+
+                    &:hover {
+                        background: rgba(255, 255, 255, 0.15);
+                        border-color: rgba(255, 255, 255, 0.25);
+                        transform: translateY(-2px);
+                        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3);
+
+                        .p-arrow {
+                            transform: translateX(3px);
+                            opacity: 1;
+                        }
+                    }
+
+                    &:active {
+                        transform: translateY(0);
+                    }
+
+                    .p-icon {
+                        width: 40px;
+                        height: 40px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: rgba(255, 255, 255, 0.1);
+                        border-radius: 10px;
+                        font-size: 1.25rem;
+                    }
+
+                    .p-info {
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1px;
+
+                        .p-club {
+                            font-size: 0.9rem;
+                            font-weight: 600;
+                            color: #fff;
+                        }
+
+                        .p-rol {
+                            font-size: 0.7rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            color: rgba(255, 255, 255, 0.5);
+                            font-weight: 500;
+                        }
+                    }
+
+                    .p-arrow {
+                        font-size: 1rem;
+                        color: rgba(255, 255, 255, 0.3);
+                        transition: all 0.2s ease;
+                        opacity: 0.5;
+                    }
+
+                    // Specific role colors/borders
+                    &.is-admin {
+                        border-left: 4px solid #3b82f6;
+                        .p-icon { background: rgba(59, 130, 246, 0.2); }
+                    }
+                    &.is-staff {
+                        border-left: 4px solid #10b981;
+                        .p-icon { background: rgba(16, 185, 129, 0.2); }
+                    }
+                    &.is-entrenador {
+                        border-left: 4px solid #f59e0b;
+                        .p-icon { background: rgba(245, 158, 11, 0.2); }
+                    }
+                    &.is-jugador {
+                        border-left: 4px solid #ec4899;
+                        .p-icon { background: rgba(236, 72, 153, 0.2); }
+                    }
+                }
+            }
+        }
 
         .input-group {
             display: flex;
@@ -297,4 +428,15 @@
     border-top-color: white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

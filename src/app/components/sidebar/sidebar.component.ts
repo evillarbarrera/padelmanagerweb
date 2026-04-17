@@ -3,6 +3,8 @@ import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ClubesService } from '../../services/clubes.service';
+import { AssetService } from '../../services/asset.service';
+import { environment } from '../../../environments/environment';
 import Swal from 'sweetalert2';
 
 import { SidebarService } from '../../services/sidebar.service';
@@ -18,13 +20,16 @@ export class SidebarComponent implements OnInit {
     @Input() userId: number | null = null;
     @Input() jugadorNombre: string = 'Usuario';
     @Input() activePage: string = '';
-    @Input() role: 'jugador' | 'entrenador' | 'administrador_club' | 'administrador' = 'jugador';
+    @Input() role: 'jugador' | 'entrenador' | 'administrador_club' | 'administrador' | 'staff_club' = 'jugador';
 
     private _jugadorFoto: string | null = null;
+    private _hasInputFoto: boolean = false;
+
     @Input() set jugadorFoto(val: string | null) {
         if (val) {
+            this._hasInputFoto = true;
             this._jugadorFoto = this.formatPhotoUrl(val);
-        } else {
+        } else if (!this._hasInputFoto) {
             this.applyFallbackFoto();
         }
     }
@@ -42,6 +47,7 @@ export class SidebarComponent implements OnInit {
         private router: Router,
         private authService: AuthService,
         private clubesService: ClubesService,
+        private assetService: AssetService,
         public sidebarService: SidebarService
     ) { }
 
@@ -58,9 +64,19 @@ export class SidebarComponent implements OnInit {
         }
 
         if (r === 'administrador' || r === 'superadmin') return 'administrador';
-        if (r.includes('admin')) return 'administrador_club';
+        if (r === 'staff_club' || r.includes('staff')) return 'staff_club';
+        if (r === 'administrador_club' || r.includes('admin')) return 'administrador_club';
         if (r.includes('entrenador')) return 'entrenador';
         return 'jugador';
+    }
+
+    get displayRoleName(): string {
+        const r = this.computedRole;
+        if (r === 'staff_club') return 'Personal de Club';
+        if (r === 'administrador_club') return 'Administrador';
+        if (r === 'administrador') return 'Super Admin';
+        if (r === 'entrenador') return 'Entrenador';
+        return 'Jugador';
     }
 
     ngOnInit() {
@@ -71,7 +87,7 @@ export class SidebarComponent implements OnInit {
         });
 
         // Initial load from local storage
-        this.availableProfiles = this.authService.getProfiles().filter(p => !['administrador_club', 'administrador'].includes(p.rol));
+        this.availableProfiles = this.authService.getProfiles().filter(p => !['administrador'].includes(p.rol));
 
         // Subscribe to user changes
         this.authService.currentUser$.subscribe(currentUser => {
@@ -89,19 +105,18 @@ export class SidebarComponent implements OnInit {
         const currentUserId = this.userId || currentUser?.id;
         if (currentUserId) {
             this.authService.refreshSession(currentUserId).subscribe(() => {
-                this.availableProfiles = this.authService.getProfiles().filter(p => !['administrador_club', 'administrador'].includes(p.rol));
+                this.availableProfiles = this.authService.getProfiles().filter(p => !['administrador'].includes(p.rol));
             });
         }
     }
 
     private formatPhotoUrl(foto: string): string {
-        if (!foto) return '';
-        if (foto.startsWith('http')) return foto;
-        const cleanPath = foto.startsWith('/') ? foto.substring(1) : foto;
-        return `https://api.padelmanager.cl/${cleanPath}`;
+        return this.assetService.getAssetUrl(foto, 'perfil');
     }
 
     private applyFallbackFoto(user?: any) {
+        if (this._hasInputFoto && this._jugadorFoto) return;
+        
         const currentUser = user || this.authService.getCurrentUser();
         if (currentUser) {
             const fotoRaw = currentUser.foto_perfil || currentUser.link_foto || currentUser.foto;
