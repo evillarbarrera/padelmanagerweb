@@ -100,9 +100,23 @@ export class AlumnoClasesComponent implements OnInit {
     alumnoPacks: any[] = [];
     activeEvalSubTab: 'tecnico' | 'tactico' | 'fisico' | 'mental' = 'tecnico';
     
-    // Multi-Packs Roadmap
     mallasActivas: any[] = [];
+    roadmapPacks: any[] = [];
+    historialPacks: any[] = [];
     selectedPack: any = null;
+
+    // Interactive Tutorial State
+    showTutorial = false;
+    currentTutorialStep = 0;
+    tutorialTop = '0px';
+    tutorialLeft = '0px';
+    tutorialSteps = [
+        { target: '.student-profile-header', title: '🪪 Perfil del Alumno', content: 'Aquí ves el nivel actual y el rendimiento técnico global del alumno.' },
+        { target: '.tabs-row .tab-btn:nth-child(1)', title: '📍 Hoja de Ruta', content: 'En esta pestaña verás el plan de entrenamiento sesión a sesión definido por el coach.' },
+        { target: '.tabs-row .tab-btn:nth-child(2)', title: '📈 Análisis y Progreso', content: '¡La parte más potente! Mapas de calor técnicos, tácticos, físicos y mentales.' },
+        { target: '.tabs-row .tab-btn:nth-child(3)', title: '📊 Evaluar Técnica', content: 'Desde aquí puedes calificar el desempeño del alumno después de cada clase.' },
+        { target: '.tabs-row .tab-btn:nth-child(5)', title: '💰 Gestión de Pagos', content: 'Controla qué packs ha comprado el alumno, su estado de pago y envía recordatorios si es necesario.' }
+    ];
 
     constructor(
         private route: ActivatedRoute,
@@ -207,33 +221,45 @@ export class AlumnoClasesComponent implements OnInit {
         if (!this.alumnoId) return;
         this.isLoading = true;
 
+        const currentCoachId = (this.userRole === 'entrenador') ? this.userId : undefined;
+
         // Fetch all active meshes and all of the student's packs
         forkJoin({
-            mallas: this.entrenamientoService.getMallasAlumno(this.alumnoId),
-            packs: this.entrenamientoService.getPacksAlumno(this.alumnoId)
+            mallas: this.entrenamientoService.getMallasAlumno(this.alumnoId, currentCoachId),
+            packs: this.entrenamientoService.getPacksAlumno(this.alumnoId, currentCoachId)
         }).subscribe({
             next: (res: any) => {
                 this.mallasActivas = res.mallas || [];
                 const allPacks = (res.packs.data || res.packs || []);
                 
                 // Map packs to include their active mesh if it exists
-                this.alumnoPacks = allPacks.map((p: any) => {
-                    // Normalize properties from the API
+                const mappedPacks = allPacks.map((p: any) => {
                     const packId = p.pack_id || p.id;
                     const packName = p.pack_nombre || p.nombre || 'Pack';
+                    const tipo = p.tipo || 'individual';
 
-                    // Find mesh (check pack_id first, then fallback to trainer if it's old data with pack_id=0)
                     let mesh = this.mallasActivas.find(m => m.pack_id == packId);
                     if (!mesh && this.mallasActivas.length > 0) {
-                        // If we only have one mesh for this trainer and it has pack_id=0, assume it's this one
                         mesh = this.mallasActivas.find(m => m.entrenador_id == p.entrenador_id && (m.pack_id == 0 || !m.pack_id));
                     }
                     
-                    return { ...p, id: packId, nombre: packName, activeMesh: mesh };
+                    return { ...p, id: packId, nombre: packName, type: tipo, activeMesh: mesh };
                 });
 
-                if (this.alumnoPacks.length > 0) {
-                    this.seleccionarPackRoadmap(this.alumnoPacks[0]);
+                // FILTER: Only Individual/Multiplayer
+                const roadmapEligible = mappedPacks.filter((p: any) => p.type !== 'grupal' && p.type !== 'pack_grupal' && p.type !== 'clase grupal');
+
+                // ACTIVE: Packs with pending sessions (reservations not yet completed)
+                this.roadmapPacks = roadmapEligible.filter((p: any) => p.sesiones_pasadas < p.sesiones_totales);
+
+                // HISTORY: Packs with all sessions completed
+                this.historialPacks = roadmapEligible.filter((p: any) => p.sesiones_pasadas >= p.sesiones_totales);
+
+                if (this.roadmapPacks.length > 0) {
+                    this.seleccionarPackRoadmap(this.roadmapPacks[0]);
+                } else if (this.historialPacks.length > 0) {
+                    // Fallback to latest history if no active
+                    this.seleccionarPackRoadmap(this.historialPacks[0]);
                 } else {
                     this.historialMalla = [];
                     this.isLoading = false;
@@ -1111,5 +1137,58 @@ export class AlumnoClasesComponent implements OnInit {
                 subscription.unsubscribe();
             }
         });
+    }
+
+    // --- INTERACTIVE TUTORIAL METHODS ---
+    startTutorial() {
+        this.showTutorial = true;
+        this.currentTutorialStep = 0;
+        setTimeout(() => this.updateTutorialPosition(), 50);
+    }
+
+    closeTutorial() {
+        this.showTutorial = false;
+        localStorage.setItem('tutorial_clases_done', 'true');
+    }
+
+    nextTutorialStep() {
+        if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+            this.currentTutorialStep++;
+
+            // Auto-switch tabs based on step
+            if (this.currentTutorialStep === 1) this.setTab('roadmap');
+            if (this.currentTutorialStep === 2) this.setTab('progreso');
+            if (this.currentTutorialStep === 3) this.setTab('evaluar');
+            if (this.currentTutorialStep === 4) this.setTab('pagos');
+
+            setTimeout(() => this.updateTutorialPosition(), 150);
+        } else {
+            this.closeTutorial();
+        }
+    }
+
+    updateTutorialPosition() {
+        const step = this.tutorialSteps[this.currentTutorialStep];
+        const el = document.querySelector(step.target);
+        if (el) {
+            const rect = el.getBoundingClientRect();
+            const cardHeight = 180;
+            const cardWidth = 340;
+            
+            let top = rect.bottom + 15;
+            let left = rect.left + (rect.width / 2) - (cardWidth / 2);
+
+            // Adjust if it goes off screen
+            if (top + cardHeight > window.innerHeight) top = rect.top - cardHeight - 15;
+            if (left + cardWidth > window.innerWidth) left = window.innerWidth - cardWidth - 20;
+            if (left < 0) left = 20;
+
+            this.tutorialTop = `${top}px`;
+            this.tutorialLeft = `${left}px`;
+            
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('tutorial-highlight');
+            setTimeout(() => el.classList.remove('tutorial-highlight'), 2000);
+        }
     }
 }

@@ -4,6 +4,26 @@
 
     <div class="main-content">
         <div class="dashboard-container fade-in">
+            <!-- INTERACTIVE TUTORIAL SYSTEM -->
+            <div class="tutorial-overlay" *ngIf="showTutorial"></div>
+            
+            <div class="tutorial-card shadow-lg" *ngIf="showTutorial" [style.top]="tutorialTop" [style.left]="tutorialLeft">
+                <div class="t-header">
+                    <div class="t-step-count">Paso {{ currentTutorialStep + 1 }} de {{ tutorialSteps.length }}</div>
+                </div>
+                <div class="t-body">
+                    <h3>{{ tutorialSteps[currentTutorialStep].title }}</h3>
+                    <p>{{ tutorialSteps[currentTutorialStep].content }}</p>
+                </div>
+                <div class="t-footer">
+                    <button class="btn-skip" (click)="closeTutorial()">Saltar</button>
+                    <button class="btn-next" (click)="nextTutorialStep()">
+                        {{ currentTutorialStep === tutorialSteps.length - 1 ? '¡Listo!' : 'Siguiente' }}
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
             <!-- 💎 PREMIUM PROFILE HEADER -->
             <header class="student-profile-header">
                 <div class="p-left">
@@ -44,8 +64,9 @@
                     </div>
                 </div>
 
-                <div class="p-right" *ngIf="hasChartData">
-                    <div class="progress-circle-wrap">
+                <div class="p-right">
+                    <button class="btn-help" (click)="startTutorial()" style="margin-bottom: 15px;">💡 Ayuda</button>
+                    <div class="progress-circle-wrap" *ngIf="hasChartData">
                         <span class="label">Rendimiento Técnico Global</span>
                         <div class="p-text">{{ (storedLineData[storedLineData.length-1] || 0) | number:'1.1-1' }} / 10</div>
                         <div class="p-bar-container">
@@ -82,10 +103,11 @@
                 </div>
 
                 <!-- 🧩 ROADMAP TABS: BY ALL STUDENT PACKS -->
-                <div class="sub-nav" *ngIf="alumnoPacks.length > 1">
-                    <button class="sn-btn" *ngFor="let p of alumnoPacks" [class.active]="selectedPack?.id === p.id" (click)="seleccionarPackRoadmap(p)">
+                <div class="sub-nav" *ngIf="roadmapPacks.length > 0">
+                    <button class="sn-btn" *ngFor="let p of roadmapPacks" [class.active]="selectedPack?.id === p.id" (click)="seleccionarPackRoadmap(p)">
                         📦 {{ p.nombre }}
                     </button>
+                    <span class="history-label" style="margin-left: auto; color: #ccff00; font-size: 11px; font-weight: 700;">PLANES ACTIVOS</span>
                 </div>
 
                 <div class="roadmap-grid" *ngIf="historialMalla.length > 0">
@@ -129,7 +151,7 @@
                 <div class="no-data-card" *ngIf="historialMalla.length === 0">
                     <div class="icon">📋</div>
                     <h3>Sin Planificación Activa</h3>
-                    <p>El coach aún no ha definido tus próximas 4 sesiones pedagógicas.</p>
+                    <p>El coach aún no ha definido las sesiones pedagógicas para el pack <strong>{{ selectedPack?.nombre }}</strong>.</p>
                     
                     <!-- 🛠 COACH ACTION: ASSIGN MALLA -->
                     <div class="coach-assign-box" *ngIf="userRole === 'entrenador' || userRole === 'admin'">
@@ -464,6 +486,55 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- 📜 VIEW 4: PASADO ACADÉMICO -->
+            <div class="view-content fade-in" *ngIf="activeTab === 'historial'">
+                <div class="section-intro">
+                    <h2>Pasado Académico</h2>
+                    <p>Revisa tu historial de planificaciones y hojas de ruta completadas.</p>
+                </div>
+
+                <!-- 🧩 HISTORY TABS -->
+                <div class="sub-nav" *ngIf="historialPacks.length > 0">
+                    <button class="sn-btn" *ngFor="let p of historialPacks" [class.active]="selectedPack?.id === p.id" (click)="seleccionarPackRoadmap(p)">
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+                            <span style="font-weight: 700;">📦 {{ p.nombre }}</span>
+                            <span style="font-size: 10px; opacity: 0.7;">Comprado: {{ p.fecha_inicio | date:'dd/MM/yy' }}</span>
+                        </div>
+                    </button>
+                    <span class="history-label" style="margin-left: auto; color: #94a3b8; font-size: 12px; font-weight: 700;">PLANES COMPLETADOS</span>
+                </div>
+
+                <div class="roadmap-grid" *ngIf="historialMalla.length > 0">
+                    <div class="sesion-card professional-sheet fade-in completada" *ngFor="let sesion of historialMalla; let i = index">
+                        <div class="sheet-status-bar"></div>
+                        <div class="s-header">
+                            <div class="sheet-id">S-{{ (i + 1) | number:'2.0' }}</div>
+                            <div class="status-badge-mini completada">Finalizada</div>
+                        </div>
+                        <div class="s-content">
+                            <div class="sheet-main-row">
+                                <h3 class="session-title">{{ sesion.titulo }}</h3>
+                                <span class="mesh-badge-mini" style="background: #f1f5f9; color: #64748b;">{{ selectedPack?.activeMesh?.malla_nombre || 'Archivo' }}</span>
+                            </div>
+                        </div>
+                        <div class="s-footer-compact">
+                            <div class="date-info-mini">
+                                <span class="v">{{ sesion.fecha ? (sesion.fecha | date:'d/MM/yy') : 'Hist' }}</span>
+                            </div>
+                            <button class="btn-sheet-mini" (click)="abrirPanelDetalle(sesion)">
+                                Ver Ficha →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="no-data-card" *ngIf="historialPacks.length === 0">
+                    <div class="icon">📚</div>
+                    <h3>Sin Historial Finalizado</h3>
+                    <p>Aún no tienes planificaciones pedagógicas completadas para archivar.</p>
+                </div>
+            </div>
 
             <!-- 💰 VIEW 4: PAGOS & PACKS -->
             <div class="view-content fade-in" *ngIf="activeTab === 'pagos'">

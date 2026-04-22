@@ -17,14 +17,14 @@ import Swal from 'sweetalert2';
 })
 export class ClubesJugadorComponent implements OnInit {
     @ViewChild('dateContainerRef') dateContainerRef!: ElementRef;
-    
+
     // Core Data
     clubes: any[] = [];
     canchas: any[] = [];
     horarios: any[] = [];
     torneos: any[] = [];
     americanos: any[] = [];
-    
+
     // UI State
     selectedClub: any = null;
     selectedCancha: any = null;
@@ -33,14 +33,14 @@ export class ClubesJugadorComponent implements OnInit {
     showOnlyAvailable: boolean = true;
     activeSubTab: 'reservar' | 'torneos' | 'americanos' = 'reservar';
     selectedRegion: string = '';
-    
+
     // Discovery
     regiones: string[] = [
-        'Región Metropolitana', 'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 
-        'Coquimbo', 'Valparaíso', 'O\'Higgins', 'Maule', 'Ñuble', 'Biobío', 'Araucanía', 
+        'Región Metropolitana', 'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama',
+        'Coquimbo', 'Valparaíso', 'O\'Higgins', 'Maule', 'Ñuble', 'Biobío', 'Araucanía',
         'Los Ríos', 'Los Lagos', 'Aysén', 'Magallanes'
     ];
-    
+
     placeholderImg: string = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='45%25' font-family='sans-serif' font-size='14' font-weight='bold' fill='%2394a3b8' text-anchor='middle'%3ECLUB%3C/text%3E%3Ctext x='50%25' y='62%25' font-family='sans-serif' font-size='11' fill='%2394a3b8' text-anchor='middle'%3EDE PADEL%3C/text%3E%3C/svg%3E";
 
     userId: number | null = null;
@@ -119,8 +119,11 @@ export class ClubesJugadorComponent implements OnInit {
     }
 
     get filteredClubes() {
-        if (!this.selectedRegion) return this.clubes;
-        return this.clubes.filter(c => c.region === this.selectedRegion);
+        // 🔒 Filtro de Seguridad: Solo mostrar clubes con el módulo de reservas activado
+        const activeClubs = this.clubes.filter(c => Number(c.reservas_activas) === 1);
+
+        if (!this.selectedRegion) return activeClubs;
+        return activeClubs.filter(c => c.region === this.selectedRegion);
     }
 
     onSelectClub(club: any) {
@@ -128,7 +131,7 @@ export class ClubesJugadorComponent implements OnInit {
         this.selectedCancha = null;
         this.horarios = [];
         this.activeSubTab = 'reservar';
-        
+
         // Load court data
         this.clubesService.getCanchas(club.id).subscribe(res => {
             this.canchas = res;
@@ -206,7 +209,7 @@ export class ClubesJugadorComponent implements OnInit {
                 const totalMin = parseInt(h) * 60 + parseInt(m) + duration;
                 const hEnd = Math.floor(totalMin / 60).toString().padStart(2, '0');
                 const mEnd = (totalMin % 60).toString().padStart(2, '0');
-                
+
                 const reserva = {
                     cancha_id: this.selectedCancha.id,
                     usuario_id: this.userId,

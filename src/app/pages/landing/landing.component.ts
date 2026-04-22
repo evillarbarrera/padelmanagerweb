@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { EntrenamientoService } from '../../services/entrenamientos.service';
 import { CurrencyService } from '../../services/currency.service';
 import { Chart, registerables } from 'chart.js';
+import { Title, Meta } from '@angular/platform-browser';
 
 Chart.register(...registerables);
 
@@ -110,24 +111,24 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   currentSlide = 0;
   slides = [
     {
-      badge: 'PADEL MANAGER PRO',
-      title: 'GESTIONA TU ACADEMIA',
-      highlight: 'COMO UN PROFESIONAL',
-      description: 'La solución definitiva para entrenadores: agenda, pagos, alumnos y análisis táctico en una sola plataforma.',
+      badge: 'GESTIÓN TOTAL',
+      title: 'SOFTWARE DE ADMIN',
+      highlight: 'PARA TU ACADEMIA',
+      description: 'Lleva el control absoluto de tu negocio de pádel. Gestión de alumnos, pagos automatizados y agenda inteligente en un solo panel profesional.',
       image: 'assets/images/app-screenshot-v2.png'
     },
     {
-      badge: 'OFERTA DE LANZAMIENTO ⚡',
-      title: '3 MESES GRATIS',
-      highlight: 'PARA ENTRENADORES',
-      description: 'Inscríbete hoy y disfruta de todas las funciones premium de Padel Manager sin costo por 90 días. Sin letras chicas.',
+      badge: 'AUTOMATIZACIÓN ⚡',
+      title: 'CONTROLA TUS CLASES',
+      highlight: 'REDUCE LA CARGA ADMIN',
+      description: 'Optimiza tu tiempo como entrenador. Seguimiento de packs, asistencias y pagos automáticos para que te enfoques solo en enseñar en pista.',
       image: 'assets/images/slide-coaches.jpg'
     },
     {
-      badge: 'TECNOLOGÍA IA',
-      title: 'ELEVA EL NIVEL',
-      highlight: 'DE TUS ALUMNOS',
-      description: 'Usa nuestra pizarra táctica con métricas en tiempo real y análisis biomecánico para entregar un servicio de élite.',
+      badge: 'MÉTRICAS DE NEGOCIO',
+      title: 'POTENCIA TU CLUB',
+      highlight: 'CON DATOS REALES',
+      description: 'Visualiza la rentabilidad de tus pistas y el progreso de tus alumnos. La herramienta de administración de pádel más completa del mercado.',
       image: 'assets/images/slide-players.jpg'
     }
   ];
@@ -141,15 +142,41 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private slideInterval: any;
 
+  faqs = [
+    {
+      q: '¿Cómo funcionan los 90 días gratis?',
+      a: 'Al registrarte como entrenador, obtienes acceso total a la plataforma sin costo por 3 meses. No requerimos tarjeta de crédito para empezar.',
+      open: false
+    },
+    {
+      q: '¿Puedo gestionar múltiples sedes o clubes?',
+      a: 'Sí, el plan ELITE está diseñado para administradores de clubes que necesitan gestionar múltiples pistas, profesores y calendarios centralizados.',
+      open: false
+    },
+    {
+      q: '¿Qué incluye el análisis por IA?',
+      a: 'Nuestra tecnología analiza la biomecánica de tus golpes base (Saque, Drive, Revés) mediante clips de video, entregando correcciones técnicas automáticas.',
+      open: false
+    },
+    {
+      q: '¿La app es compatible con iOS y Android?',
+      a: 'Absolutamente. PadelManager está optimizada como una PWA (Progressive Web App) y pronto disponible en tiendas oficiales.',
+      open: false
+    }
+  ];
+
   constructor(
     private router: Router,
     private mysqlService: MysqlService,
     private authService: AuthService,
     private entrenamientoService: EntrenamientoService,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private titleService: Title,
+    private metaService: Meta
   ) { }
 
   ngOnInit(): void {
+    this.setSeoTags();
     this.detectCurrency();
     this.userId = Number(localStorage.getItem('userId'));
     const userRole = localStorage.getItem('userRole');
@@ -163,6 +190,21 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isAuthenticated = true;
     this.userRole = userRole as any;
     this.cargarDatos();
+  }
+
+  setSeoTags(): void {
+    this.titleService.setTitle('PadelManager | Software de Gestión para Academias de Pádel');
+    this.metaService.addTags([
+      { name: 'description', content: 'La plataforma líder para entrenadores y clubes de pádel. Gestión de alumnos, pagos, agenda inteligente y análisis por IA. Prueba 90 días gratis.' },
+      { name: 'keywords', content: 'software padel, gestion academias padel, app entrenadores padel, reservas pistas padel, clases padel' },
+      { property: 'og:title', content: 'PadelManager | Eleva tu Academia al Siguiente Nivel' },
+      { property: 'og:description', content: 'Digitaliza tu academia de pádel con el software más potente del mercado.' },
+      { property: 'og:image', content: 'assets/images/app-screenshot-v2.png' }
+    ]);
+  }
+
+  toggleFaq(index: number) {
+    this.faqs[index].open = !this.faqs[index].open;
   }
 
   detectCurrency(): void {

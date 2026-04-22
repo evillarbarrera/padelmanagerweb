@@ -368,10 +368,14 @@ export class ClubReservasComponent implements OnInit {
 
         this.newReserva = { 
             ...res,
-            jugador_id: res.usuario_id,
+            jugador_id: res.usuario_id || 0,
             jugador2_id: res.jugador2_id || 0,
             jugador3_id: res.jugador3_id || 0,
             jugador4_id: res.jugador4_id || 0,
+            nombre_externo: res.nombre_externo || res.jugador_nombre || '',
+            nombre_externo2: res.nombre_externo2 || res.jugador2_nombre || '',
+            nombre_externo3: res.nombre_externo3 || res.jugador3_nombre || '',
+            nombre_externo4: res.nombre_externo4 || res.jugador4_nombre || '',
             metodo_pago: metodo,
             pagos: {
                 p1: Number(res.pago_p1) === 1,

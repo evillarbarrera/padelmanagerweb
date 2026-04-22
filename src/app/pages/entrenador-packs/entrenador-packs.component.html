@@ -13,9 +13,32 @@
           <h2>Mis Packs de Entrenamiento</h2>
           <p>Crea y gestiona tus paquetes de clases</p>
         </div>
-        <button class="add-btn" (click)="toggleFormulario()">
-          {{ mostrarFormulario ? '✕ Cancelar' : '+ Crear Nuevo Pack' }}
-        </button>
+        <div class="header-btns">
+          <button class="btn-help" (click)="startTutorial()">💡 Ayuda</button>
+          <button class="add-btn" (click)="toggleFormulario()">
+            {{ mostrarFormulario ? '✕ Cancelar' : '+ Crear Nuevo Pack' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE TUTORIAL OVERLAY -->
+      <div class="tutorial-overlay" *ngIf="showTutorial"></div>
+      
+      <div class="tutorial-card shadow-lg" *ngIf="showTutorial" [style.top]="tutorialTop" [style.left]="tutorialLeft">
+        <div class="t-header">
+          <div class="t-step-count">Paso {{ currentTutorialStep + 1 }} de {{ tutorialSteps.length }}</div>
+        </div>
+        <div class="t-body">
+          <h3>{{ tutorialSteps[currentTutorialStep].title }}</h3>
+          <p>{{ tutorialSteps[currentTutorialStep].content }}</p>
+        </div>
+        <div class="t-footer">
+          <button class="btn-skip" (click)="closeTutorial()">Saltar</button>
+          <button class="btn-next" (click)="nextTutorialStep()">
+            {{ currentTutorialStep === tutorialSteps.length - 1 ? '¡Listo!' : 'Siguiente' }}
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Search Bar -->

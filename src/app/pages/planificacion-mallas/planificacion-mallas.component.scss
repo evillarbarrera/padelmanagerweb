@@ -12,12 +12,17 @@
     padding: 32px 40px; max-width: 1300px; margin: 0 auto; width: 100%;
 }
 
-// Page Header
 .page-header-flex {
-    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; gap: 20px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; gap: 20px;
+    
+    .section-title { font-size: 28px; font-weight: 950; margin: 0; color: #111; text-transform: uppercase; letter-spacing: -1.5px; }
+    .section-subtitle { margin: 4px 0 0; color: #64748b; font-size: 14px; font-weight: 500; }
 
-    .section-title { font-size: 28px; font-weight: 950; margin: 0; color: #111; text-transform: uppercase; letter-spacing: -1px; }
-    .section-subtitle { margin: 8px 0 0; color: #666; font-size: 14px; b { color: #111; font-weight: 800; } }
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 }
 
 // List View Styles
@@ -54,25 +59,27 @@
 
     .malla-badge {
         position: absolute;
-        top: 24px;
-        right: 24px;
-        background: #f2f2f7;
-        color: #111;
+        top: 20px;
+        right: 20px;
+        background: #f8fafc;
+        color: #64748b;
         font-weight: 900;
         font-size: 10px;
         text-transform: uppercase;
-        padding: 4px 12px;
-        border-radius: 20px;
+        padding: 6px 12px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
         transition: 0.3s;
     }
 
     .malla-info {
         h3 {
-            margin: 0 0 12px;
-            font-size: 20px;
-            font-weight: 900;
-            color: #111;
+            margin: 0 0 8px;
+            font-size: 22px;
+            font-weight: 950;
+            color: #0f172a;
             padding-right: 60px;
+            letter-spacing: -0.5px;
         }
 
         .meta-row {
@@ -280,18 +287,65 @@
     span { padding: 0 20px; font-weight: 950; font-size: 12px; color: #aaa; letter-spacing: 2px; }
 }
 
-// Buttons
-button:not(.tab-item) { font-family: inherit; font-weight: 900; padding: 14px 28px; border-radius: 14px; cursor: pointer; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; transition: 0.2s; border: none; }
+// Buttons & Actions
+button:not(.tab-item) { 
+    font-family: inherit; font-weight: 950; padding: 12px 24px; border-radius: 16px; 
+    cursor: pointer; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; 
+}
+
 .btn-save {
-    background: #ccff00; color: #000; box-shadow: 0 10px 20px rgba(204, 255, 0, 0.2);
-    &:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(204, 255, 0, 0.4); background: #bbff00; }
-    &.btn-glow { box-shadow: 0 0 20px rgba(204, 255, 0, 0.6); &:hover { box-shadow: 0 0 35px rgba(204, 255, 0, 0.8); } }
+    background: #ccff00; color: #000; border: 2px solid #000;
+    &:hover { transform: translateY(-2px); background: #000; color: #ccff00; box-shadow: 0 10px 25px rgba(204, 255, 0, 0.3); }
+    &.btn-glow { box-shadow: 0 4px 15px rgba(204, 255, 0, 0.2); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 }
 
-.btn-edit-line {
-    cursor: pointer;
-    transition: 0.2s;
-    border: none;
+.btn-cancel {
+    background: #f1f5f9; color: #64748b; font-weight: 800; border: 1.5px solid #e2e8f0;
+    &:hover { background: #111; color: #fff; border-color: #111; }
 }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.btn-help {
+    background: #0f172a; color: #ccff00; border: 1.5px solid #0f172a; display: flex; align-items: center; gap: 8px;
+    &:hover { background: #ccff00; color: #0f172a; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(204, 255, 0, 0.3); }
+}
+
+.btn-edit-line { background: #f1f5f9; color: #111; font-weight: 900; &:hover { background: #111; color: #fff; } }
+
+/* INTERACTIVE TUTORIAL SYSTEM */
+.tutorial-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent; z-index: 10000; pointer-events: none;
+}
+  
+.tutorial-card {
+    position: fixed; width: 340px; background: #ffffff; border-radius: 24px; box-shadow: 0 30px 90px rgba(0,0,0,0.4);
+    z-index: 10100; pointer-events: auto; border: 1px solid rgba(0,0,0,0.1); overflow: hidden;
+    animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+    .t-header {
+      background: #0f172a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+      .t-step-count { font-size: 9px; font-weight: 900; color: #ccff00; text-transform: uppercase; letter-spacing: 1px; }
+    }
+  
+    .t-body {
+      padding: 24px;
+      h3 { font-size: 19px; font-weight: 950; color: #0f172a; margin: 0 0 8px; letter-spacing: -0.5px; }
+      p { font-size: 14px; color: #475569; line-height: 1.6; margin: 0; font-weight: 500; }
+    }
+  
+    .t-footer {
+      padding: 0 24px 24px; display: flex; justify-content: space-between; gap: 12px;
+      button { padding: 10px 16px; border-radius: 12px; font-size: 12px; }
+      .btn-skip { background: #f1f5f9; color: #64748b; &:hover { background: #e2e8f0; } }
+      .btn-next { background: #000; color: #ccff00; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; &:hover { background: #1e293b; transform: translateY(-2px); } }
+    }
+}
+  
+@keyframes modalPop { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  
+.tutorial-highlight {
+    position: relative; z-index: 10005 !important; outline: 9999px solid rgba(15, 23, 42, 0.5); 
+    box-shadow: 0 0 30px rgba(204, 255, 0, 1), 0 0 0 4px rgba(204, 255, 0, 0.5) !important;
+    border-radius: 12px !important; pointer-events: auto !important; 
+}

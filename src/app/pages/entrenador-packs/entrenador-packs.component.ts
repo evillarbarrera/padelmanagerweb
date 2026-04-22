@@ -23,6 +23,23 @@ export class EntrenadorPacksComponent implements OnInit {
   coachNombre = 'Entrenador';
   coachFoto: string | null = null;
 
+  // Tutorial State
+  showTutorial = false;
+  currentTutorialStep = 0;
+  tutorialTop = '0px';
+  tutorialLeft = '0px';
+  tutorialSteps = [
+    { target: '.add-btn', title: '➕ Crea tu Pack', content: 'Haz clic aquí para abrir el formulario y empezar a ofrecer tus servicios.' },
+    { target: 'input[name="nombre"]', title: '🏷️ Nombre del Pack', content: 'Dale un nombre atractivo, por ejemplo: "Pack Pro 10 Clases" o "Clínica de Verano".' },
+    { target: 'select[name="tipo"]', title: '🎾 Tipo de Clase', content: 'Elige entre Individual o Grupal. Recuerda que Grupal es para 4-6 alumnos.' },
+    { target: 'input[name="cant_personas"]', title: '👥 Jugadores', content: 'Define cuántas personas incluye el pack. Útil para "Packs Duplas" o "Tríos". El sistema dividirá los créditos.' },
+    { target: 'input[name="sesiones"]', title: '🔢 Cantidad de Sesiones', content: 'Define cuántas clases incluye el pack (comúnmente 4, 8 o 12).' },
+    { target: 'input[name="precio"]', title: '💰 Define tu Precio', content: 'Ponle valor a tu trabajo. El pago se gestionará según el pack seleccionado.' },
+    { target: 'input[name="r_inicio"]', title: '🕒 Horario Permitido', content: 'Opcional. Útil para packs "Hora Valle" o promociones matutinas. Limita cuándo se pueden usar los créditos.' },
+    { target: 'textarea[name="descripcion"]', title: '📝 Descripción', content: 'Cuéntales a tus alumnos qué incluye el pack, beneficios o requisitos especiales.' },
+    { target: '.btn-submit', title: '🚀 ¡Publicar!', content: 'Guarda tu pack para que aparezca en tu lista y puedas empezar a agendar alumnos.' }
+  ];
+
   nuevoPack: any = {
     id: null,
     nombre: '',
@@ -187,6 +204,66 @@ export class EntrenadorPacksComponent implements OnInit {
       rango_horario_fin: null,
       cantidad_personas: 1
     };
+  }
+
+  // --- TUTORIAL METHODS ---
+  startTutorial() {
+    this.showTutorial = true;
+    this.currentTutorialStep = 0;
+    this.updateTutorialPosition();
+  }
+
+  nextTutorialStep() {
+    if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+      this.currentTutorialStep++;
+      
+      // Auto-open form for step 2 if it's closed
+      if (this.currentTutorialStep === 1 && !this.mostrarFormulario) {
+        this.toggleFormulario();
+      }
+
+      // Force "Individual" type for steps that require it (like "Jugadores" or "Horario")
+      if (this.currentTutorialStep === 3) {
+        this.nuevoPack.tipo = 'individual';
+      }
+
+      setTimeout(() => this.updateTutorialPosition(), 50);
+    } else {
+      this.closeTutorial();
+    }
+  }
+
+  updateTutorialPosition() {
+    const step = this.tutorialSteps[this.currentTutorialStep];
+    document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+
+    setTimeout(() => {
+      const el = document.querySelector(step.target) as HTMLElement;
+      if (el) {
+        el.scrollIntoView({ behavior: 'auto', block: 'center' });
+        el.classList.add('tutorial-highlight');
+
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const vw = window.innerWidth;
+
+        if (rect.top > vh / 2) {
+          this.tutorialTop = (rect.top - 200) + 'px';
+        } else {
+          this.tutorialTop = (rect.bottom + 40) + 'px';
+        }
+        this.tutorialLeft = Math.max(20, Math.min(vw - 420, rect.left)) + 'px';
+      } else {
+        this.tutorialTop = '40%';
+        this.tutorialLeft = 'calc(50% - 200px)';
+      }
+    }, 10);
+  }
+
+  closeTutorial() {
+    this.showTutorial = false;
+    this.currentTutorialStep = 0;
+    document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
   }
 
   volver(): void {

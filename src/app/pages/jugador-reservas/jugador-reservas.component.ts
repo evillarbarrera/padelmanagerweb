@@ -155,19 +155,38 @@ export class JugadorReservasComponent implements OnInit {
     this.checkQueryParams();
   }
 
-  checkBookingRestriction(entrenadorId: number) {
-    if (!this.userId || !entrenadorId) return;
-    this.mysqlService.checkPendientesEntrenador(this.userId, entrenadorId).subscribe({
+  checkBookingRestriction(entrenadorId?: number) {
+    if (!this.userId) return;
+    this.mysqlService.getHomeStats(this.userId).subscribe({
       next: (res: any) => {
-        if (res.success && res.pendientes > 0 && res.disponibles <= 0) {
-          this.popupService.info(
-            'Atención',
-            'Aún tienes clases reservadas por asistir con este entrenador. Podrás comprar un nuevo pack una vez que hayas completado tus reservas actuales.'
-          );
+        const stats = res.estadisticas?.packs;
+        if (stats) {
+          if (entrenadorId) {
+            let detalleCoach = (stats.detalle || []).filter((d: any) => Number(d.entrenador_id) === Number(entrenadorId));
+            
+            if (this.tipoEntrenamiento !== 'todos') {
+              detalleCoach = detalleCoach.filter((d: any) => {
+                const pTipo = d.tipo?.toLowerCase() || 'individual';
+                if (this.tipoEntrenamiento === 'grupal') return pTipo === 'grupal';
+                return pTipo !== 'grupal';
+              });
+            }
+
+            this.creditosDisponiblesWeb = detalleCoach.reduce((acc: number, d: any) => acc + Number(d.disponibles || 0), 0);
+            this.reservasFuturasWeb = detalleCoach.reduce((acc: number, d: any) => acc + Number(d.futuras || 0), 0);
+          } else {
+            this.creditosDisponiblesWeb = Number(stats.disponibles || 0); 
+            this.reservasFuturasWeb = Number(stats.futuras || 0);
+          }
         }
-      }
+      },
+      error: (err: any) => console.error('Error validation:', err)
     });
   }
+
+  // Helper variables for web scenarios if needed (though web uses popups more than scenarios)
+  creditosDisponiblesWeb = 0;
+  reservasFuturasWeb = 0;
 
   updateComunas(keepComuna = false): void {
     const selectedRegion = this.regions.find(r => r.name === this.regionSeleccionada);
@@ -414,6 +433,9 @@ export class JugadorReservasComponent implements OnInit {
       if (currentFiltered.length > 0) {
         this.diaSeleccionado = currentFiltered[0];
       }
+    }
+    if (this.selectedEntrenador) {
+        this.checkBookingRestriction(this.selectedEntrenador);
     }
   }
 
@@ -816,6 +838,7 @@ export class JugadorReservasComponent implements OnInit {
       hora_fin: this.pendingHorario.hora_fin.toTimeString().slice(0, 5),
       jugador_id: Number(this.userId),
       pack_id: packId,
+      reserva_id: this.pendingHorario.id || null,
       estado: 'bloqueado',
       tipo: finalTipo,
       cantidad_personas: 1,
@@ -842,8 +865,15 @@ export class JugadorReservasComponent implements OnInit {
             if (payRes.token && payRes.url) {
               const separator = payRes.url.includes('?') ? '&' : '?';
               window.location.href = `${payRes.url}${separator}token_ws=${payRes.token}`;
+            } else if (payRes.direct || (payRes.success && !payRes.url)) {
+              this.showPackModal = false;
+              this.popupService.success(
+                '¡Reserva Completada!',
+                payRes.message || 'Tu reserva ha sido registrada con éxito. Recuerda coordinar el pago con tu profesor.'
+              ).then(() => {
+                this.onEntrenadorChange();
+              });
             } else {
-
               this.popupService.error('Error', 'No se pudo generar el enlace de pago.');
             }
           },
@@ -898,6 +928,7 @@ export class JugadorReservasComponent implements OnInit {
           jugador_id: Number(this.userId),
           pack_id: packId,
           pack_jugador_id: newPackJugadorId,
+          reserva_id: this.pendingHorario.id || null,
           estado: 'reservado',
           tipo: finalTipo,
           cantidad_personas: 1,

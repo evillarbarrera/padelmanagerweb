@@ -44,6 +44,18 @@ export class EntrenadorCuponesComponent implements OnInit {
         uso_maximo: null
     };
 
+    // Interactive Tutorial State
+    showTutorial = false;
+    currentTutorialStep = 0;
+    tutorialTop = '0px';
+    tutorialLeft = '0px';
+    tutorialSteps = [
+        { target: '.hero-section', title: '🎟️ Gestión de Cupones', content: 'Aquí puedes crear descuentos para fidelizar a tus alumnos o lanzar promociones especiales en tus packs.' },
+        { target: '.btn-neon-action', title: '➕ Crear Cupón', content: 'Haz clic aquí para diseñar tu primer cupón. Podrás elegir entre descuento fijo o porcentaje.' },
+        { target: '.modal-content', title: '🛠 Configuración Avanzada', content: 'Puedes limitar el cupón a un alumno específico, a un pack concreto o establecer un límite de usos.' },
+        { target: '.coupons-grid', title: '📊 Control de Activos', content: 'En este listado verás todos tus cupones activos, cuántas veces se han usado y cuándo vencen.' }
+    ];
+
     constructor(
         private entrenamientoService: EntrenamientoService,
         private mysqlService: MysqlService,
@@ -211,5 +223,61 @@ export class EntrenadorCuponesComponent implements OnInit {
 
     goBack() {
         this.router.navigate(['/entrenador-home']);
+    }
+
+    // --- INTERACTIVE TUTORIAL METHODS ---
+    startTutorial() {
+        this.showTutorial = true;
+        this.currentTutorialStep = 0;
+        this.cerrarModal(); // Ensure we start clean
+        setTimeout(() => this.updateTutorialPosition(), 50);
+    }
+
+    closeTutorial() {
+        this.showTutorial = false;
+        this.cerrarModal();
+        localStorage.setItem('tutorial_cupones_done', 'true');
+    }
+
+    nextTutorialStep() {
+        if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+            this.currentTutorialStep++;
+
+            // Interaction logic: Step 2 opens the creation modal to show fields
+            if (this.currentTutorialStep === 2) {
+                this.abrirModal();
+            } else if (this.currentTutorialStep === 3) {
+                this.cerrarModal();
+            }
+
+            setTimeout(() => this.updateTutorialPosition(), 150);
+        } else {
+            this.closeTutorial();
+        }
+    }
+
+    updateTutorialPosition() {
+        const step = this.tutorialSteps[this.currentTutorialStep];
+        const el = document.querySelector(step.target);
+        if (el) {
+            const rect = el.getBoundingClientRect();
+            const cardHeight = 180;
+            const cardWidth = 340;
+            
+            let top = rect.bottom + 15;
+            let left = rect.left + (rect.width / 2) - (cardWidth / 2);
+
+            // Adjust if it goes off screen
+            if (top + cardHeight > window.innerHeight) top = rect.top - cardHeight - 15;
+            if (left + cardWidth > window.innerWidth) left = window.innerWidth - cardWidth - 20;
+            if (left < 0) left = 20;
+
+            this.tutorialTop = `${top}px`;
+            this.tutorialLeft = `${left}px`;
+            
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('tutorial-highlight');
+            setTimeout(() => el.classList.remove('tutorial-highlight'), 2000);
+        }
     }
 }

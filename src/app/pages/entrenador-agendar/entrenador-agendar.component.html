@@ -16,6 +16,10 @@
                     </div>
                 </div>
                 <div class="header-actions">
+                    <button class="btn-tutorial-trigger" (click)="startTutorial()">
+                        <span class="icon">💡</span> ¿Cómo agendar?
+                    </button>
+                    <div class="nav-sep"></div>
                     <div class="view-switch">
                         <button [class.active]="viewMode === 'day'" (click)="switchView('day')">DÍA</button>
                         <button [class.active]="viewMode === 'week'" (click)="switchView('week')">SEMANA</button>
@@ -24,6 +28,24 @@
                     <div class="nav-sep"></div>
                     <button class="btn-nav" (click)="changeDate(-1)">ANTERIOR</button>
                     <button class="btn-nav" (click)="changeDate(1)">SIGUIENTE</button>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE TUTORIAL OVERLAY -->
+            <div class="tutorial-overlay fade-in" *ngIf="showTutorial">
+                <div class="tutorial-card" [style.top]="tutorialTop" [style.left]="tutorialLeft">
+                    <div class="t-step-count">Paso {{ currentTutorialStep + 1 }} de {{ tutorialSteps.length }}</div>
+                    <div class="t-content">
+                        <h3>{{ tutorialSteps[currentTutorialStep].title }}</h3>
+                        <p>{{ tutorialSteps[currentTutorialStep].content }}</p>
+                    </div>
+                    <div class="t-footer">
+                        <button class="btn-skip" (click)="closeTutorial()">Saltar</button>
+                        <button class="btn-next" (click)="nextTutorialStep()">
+                            {{ currentTutorialStep === tutorialSteps.length - 1 ? '¡Finalizar!' : 'Siguiente' }}
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -138,14 +160,14 @@
                                     <div class="st-meta">
                                         <b>{{ a.jugador_nombre }}</b>
                                         <div class="credits-info">
-                                            <span [class.no-cred]="(a.creditos_reales || 0) <= 0" class="real-credits">
-                                                {{ (a.creditos_reales > 0) ? (a.creditos_reales + ' disp.') : 'Sin créditos' }}
+                                            <span [class.no-cred]="(a.creditos_reales || 0) <= 0 || !packMatchesTipo(a, tipoClaseSeleccionado)" class="real-credits">
+                                                {{ (packMatchesTipo(a, tipoClaseSeleccionado) && (a.creditos_reales || 0) > 0) ? (a.creditos_reales + ' disp.') : 'Sin créditos' }}
                                             </span>
-                                            <span class="reserved-info" *ngIf="a.sesiones_reservadas > 0">
+                                            <span class="reserved-info" *ngIf="a.sesiones_reservadas > 0 && packMatchesTipo(a, tipoClaseSeleccionado)">
                                                 ({{ a.sesiones_reservadas }} reservadas)
                                             </span>
                                         </div>
-                                        <small class="pack-name">{{ a.pack_nombre || 'Sin Pack' }}</small>
+                                        <small class="pack-name">{{ (packMatchesTipo(a, tipoClaseSeleccionado)) ? (a.pack_nombre || 'Sin Pack') : 'Sin Pack ' + getTipoLabel(tipoClaseSeleccionado) }}</small>
                                     </div>
                                     <div class="check" *ngIf="isAlumnoSelected(a)">✔</div>
                                 </div>
@@ -285,9 +307,13 @@
                                     <div class="students-pack-status" *ngIf="alumnosSeleccionados.length > 0">
                                         <div *ngFor="let s of alumnosSeleccionados" class="sp-row">
                                             <span class="sp-name">{{ s.jugador_nombre }}</span>
-                                            <span class="sp-badge" [class.active]="(s.sesiones_restantes || 0) > 0"
-                                                  [class.inactive]="(s.sesiones_restantes || 0) <= 0">
-                                                {{ (s.sesiones_restantes || 0) > 0 ? s.pack_nombre : 'Sin pack' }}
+                                            <span class="sp-badge" 
+                                                  [class.active]="(s.creditos_reales || 0) > 0 && packMatchesTipo(s, tipoClaseSeleccionado)"
+                                                  [class.inactive]="(s.creditos_reales || 0) <= 0 || !packMatchesTipo(s, tipoClaseSeleccionado)">
+                                                {{ packMatchesTipo(s, tipoClaseSeleccionado) ? s.pack_nombre : 'Sin pack ' + getTipoLabel(tipoClaseSeleccionado) }}
+                                                <small *ngIf="packMatchesTipo(s, tipoClaseSeleccionado)" style="opacity: 0.8; margin-left: 5px;">
+                                                    ({{ s.creditos_reales || 0 }} disp.)
+                                                </small>
                                             </span>
                                         </div>
                                     </div>

@@ -4,6 +4,26 @@
     </app-sidebar>
 
     <main class="main-content">
+        <!-- INTERACTIVE TUTORIAL SYSTEM -->
+        <div class="tutorial-overlay" *ngIf="showTutorial"></div>
+        
+        <div class="tutorial-card shadow-lg" *ngIf="showTutorial" [style.top]="tutorialTop" [style.left]="tutorialLeft">
+            <div class="t-header">
+                <div class="t-step-count">Paso {{ currentTutorialStep + 1 }} de {{ tutorialSteps.length }}</div>
+            </div>
+            <div class="t-body">
+                <h3>{{ tutorialSteps[currentTutorialStep].title }}</h3>
+                <p>{{ tutorialSteps[currentTutorialStep].content }}</p>
+            </div>
+            <div class="t-footer">
+                <button class="btn-skip" (click)="closeTutorial()">Saltar</button>
+                <button class="btn-next" (click)="nextTutorialStep()">
+                    {{ currentTutorialStep === tutorialSteps.length - 1 ? '¡Listo!' : 'Siguiente' }}
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
         <div class="dashboard-grid">
             <!-- Hero Section -->
             <div class="hero-section">
@@ -11,9 +31,12 @@
                     <h2>Gestión de Cupones</h2>
                     <p>Crea y administra códigos de promoción para tus alumnos</p>
                 </div>
-                <button class="add-btn" (click)="abrirModal()">
-                    + NUEVO CUPÓN
-                </button>
+                <div class="hero-actions">
+                    <button class="btn-help" (click)="startTutorial()">💡 Ayuda</button>
+                    <button class="btn-neon-action" (click)="abrirModal()">
+                        + NUEVO CUPÓN
+                    </button>
+                </div>
             </div>
 
             <!-- Stats Bar -->

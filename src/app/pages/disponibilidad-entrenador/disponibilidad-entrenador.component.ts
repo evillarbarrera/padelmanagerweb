@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -68,6 +68,28 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
   ];
   templateBlocks: { [dayId: number]: { time: string, selected: boolean }[] } = {};
   selectedDayTemplate: number = 1; // Default Lunes
+
+  // Interactive Tutorial State
+  showTutorial = false;
+  currentTutorialStep = 0;
+  tutorialTop = '0px';
+  tutorialLeft = '0px';
+  tutorialSteps = [
+    { target: '.club-selector-web', title: '🏢 Selección de Recinto', content: 'Primero elige dónde harás tus clases. Si tu club no aparece, dale al botón "+" para registrarlo rápido.' },
+    { target: '.month-tabs', title: '📅 Mes de Trabajo', content: 'Elige el mes que deseas configurar. Puedes proyectar tu disponibilidad hasta con 6 meses de anticipación.' },
+    { target: '.day-tabs', title: '📆 Selección de Día', content: 'Navega por los días del mes y selecciona el que vas a editar.' },
+    { target: '.blocks-grid', title: '⚡ Bloques Horarios', content: 'Pulsa directamente sobre cada bloque para activarlo o desactivarlo. Los bloques con 🔒 ya están reservados.' },
+    { target: '.btn-template', title: '⚙️ Semana Base (PRO)', content: '¡Ahorra tiempo! Configura aquí tu horario semanal típico y úsalo de plantilla.' },
+    { target: '.default-modal', title: '📅 Tu Plantilla Semanal', content: 'Aquí defines tu horario "ideal" para cada día. El sistema lo usará para rellenar tus próximos 30 días automáticamente.' },
+    { target: '.template-day-tabs', title: '📆 Días de la Semana', content: 'Cambia entre Lunes, Martes, etc. para configurar el horario base de cada día por separado.' },
+    { target: '.btn-primary-neon', title: '💾 Guardar Plantilla', content: 'No olvides guardar tus ajustes de plantilla antes de aplicarlos a tu calendario real.' },
+    { target: '.btn-apply', title: '🪄 Aplicar Plantilla', content: '¡El toque final! Una vez tengas tu plantilla, úsala aquí para configurar todo el mes en un solo clic.' }
+  ];
+
+  @HostListener('window:resize')
+  onResize() {
+    if (this.showTutorial) this.updateTutorialPosition();
+  }
 
   constructor(
     private entrenamientoService: EntrenamientoService,
@@ -680,5 +702,67 @@ onMonthChange() {
 
   private formatTime(date: Date): string {
     return date.toTimeString().slice(0, 8); // "HH:MM:SS"
+  }
+
+  // --- TUTORIAL METHODS ---
+  startTutorial() {
+    this.showTutorial = true;
+    this.currentTutorialStep = 0;
+    setTimeout(() => this.updateTutorialPosition(), 50);
+  }
+
+  closeTutorial() {
+    this.showTutorial = false;
+    localStorage.setItem('tutorial_disponibilidad_done', 'true');
+  }
+
+  nextTutorialStep() {
+    if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+      this.currentTutorialStep++;
+      
+      // Step logic: Open Modal
+      if (this.currentTutorialStep === 5) {
+        this.openDefaultModal();
+      }
+      // Step logic: Close Modal when moving past template steps
+      if (this.currentTutorialStep === 8) {
+        this.showDefaultModal = false;
+      }
+      
+      const waitTime = (this.currentTutorialStep === 5) ? 400 : 100;
+      setTimeout(() => this.updateTutorialPosition(), waitTime);
+    } else {
+      this.closeTutorial();
+    }
+  }
+
+  updateTutorialPosition() {
+    const step = this.tutorialSteps[this.currentTutorialStep];
+    const el = document.querySelector(step.target);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const cardHeight = 220;
+      const cardWidth = 340;
+      
+      let top = rect.bottom + 20;
+      let left = rect.left + (rect.width / 2) - (cardWidth / 2);
+
+      // Adjust if it goes off screen
+      if (top + cardHeight > window.innerHeight) top = rect.top - cardHeight - 20;
+      if (left + cardWidth > window.innerWidth) left = window.innerWidth - cardWidth - 20;
+      if (left < 0) left = 20;
+
+      this.tutorialTop = `${top + window.scrollY}px`;
+      this.tutorialLeft = `${left + window.scrollX}px`;
+      
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('tutorial-highlight');
+      setTimeout(() => el.classList.remove('tutorial-highlight'), 3000);
+    } else {
+      // Self-healing: skip step if element not found
+      if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+        this.nextTutorialStep();
+      }
+    }
   }
 }

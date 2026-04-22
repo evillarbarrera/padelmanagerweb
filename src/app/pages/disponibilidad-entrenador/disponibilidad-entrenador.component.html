@@ -15,6 +15,7 @@
         </div>
 
         <div class="hero-actions">
+          <button class="btn-help" (click)="startTutorial()">💡 Ayuda</button>
           <div class="club-selector-web">
             <span class="selector-label">RECINTO:</span>
             <select [(ngModel)]="selectedClubId" (change)="onClubChange()" class="club-select-modern">
@@ -25,14 +26,34 @@
               +
             </button>
           </div>
-          <button class="btn-secondary" (click)="openDefaultModal()">
+          <button class="btn-secondary btn-template" (click)="openDefaultModal()">
             ⚙️ Semana Base
           </button>
-          <button class="btn-secondary" (click)="applyDefaultConfig()">
+          <button class="btn-secondary btn-apply" (click)="applyDefaultConfig()">
             🪄 Aplicar Plantilla
           </button>
           <button class="save-btn-desktop" (click)="guardarDisponibilidad()">
             💾 Guardar Cambios
+          </button>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE TUTORIAL SYSTEM -->
+      <div class="tutorial-overlay" *ngIf="showTutorial"></div>
+      
+      <div class="tutorial-card shadow-lg" *ngIf="showTutorial" [style.top]="tutorialTop" [style.left]="tutorialLeft">
+        <div class="t-header">
+          <div class="t-step-count">Paso {{ currentTutorialStep + 1 }} de {{ tutorialSteps.length }}</div>
+        </div>
+        <div class="t-body">
+          <h3>{{ tutorialSteps[currentTutorialStep].title }}</h3>
+          <p>{{ tutorialSteps[currentTutorialStep].content }}</p>
+        </div>
+        <div class="t-footer">
+          <button class="btn-skip" (click)="closeTutorial()">Saltar</button>
+          <button class="btn-next" (click)="nextTutorialStep()">
+            {{ currentTutorialStep === tutorialSteps.length - 1 ? '¡Listo!' : 'Siguiente' }}
+            <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>

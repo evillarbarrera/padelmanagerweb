@@ -67,6 +67,13 @@ export class MysqlService {
     });
   }
 
+  getDetalleVentas(entrenadorId: number, mes?: string, fecha?: string): Observable<any> {
+    let url = `${this.apiUrl}/entrenador/get_detalles_ventas.php?entrenador_id=${entrenadorId}`;
+    if (mes) url += `&mes=${mes}`;
+    if (fecha) url += `&fecha=${fecha}`;
+    return this.http.get(url, { headers: this.getHeaders() });
+  }
+
   getEstadisticasEntrenador(entrenadorId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/entrenador/get_packs_grupales.php?entrenador_id=${entrenadorId}`, {
       headers: this.getHeaders()
@@ -153,6 +160,25 @@ export class MysqlService {
 
   postApi(endpoint: string, data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/${endpoint}`, data, {
+      headers: this.getHeaders()
+    });
+  }
+
+  saveMatchResult(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/clubes/save_match_result.php`, data, {
+      headers: this.getHeaders()
+    });
+  }
+
+  getMisPartidos(): Observable<any[]> {
+    const userId = localStorage.getItem('userId');
+    return this.http.get<any[]>(`${this.apiUrl}/clubes/get_mis_partidos.php?jugador_id=${userId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  getOnboardingStatus(entrenadorId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/entrenador/get_onboarding_status.php?entrenador_id=${entrenadorId}`, {
       headers: this.getHeaders()
     });
   }

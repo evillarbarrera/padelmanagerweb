@@ -26,6 +26,42 @@ export class EntrenadorAgendarComponent implements OnInit {
     entrenadorId: number | null = null;
     coachNombre: string | null = null;
     coachFoto: string | null = null;
+    
+    // Tutorial State
+    showTutorial = false;
+    currentTutorialStep = 0;
+    tutorialSteps = [
+        { 
+            target: '.slot-cell:not(.booked):not(.past)', 
+            title: '📅 Elige tu Horario', 
+            content: 'Haz clic en una celda vacía para iniciar tu agendamiento. Los bloques claros indican disponibilidad.' 
+        },
+        { 
+            target: '.type-selector', 
+            title: '🎾 Tipo de Clase', 
+            content: 'Elige entre Individual, Multijugador (2 a 4 alumnos) o Grupal (4 a 6 alumnos). El sistema filtrará los packs correspondientes.' 
+        },
+        { 
+            target: '.search-box', 
+            title: '👤 Asigna al Alumno', 
+            content: 'Busca a tu alumno por nombre. Veremos al instante si tiene créditos en su pack.' 
+        },
+        { 
+            target: '.plan-section', 
+            title: '📋 Dossier Técnico', 
+            content: 'Opcional: Añade qué entrenarán hoy. El alumno podrá verlo desde su app.' 
+        },
+        { 
+            target: '.current-pack', 
+            title: '💳 Créditos y Pack', 
+            content: 'Verifica si el alumno tiene créditos. Si no le quedan, selecciona su nuevo pack aquí mismo.' 
+        },
+        { 
+            target: '.b-confirm', 
+            title: '🚀 ¡Todo Listo!', 
+            content: 'Revisa los detalles finales y confirma la reserva para notificar al alumno.' 
+        },
+    ];
 
     // Calendar State
     currentDate: Date = new Date();
@@ -72,23 +108,54 @@ export class EntrenadorAgendarComponent implements OnInit {
     recurrencia: number = 1;
     tipoClaseSeleccionado: 'individual' | 'multijugador' | 'grupal' | 'evaluacion' = 'individual';
 
+    packMatchesTipo(p: any, type: string): boolean {
+        if (!p) return false;
+        // Check multiple possible field names as well as the name/title of the pack
+        const name = (p.pack_nombre || p.nombre || p.titulo || p.pack_nombres || '').toLowerCase();
+        const rawTipo = (p.tipo || p.pack_tipo || p.reserva_tipo || p.tipo_reserva || '').toLowerCase();
+        const combined = rawTipo + ' ' + name;
+        
+        // Prioritize explicit person count, fallback to keywords
+        const personas = Number(p.cantidad_personas || (combined.includes('duo') ? 2 : combined.includes('trio') ? 3 : (combined.includes('grupal') ? 4 : 1)));
+        const capMax = Number(p.capacidad_maxima || (p.cantidad_personas ? personas : (combined.includes('grupal') ? 6 : personas)));
+
+        if (type === 'individual' || type === 'evaluacion') {
+            // Strictly 1 person and not a multi/group keyword
+            return personas === 1 && !combined.includes('duo') && !combined.includes('trio') && !combined.includes('grupal') && !combined.includes('multi');
+        } else if (type === 'multijugador') {
+            // Strictly 2-3 people or multi keywords
+            return (personas >= 2 && personas <= 3) || combined.includes('duo') || combined.includes('trio') || combined.includes('multi');
+        } else if (type === 'grupal') {
+            // Strictly 4+ people or grupal keyword
+            return personas >= 4 || capMax >= 4 || combined.includes('grupal');
+        }
+        return true;
+    }
+
+    getTipoLabel(tipo: string): string {
+        if (tipo === 'individual') return 'Individual';
+        if (tipo === 'multijugador') return 'Multi';
+        if (tipo === 'grupal') return 'Grupal';
+        return tipo;
+    }
+
     get alumnosPacksConCredito(): any[] {
-        // Only show packs that have REAL available credits (Total Remaining - Already Reserved)
+        // Only show packs that have REAL available credits
+        // Math: Total Sessions - Total Scheduled (Reservadas includes past/done)
         return (this.alumnosPacks || [])
             .map(p => {
-                const totales = Number(p.sesiones_totales || p.sesiones || 0);
-                const usadas = Number(p.sesiones_usadas || 0);
-                
-                // Fallback formulation so HTML math evaluates safely
-                if (p.sesiones_restantes === undefined || p.sesiones_restantes === null) {
-                    p.sesiones_restantes = totales - usadas;
-                }
-                
+                const total = Number(p.sesiones_totales || p.sesiones || 0);
                 const reservadas = Number(p.sesiones_reservadas || 0);
-                p._disponibles = Number(p.sesiones_restantes) - reservadas;
+                
+                // Real available = Total contracted - Total scheduled/reserved
+                p._disponibles = total - reservadas;
+
+                // Fallback for UI if sesiones_restantes isn't what we expect
+                if (p.sesiones_restantes === undefined) p.sesiones_restantes = total - Number(p.sesiones_usadas || 0);
+                
                 return p;
             })
-            .filter(p => p._disponibles > 0);
+            .filter(p => p._disponibles > 0 && this.packMatchesTipo(p, this.tipoClaseSeleccionado));
     }
 
     get maxAlumnos(): number {
@@ -98,28 +165,8 @@ export class EntrenadorAgendarComponent implements OnInit {
     }
 
     actualizarPacksParaTipo() {
-        if (this.tipoClaseSeleccionado === 'individual' || this.tipoClaseSeleccionado === 'evaluacion') {
-            this.packsParaTipoList = this.packsDisponibles.filter(p => {
-                const tipo = (p.tipo || '').toLowerCase();
-                const personas = Number(p.cantidad_personas || 1);
-                const capMax = Number(p.capacidad_maxima || personas);
-                return tipo !== 'grupal' && tipo !== 'pack_grupal' && personas < 2 && capMax < 4;
-            });
-        } else if (this.tipoClaseSeleccionado === 'multijugador') {
-            this.packsParaTipoList = this.packsDisponibles.filter(p => {
-                const tipo = (p.tipo || '').toLowerCase();
-                const personas = Number(p.cantidad_personas || 1);
-                const capMax = Number(p.capacidad_maxima || personas);
-                return (personas > 1 && personas < 4) || (capMax >= 2 && capMax < 4) || tipo === 'duo' || tipo === 'trio' || tipo === 'multijugador';
-            });
-        } else {
-            this.packsParaTipoList = this.packsDisponibles.filter(p => {
-                const tipo = (p.tipo || '').toLowerCase();
-                const personas = Number(p.cantidad_personas || 1);
-                const capMax = Number(p.capacidad_maxima || personas);
-                return tipo === 'grupal' || tipo === 'pack_grupal' || capMax >= 4 || personas >= 5;
-            });
-        }
+        if (!this.packsDisponibles) return;
+        this.packsParaTipoList = this.packsDisponibles.filter(p => this.packMatchesTipo(p, this.tipoClaseSeleccionado));
     }
 
     filtrarListaAlumnos() {
@@ -236,6 +283,72 @@ export class EntrenadorAgendarComponent implements OnInit {
         const slotDate = new Date(date);
         slotDate.setHours(parseInt(hours), parseInt(minutes), 0);
         return slotDate < now;
+    }
+
+    // --- TUTORIAL METHODS ---
+    startTutorial() {
+        this.showTutorial = true;
+        this.currentTutorialStep = 0;
+        this.updateTutorialPosition();
+    }
+
+    nextTutorialStep() {
+        if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+            this.currentTutorialStep++;
+            this.updateTutorialPosition();
+            
+            // Auto-open modal for step 2 if we are in step 1
+            if (this.currentTutorialStep === 1 && !this.showModal) {
+                this.openBooking(new Date(), '10:00', { available: true });
+                // Re-calculate after modal animation
+                setTimeout(() => this.updateTutorialPosition(), 500);
+            }
+        } else {
+            this.closeTutorial();
+        }
+    }
+
+    tutorialTop = '0px';
+    tutorialLeft = '0px';
+
+    updateTutorialPosition() {
+        const step = this.tutorialSteps[this.currentTutorialStep];
+        document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+
+        setTimeout(() => {
+            const el = document.querySelector(step.target) as HTMLElement;
+            if (el) {
+                el.scrollIntoView({ behavior: 'auto', block: 'center' }); // Instant scroll
+                el.classList.add('tutorial-highlight');
+                
+                const rect = el.getBoundingClientRect();
+                const vh = window.innerHeight;
+                const vw = window.innerWidth;
+
+                // Position the card near the element
+                if (rect.top > vh / 2) {
+                    // Place above
+                    this.tutorialTop = (rect.top - 200) + 'px';
+                } else {
+                    // Place below
+                    this.tutorialTop = (rect.bottom + 40) + 'px';
+                }
+
+                this.tutorialLeft = Math.max(20, Math.min(vw - 420, rect.left)) + 'px';
+            } else {
+                // Fallback to center
+                this.tutorialTop = '40%';
+                this.tutorialLeft = 'calc(50% - 200px)';
+            }
+        }, 0);
+    }
+
+
+
+    closeTutorial() {
+        this.showTutorial = false;
+        this.currentTutorialStep = 0;
+        document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
     }
 
     isPastDay(date: Date): boolean {
@@ -525,33 +638,60 @@ export class EntrenadorAgendarComponent implements OnInit {
             }
             this.alumnoSeleccionado = this.alumnosSeleccionados[0] || null;
         }
-        // Reset pack when selection changes
-        this.packAAsignar = null;
-        this.alumnosPacks = [];
         
-        if (this.alumnoSeleccionado) {
-            this.cargarPacksAlumno(this.alumnoSeleccionado.jugador_id || this.alumnoSeleccionado.id);
+        // Load full pack info for the student regardless of list position
+        // This ensures compatibility info (Duo vs Individual) is accurate for the UI
+        if (this.isAlumnoSelected(alumno)) {
+            this.cargarPacksAlumno(alumno.jugador_id || alumno.id, alumno);
         }
+
+        // Reset global assignment pack if primary student changes
+        this.packAAsignar = null;
     }
 
-    cargarPacksAlumno(jugadorId: number) {
+    cargarPacksAlumno(jugadorId: number, targetAlumno?: any) {
         this.cargandoPacks = true;
-        // Search globally for student packs (remove trainer filter to find all credits)
         this.entrenamientoService.getPacksAlumno(jugadorId).subscribe({
             next: (res: any) => {
-                // The API returns {success: true, data: [...]}
-                this.alumnosPacks = Array.isArray(res) ? res : (res.data || res.packs || []);
+                const packs = Array.isArray(res) ? res : (res.data || res.packs || []);
                 
-                // Auto-select first pack with credits if none selected
-                if (this.alumnosPacks.length > 0 && !this.packAAsignar) {
-                    const activePack = this.alumnosPacks.find(p => Number(p.sesiones_restantes || 0) > 0);
-                    if (activePack) {
-                        this.alumnoSeleccionado.pack_id = activePack.pack_id;
-                        this.alumnoSeleccionado.pack_jugador_id = activePack.id || activePack.pack_jugador_id;
-                        this.alumnoSeleccionado.sesiones_restantes = activePack.sesiones_restantes;
-                        this.alumnoSeleccionado.pack_nombre = activePack.pack_nombre;
+                // Use provided student or fallback to the primary one
+                const target = targetAlumno || this.alumnoSeleccionado;
+                
+                if (target) {
+                    // Update this specific student's info to reflect current modality compatibility
+                    const matching = packs.filter((p: any) => this.packMatchesTipo(p, this.tipoClaseSeleccionado));
+                    if (matching.length > 0) {
+                        // Sort by remaining sessions to show the most useful one
+                        const best = matching.sort((a: any, b: any) => (b.sesiones_restantes || 0) - (a.sesiones_restantes || 0))[0];
+                        target.pack_nombre = best.pack_nombre;
+                        
+                        const total = Number(best.sesiones_totales || best.sesiones || 0);
+                        const reservadas = Number(best.sesiones_reservadas || 0);
+                        
+                        // Critical Balance: Total sessions minus EVERYTHING already in the calendar (past or future)
+                        target.creditos_reales = total - reservadas;
+                        
+                        target.sesiones_restantes = Number(best.sesiones_restantes || 0);
+                        target.sesiones_reservadas = reservadas;
+                        
+                        // Sync IDs for reservation logic
+                        target.pack_id = best.pack_id || best.id_pack || best.id;
+                        target.pack_jugador_id = best.id || best.pack_jugador_id;
+                    } else if (packs.length > 0) {
+                        // If they have packs but none at this level, clearly show it
+                        target.creditos_reales = 0;
+                        target.sesiones_restantes = 0;
+                        target.pack_nombre = 'Sin pack ' + this.getTipoLabel(this.tipoClaseSeleccionado);
                     }
                 }
+
+                // If this is the primary student (alumnosSeleccionados[0]), 
+                // fill the global store used for the "Existing Pack" selector dropdown
+                if (this.alumnosSeleccionados.length > 0 && (target === this.alumnosSeleccionados[0])) {
+                    this.alumnosPacks = packs;
+                }
+                
                 this.cargandoPacks = false;
             },
             error: () => this.cargandoPacks = false
@@ -579,6 +719,8 @@ export class EntrenadorAgendarComponent implements OnInit {
         this.alumnosSeleccionados = [];
         this.alumnoSeleccionado = null;
         this.packAAsignar = null;
+        this.alumnosPacks = [];
+        this.actualizarPacksParaTipo();
     }
 
     confirmarAgenda() {

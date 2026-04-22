@@ -3,6 +3,7 @@ import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { SidebarService } from '../../services/sidebar.service';
 import { environment } from '../../../environments/environment';
 import { Chart, registerables } from 'chart.js';
 import Swal from 'sweetalert2';
@@ -20,7 +21,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     userId: number | null = null;
     adminNombre = 'Administrador';
     adminFoto: string | null = null;
-    activeTab: 'resumen' | 'entrenadores' | 'analiticas' | 'config' = 'resumen';
+    activeTab: 'resumen' | 'entrenadores' | 'analiticas' | 'config' | 'clubes' = 'resumen';
     isSidebarOpen = false;
 
     stats: any = null;
@@ -31,8 +32,26 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     analyticsData: any[] = [];
     growthStats: any = null;
 
+    // Filter properties
+    coachSearchQuery = '';
+
+    constructor(
+        private http: HttpClient, 
+        private router: Router,
+        public sidebarService: SidebarService
+    ) { }
+
     toggleSidebar() {
         this.isSidebarOpen = !this.isSidebarOpen;
+    }
+
+    get filteredEntrenadores() {
+        if (!this.coachSearchQuery) return this.entrenadores;
+        const query = this.coachSearchQuery.toLowerCase();
+        return this.entrenadores.filter(e => 
+            e.nombre.toLowerCase().includes(query) || 
+            (e.usuario && e.usuario.toLowerCase().includes(query))
+        );
     }
 
     switchTab(tab: any) {
@@ -44,6 +63,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         }
         if (tab === 'entrenadores') {
             this.loadEntrenadores();
+        }
+        if (tab === 'clubes') {
+            this.loadAllClubes();
         }
     }
 
@@ -87,8 +109,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     isBlocked = false;
     subMessage = '';
-
-    constructor(private http: HttpClient, private router: Router) { }
 
     ngOnInit(): void {
         this.userId = Number(localStorage.getItem('userId')) || 0;
@@ -204,13 +224,32 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                         label: 'Ingresos Mensuales ($)',
                         data: this.chartData.datasets.ingresos,
                         borderColor: '#ccff00',
-                        backgroundColor: 'rgba(204, 255, 0, 0.2)',
-                        borderWidth: 3,
+                        backgroundColor: 'rgba(204, 255, 0, 0.1)',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#ccff00',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
                         fill: true,
                         tension: 0.4
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(0,0,0,0.03)' },
+                            ticks: { font: { weight: 'bold' } }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
             });
         }
 
@@ -224,17 +263,24 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                             label: 'Nuevos Usuarios',
                             data: this.chartData.datasets.usuarios,
                             backgroundColor: '#4a90e2',
-                            borderRadius: 4
+                            borderRadius: 6
                         },
                         {
                             label: 'Packs Vendidos',
                             data: this.chartData.datasets.packs,
-                            backgroundColor: '#e24a4a',
-                            borderRadius: 4
+                            backgroundColor: '#ef4444',
+                            borderRadius: 6
                         }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(0,0,0,0.03)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
             });
         }
 
@@ -251,10 +297,16 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                         datasets: [{
                             data: [this.stats.dispositivos.Mobile, this.stats.dispositivos.PC],
                             backgroundColor: ['#ccff00', '#111'],
-                            borderWidth: 0
+                            borderWidth: 0,
+                            hoverOffset: 10
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '70%',
+                        plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, padding: 20 } } } 
+                    }
                 });
             }
 
@@ -268,11 +320,17 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                         labels: ['Hombres', 'Mujeres'],
                         datasets: [{
                             data: [this.stats.genero[0].count, this.stats.genero[1].count],
-                            backgroundColor: ['#4a90e2', '#e24a4a'],
-                            borderWidth: 0
+                            backgroundColor: ['#4a90e2', '#ef4444'],
+                            borderWidth: 0,
+                            hoverOffset: 10
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '70%',
+                        plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, padding: 20 } } } 
+                    }
                 });
             }
 
@@ -291,7 +349,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                             borderRadius: 6
                         }]
                     },
-                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+                    options: { 
+                        indexAxis: 'y', 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
+                    }
                 });
             }
 
@@ -310,7 +374,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                             borderRadius: 6
                         }]
                     },
-                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+                    options: { 
+                        indexAxis: 'y', 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
+                    }
                 });
             }
 
@@ -325,17 +395,18 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                         datasets: [{
                             label: 'Visitas Diarias',
                             data: this.chartData.datasets.trafico,
-                            backgroundColor: 'rgba(204, 255, 0, 0.7)',
+                            backgroundColor: 'rgba(204, 255, 0, 0.4)',
                             borderColor: '#ccff00',
-                            borderWidth: 1,
-                            borderRadius: 4
+                            borderWidth: 2,
+                            borderRadius: 6
                         }]
                     },
                     options: { 
                         responsive: true, 
                         maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
                         scales: {
-                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)' } },
                             x: { grid: { display: false } }
                         }
                     }
@@ -452,6 +523,57 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         });
     }
 
+
+    // ===== CLUBES (SUPER ADMIN) =====
+    allClubes: any[] = [];
+    loadingClubes = false;
+
+    loadAllClubes() {
+        this.loadingClubes = true;
+        this.http.get<any[]>(`${this.apiUrl}/clubes/get_clubes.php`, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                this.allClubes = res;
+                this.loadingClubes = false;
+            },
+            error: (err) => {
+                console.error('Error loading all clubs', err);
+                this.loadingClubes = false;
+            }
+        });
+    }
+
+    toggleClubModule(club: any, type: 'reservas' | 'academia') {
+        const payload = { ...club };
+        if (type === 'reservas') {
+            payload.reservas_activas = club.reservas_activas == 1 ? 0 : 1;
+        } else {
+            payload.academia_activa = club.academia_activa == 1 ? 0 : 1;
+        }
+
+        this.http.post<any>(`${this.apiUrl}/clubes/update_club.php`, payload, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                if (res.success) {
+                    club.reservas_activas = payload.reservas_activas;
+                    club.academia_activa = payload.academia_activa;
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Módulo actualizado'
+                    });
+                }
+            },
+            error: (err) => {
+                console.error('Error toggling club module', err);
+                Swal.fire('Error', 'No se pudo actualizar el módulo', 'error');
+            }
+        });
+    }
 
     logout() {
         localStorage.clear();

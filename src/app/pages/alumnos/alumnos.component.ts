@@ -30,6 +30,21 @@ export class AlumnosComponent implements OnInit {
   nuevoAlumno = { nombre: '', email: '' };
   isCreatingAlumno = false;
 
+  // Interactive Tutorial State
+  showTutorial = false;
+  currentTutorialStep = 0;
+  tutorialTop = '0px';
+  tutorialLeft = '0px';
+  tutorialSteps = [
+    { target: '.create-btn', title: '👤 Registrar Nuevo Alumno', content: 'Haz clic aquí para dar de alta a un jugador nuevo. Le enviaremos un correo con sus datos de acceso.' },
+    { target: '.modal-content', title: '📝 Datos del Alumno', content: 'Ingresa el nombre y correo del alumno. El sistema generará su clave automáticamente.' },
+    { target: '.search-bar', title: '🔍 Busque Ágil', content: 'Encuentra a cualquier alumno rápidamente escribiendo su nombre aquí.' },
+    { target: '.sort-btn:last-child', title: '⚠️ Alerta de Saldo', content: 'Usa este filtro para ver quiénes están por quedarse sin clases. ¡Ideal para gestionar cobranzas!' },
+    { target: '.alumno-card:first-child', title: '🪪 Perfil del Alumno', content: 'Aquí puedes ver el resumen de cada jugador y su estado actual.' },
+    { target: '.alumno-card:first-child .session-info', title: '📊 Indicadores Técnicos', content: 'Pag: Totales pagadas / Res: Reservas hechas / Grup: Reservas en grupos / Pend: Clases disponibles para usar.' },
+    { target: '.alumno-card:first-child .action-btn', title: '📋 Gestión Directa', content: 'Evalúa el nivel del alumno o revisa su historial de clases detallado desde este botón.' }
+  ];
+
   // Paginación y Ordenamiento
   currentPage = 1;
   itemsPerPage = 6;
@@ -232,5 +247,60 @@ export class AlumnosComponent implements OnInit {
         this.popupService.error('Error', msg);
       }
     });
+  }
+
+  // --- TUTORIAL METHODS ---
+  startTutorial() {
+    this.showTutorial = true;
+    this.currentTutorialStep = 0;
+    setTimeout(() => this.updateTutorialPosition(), 50);
+  }
+
+  closeTutorial() {
+    this.showTutorial = false;
+    this.cerrarModalCrear();
+    localStorage.setItem('tutorial_alumnos_done', 'true');
+  }
+
+  nextTutorialStep() {
+    if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+      this.currentTutorialStep++;
+      
+      // Step 1: Open modal (target: .modal-content)
+      if (this.currentTutorialStep === 1) {
+        this.mostrarModalCrear();
+      } else {
+        this.cerrarModalCrear();
+      }
+
+      setTimeout(() => this.updateTutorialPosition(), 50);
+    } else {
+      this.closeTutorial();
+    }
+  }
+
+  updateTutorialPosition() {
+    const step = this.tutorialSteps[this.currentTutorialStep];
+    const el = document.querySelector(step.target);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const cardHeight = 180;
+      const cardWidth = 320;
+      
+      let top = rect.bottom + 15;
+      let left = rect.left + (rect.width / 2) - (cardWidth / 2);
+
+      // Adjust if it goes off screen
+      if (top + cardHeight > window.innerHeight) top = rect.top - cardHeight - 15;
+      if (left + cardWidth > window.innerWidth) left = window.innerWidth - cardWidth - 20;
+      if (left < 0) left = 20;
+
+      this.tutorialTop = `${top}px`;
+      this.tutorialLeft = `${left}px`;
+      
+      el.scrollIntoView({ behavior: 'auto', block: 'center' });
+      el.classList.add('tutorial-highlight');
+      setTimeout(() => el.classList.remove('tutorial-highlight'), 2000);
+    }
   }
 }

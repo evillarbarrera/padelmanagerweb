@@ -65,17 +65,19 @@
           <div class="slides-wrapper">
             <div *ngFor="let slide of slides; let i = index" class="slide-item" [class.active]="currentSlide === i">
               <span class="badge-new">{{ slide.badge }}</span>
-              <h1>{{ slide.title }} <br><span class="highlight">{{ slide.highlight }}</span></h1>
+              <h1 style="font-size: clamp(2.5rem, 5vw, 4.5rem); line-height: 1.1; margin-bottom: 20px;">
+                Gestión Profesional <br><span class="highlight">para Academias</span>
+              </h1>
               <p>{{ slide.description }}</p>
             </div>
           </div>
 
           <div class="cta-group">
             <button class="btn-primary-large" (click)="irALogin()">
-              <span class="btn-text">EXPLORAR AHORA</span>
+              <span class="btn-text">REGÍSTRATE GRATIS</span>
             </button>
             <button class="btn-secondary-large" (click)="irALogin()">
-              <span class="btn-text">VER DEMO</span>
+              <span class="btn-text">VER FUNCIONES</span>
             </button>
           </div>
 
@@ -88,26 +90,124 @@
             </div>
           </div>
 
-          <div class="app-buttons">
-            <button class="btn-store btn-apple">
-              <span class="icon"></span>
-              <div class="text">
-                <span class="small">Descárgalo en</span>
-                <span class="large">App Store</span>
+          <!-- APP STORES -->
+          <div class="app-buttons" style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="https://apps.apple.com/cl/app/padelmanager-chile/id6759664729" target="_blank" class="btn-store btn-apple" style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 12px; color: white; text-decoration: none; transition: 0.3s;">
+              <span class="icon" style="font-size: 1.5rem;"></span>
+              <div class="text" style="display: flex; flex-direction: column; line-height: 1.2;">
+                <span class="small" style="font-size: 0.65rem; opacity: 0.6;">Descárgalo en</span>
+                <span class="large" style="font-size: 0.9rem; font-weight: 800;">App Store</span>
               </div>
-            </button>
-            <button class="btn-store btn-google">
-              <span class="icon">▶</span>
-              <div class="text">
-                <span class="small">Consíguelo en</span>
-                <span class="large">Google Play</span>
+            </a>
+            
+            <a href="mailto:soporte@padelmanager.cl?subject=Interés en periodo de prueba Android - PadelManager" class="btn-store btn-google" style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 12px; color: white; text-decoration: none; transition: 0.3s;">
+              <span class="icon" style="font-size: 1.5rem;">▶</span>
+              <div class="text" style="display: flex; flex-direction: column; line-height: 1.2;">
+                <span class="small" style="font-size: 0.65rem; opacity: 0.6;">Solicitar Trial</span>
+                <span class="large" style="font-size: 0.9rem; font-weight: 800;">Google Play</span>
               </div>
-            </button>
+            </a>
           </div>
         </div>
       </div>
     </div>
   </header>
+
+  <!-- 🤝 TRUSTED PARTNERS SECTION (Social Proof) -->
+  <section class="partners-section reveal fade-in" style="padding: 40px 0; background: #070707; border-bottom: 1px solid rgba(255,255,255,0.03);">
+      <div class="container text-center">
+          <p style="font-size: 0.8rem; font-weight: 800; color: rgba(255,255,255,0.3); margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase;">Clubes y Academias que ya escalan con nosotros</p>
+          <div class="partners-logos" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 60px; opacity: 0.5; filter: grayscale(1);">
+              <span style="font-size: 1.5rem; font-weight: 900; color: #fff;">ACADEMIA NICO RUIZ</span>
+              <span style="font-size: 1.5rem; font-weight: 900; color: #fff;">ACADEMIA ELITE</span>
+              <span style="font-size: 1.5rem; font-weight: 900; color: #fff;">CLUB CENTER</span>
+              <span style="font-size: 1.5rem; font-weight: 900; color: #fff;">TRAINING CENTER</span>
+          </div>
+      </div>
+  </section>
+
+  <!-- SEO OPTIMIZED SECTION: GESTIÓN DE ACADEMIAS DE PÁDEL -->
+  <section class="seo-training-section reveal fade-in" style="padding: 120px 0; background: #000; position: relative; overflow: hidden;">
+    <!-- Sutil decoración de fondo -->
+    <div style="position: absolute; top: -10%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(204,255,0,0.05) 0%, transparent 70%); pointer-events: none;"></div>
+    
+    <div class="container">
+      <div class="seo-header-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: end; margin-bottom: 80px;">
+        <div class="left-col">
+          <span class="badge-new" style="margin-bottom: 20px; display: inline-block;">SOFTWARE LÍDER</span>
+          <h2 style="font-size: clamp(2.5rem, 4vw, 4rem); font-weight: 950; line-height: 1; letter-spacing: -2px; text-transform: uppercase; margin: 0;">
+            GESTIÓN DE <br><span class="text-gradient">ACADEMIAS</span>
+          </h2>
+        </div>
+        <div class="right-col" style="padding-bottom: 10px;">
+          <p style="color: #888; font-size: 1.15rem; line-height: 1.6; border-left: 2px solid #ccff00; padding-left: 30px; margin: 0;">
+            PadelManager es el <strong>software de administración</strong> definitivo. 
+            Diseñado para que <strong>entrenadores y clubes</strong> automaticen su operación diaria, 
+            desde la captación de alumnos hasta el control financiero total.
+          </p>
+        </div>
+      </div>
+      
+      <div class="training-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px;">
+        <div class="t-card" style="background: rgba(255,255,255,0.02); padding: 50px 40px; border-radius: 32px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; position: relative; overflow: hidden;">
+          <div style="font-size: 2.8rem; margin-bottom: 30px;">👥</div>
+          <h3 style="color: #fff; font-size: 1.5rem; font-weight: 800; margin-bottom: 15px;">Gestión de Alumnos</h3>
+          <p style="color: #666; font-size: 1rem; line-height: 1.6;">Control de fichas técnicas, asistencia y seguimiento de progreso técnico automatizado.</p>
+        </div>
+
+        <div class="t-card" style="background: rgba(255,255,255,0.02); padding: 50px 40px; border-radius: 32px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; position: relative; overflow: hidden;">
+          <div style="font-size: 2.8rem; margin-bottom: 30px;">💳</div>
+          <h3 style="color: #fff; font-size: 1.5rem; font-weight: 800; margin-bottom: 15px;">Pagos & Packs</h3>
+          <p style="color: #666; font-size: 1rem; line-height: 1.6;">Administración de cobros, gestión de renovaciones de packs y facturación simplificada.</p>
+        </div>
+
+        <div class="t-card" style="background: rgba(255,255,255,0.02); padding: 50px 40px; border-radius: 32px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; position: relative; overflow: hidden;">
+          <div style="font-size: 2.8rem; margin-bottom: 30px;">📅</div>
+          <h3 style="color: #fff; font-size: 1.5rem; font-weight: 800; margin-bottom: 15px;">Agenda Inteligente</h3>
+          <p style="color: #666; font-size: 1rem; line-height: 1.6;">Calendarios sincronizados para clases y torneos que eliminan cualquier conflicto de pistas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 💡 WHY PADELMANAGER? (Value Proposition) -->
+  <section class="why-us-section reveal fade-in" style="padding: 120px 0; background: #000;">
+    <div class="container">
+        <div class="section-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;">
+            <div class="why-text">
+                <span class="overline">LA SOLUCIÓN DEFINITIVA</span>
+                <h2 style="font-size: 3.5rem; font-weight: 800; margin: 20px 0;">RECUPERA EL CONTROL <br><span class="text-gradient">DE TU TIEMPO</span></h2>
+                <p style="color: #888; font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                    ¿Cansado de perseguir pagos o gestionar clases por WhatsApp? PadelManager automatiza 
+                    la parte aburrida del trabajo para que vuelvas a lo que te apasiona: <strong>formar mejores jugadores.</strong>
+                </p>
+                <div class="why-list">
+                    <div class="why-item" style="display: flex; gap: 20px; margin-bottom: 30px;">
+                        <span style="font-size: 1.8rem;">💸</span>
+                        <div>
+                            <h4 style="color: #fff; margin-bottom: 5px;">Cero Morosidad</h4>
+                            <p style="color: #666; font-size: 0.95rem;">Los alumnos solo agendan con créditos ya pagados. Garantiza tu flujo de caja.</p>
+                        </div>
+                    </div>
+                    <div class="why-item" style="display: flex; gap: 20px;">
+                        <span style="font-size: 1.8rem;">🚀</span>
+                        <div>
+                            <h4 style="color: #fff; margin-bottom: 5px;">Imagen de Élite</h4>
+                            <p style="color: #666; font-size: 0.95rem;">Ofrece una app profesional a tus alumnos con su historial y radar de habilidades.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="why-visual" style="position: relative; display: flex; justify-content: center;">
+                <img src="assets/images/app-screenshot-v2.png" style="width: 75%; border-radius: 40px; box-shadow: 0 50px 100px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); transform: perspective(1000px) rotateY(-10deg) rotateX(5deg);" alt="PadelManager Dashboard">
+                <div style="position: absolute; bottom: -20px; right: 10%; background: #ccff00; padding: 25px; border-radius: 20px; color: #000; box-shadow: 0 20px 40px rgba(0,0,0,0.2); z-index: 10;">
+                    <h3 style="font-size: 2.2rem; font-weight: 950; line-height: 1; margin: 0;">+45%</h3>
+                    <p style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Eficiencia Operativa</p>
+                </div>
+            </div>
+        </div>
+    </div>
+  </section>
 
   <!-- FEATURES SECTION -->
   <section id="features" class="nike-features reveal fade-in">
@@ -256,6 +356,31 @@
     </div>
   </section>
 
+  <!-- ❓ FAQ SECTION -->
+  <section class="faq-section reveal fade-in" style="padding: 100px 0; background: #070707;">
+      <div class="container">
+          <div class="section-header text-center" style="margin-bottom: 60px;">
+              <span class="overline">¿DUDAS?</span>
+              <h2>PREGUNTAS <span class="text-gradient">FRECUENTES</span></h2>
+          </div>
+          
+          <div class="faq-container" style="max-width: 800px; margin: 0 auto;">
+              <div *ngFor="let faq of faqs; let i = index" 
+                   class="faq-item" 
+                   style="margin-bottom: 15px; background: rgba(255,255,255,0.02); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.04);">
+                  <button (click)="toggleFaq(i)" 
+                          style="width: 100%; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; color: #fff; cursor: pointer; text-align: left;">
+                      <span style="font-weight: 700; font-size: 1.1rem;">{{ faq.q }}</span>
+                      <span style="font-size: 1.5rem; transition: 0.3s;" [style.transform]="faq.open ? 'rotate(45deg)' : ''">+</span>
+                  </button>
+                  <div *ngIf="faq.open" style="padding: 0 30px 25px; color: #888; line-height: 1.6; font-size: 1rem;">
+                      {{ faq.a }}
+                  </div>
+              </div>
+          </div>
+      </div>
+  </section>
+
   <!-- PRICING SECTION -->
   <section id="pricing" class="nike-pricing reveal fade-in">
     <div class="container">
@@ -321,9 +446,9 @@
           </div>
           <p>Elevando el rendimiento con tecnología de vanguardia.</p>
           <div class="socials">
-            <a href="#" class="social-link">Instagram</a>
-            <a href="#" class="social-link">Twitter</a>
-            <a href="#" class="social-link">LinkedIn</a>
+            <a href="https://www.instagram.com/padelmanager/" target="_blank" class="social-link" style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.9rem; transition: 0.3s;">
+              <span style="font-size: 1.2rem;">📸</span> Instagram
+            </a>
           </div>
         </div>
         <div class="links-col">

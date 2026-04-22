@@ -198,15 +198,15 @@ body {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      opacity: 0.35;
-      filter: saturate(1.1) brightness(0.7);
+      opacity: 0.55;
+      filter: saturate(1.2) brightness(0.85);
       animation: slowPan 25s infinite alternate linear;
     }
 
     .overlay-gradient {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at center, transparent, rgba($dark-navy, 0.8) 60%, $dark-navy 100%);
+      background: radial-gradient(circle at 40% center, transparent 0%, rgba($dark-navy, 0.4) 40%, rgba($dark-navy, 0.9) 85%, $dark-navy 100%);
     }
   }
 

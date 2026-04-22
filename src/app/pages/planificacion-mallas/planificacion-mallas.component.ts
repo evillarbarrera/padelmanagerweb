@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -30,6 +30,88 @@ export class PlanificacionMallasComponent implements OnInit {
     // UI State
     selectedClaseIndex: number = 0;
     isLoading: boolean = false;
+    // Tutorial State
+    showTutorial: boolean = false;
+    currentTutorialStep: number = 0;
+    tutorialTop: string = '0px';
+    tutorialLeft: string = '0px';
+    tutorialSteps = [
+        { target: '.section-title', title: '🏗️ Planificación Estratégica', content: 'Aquí puedes diseñar programas de entrenamiento completos para tus alumnos.' },
+        { target: '.btn-save.btn-glow', title: '➕ Crear Nuevo Plan', content: 'Haz clic aquí para comenzar una nueva malla desde cero.' },
+        { target: '.config-section', title: '⚙️ Configuración Base', content: 'Define el nombre, nivel y público objetivo. El sistema adaptará los módulos automáticamente.' },
+        { target: '.tabs-nav', title: '📅 Organización Técnica', content: 'Navega entre las distintas clases de tu programa y dales una secuencia lógica.' },
+        { target: '.builder-stage', title: '🎾 Contenido de la Clase', content: 'Detalla cada bloque técnico para que tu alumno sepa exactamente qué trabajaron.' },
+        { target: '.footer-btns', title: '🚀 Guardar y Publicar', content: 'Al terminar, guarda tu plan para asignarlo como una plantilla oficial de tu academia.' }
+    ];
+
+    @HostListener('window:resize')
+    onResize() {
+        if (this.showTutorial) this.updateTutorialPosition();
+    }
+
+    startTutorial() {
+        if (this.viewMode === 'editor') {
+            this.viewMode = 'list';
+        }
+        this.showTutorial = true;
+        this.currentTutorialStep = 0;
+        setTimeout(() => this.updateTutorialPosition(), 100);
+    }
+
+    closeTutorial() {
+        this.showTutorial = false;
+        // Optional: reload mallas to be safe
+        this.loadMallas();
+    }
+
+    nextTutorialStep() {
+        if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+            this.currentTutorialStep++;
+            
+            // If moving to step 2 (Config), open the editor
+            if (this.currentTutorialStep === 2 && this.viewMode === 'list') {
+                this.nuevaMalla();
+            }
+
+            // High timeout for step 2 to allow editor rendering
+            const waitTime = this.currentTutorialStep === 2 ? 400 : 100;
+            setTimeout(() => this.updateTutorialPosition(), waitTime);
+        } else {
+            this.closeTutorial();
+            this.viewMode = 'list';
+        }
+    }
+
+    updateTutorialPosition() {
+        const step = this.tutorialSteps[this.currentTutorialStep];
+        const el = document.querySelector(step.target);
+        
+        if (el) {
+            const rect = el.getBoundingClientRect();
+            const cardHeight = 220;
+            const cardWidth = 340;
+            
+            let top = rect.bottom + 20;
+            let left = rect.left + (rect.width / 2) - (cardWidth / 2);
+
+            if (top + cardHeight > window.innerHeight) top = rect.top - cardHeight - 20;
+            if (left + cardWidth > window.innerWidth) left = window.innerWidth - cardWidth - 20;
+            if (left < 0) left = 20;
+
+            this.tutorialTop = `${top + window.scrollY}px`;
+            this.tutorialLeft = `${left + window.scrollX}px`;
+            
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('tutorial-highlight');
+            setTimeout(() => el.classList.remove('tutorial-highlight'), 2500);
+        } else {
+            // Self-healing: if target not found and we have more steps, skip to next
+            if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+                console.warn('Target not found, skipping to next step:', step.target);
+                this.nextTutorialStep();
+            }
+        }
+    }
 
     constructor(
         private fb: FormBuilder,

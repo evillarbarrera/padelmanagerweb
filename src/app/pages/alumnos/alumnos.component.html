@@ -7,6 +7,39 @@
 
 
     <div class="dashboard-grid">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-text">
+          <h2>Gestión de Alumnos</h2>
+          <p>Administra el progreso y créditos de tus estudiantes</p>
+        </div>
+        <div class="header-btns">
+          <button class="btn-help" (click)="startTutorial()">
+            💡 Ayuda
+          </button>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE TUTORIAL SYSTEM -->
+      <div class="tutorial-overlay" *ngIf="showTutorial"></div>
+      
+      <div class="tutorial-card shadow-lg" *ngIf="showTutorial" [style.top]="tutorialTop" [style.left]="tutorialLeft">
+        <div class="t-header">
+          <div class="t-step-count">Paso {{ currentTutorialStep + 1 }} de {{ tutorialSteps.length }}</div>
+        </div>
+        <div class="t-body">
+          <h3>{{ tutorialSteps[currentTutorialStep].title }}</h3>
+          <p>{{ tutorialSteps[currentTutorialStep].content }}</p>
+        </div>
+        <div class="t-footer">
+          <button class="btn-skip" (click)="closeTutorial()">Saltar</button>
+          <button class="btn-next" (click)="nextTutorialStep()">
+            {{ currentTutorialStep === tutorialSteps.length - 1 ? '¡Listo!' : 'Siguiente' }}
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- Search Bar -->
       <div class="search-section">
         <div class="search-bar">

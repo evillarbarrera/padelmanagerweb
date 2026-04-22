@@ -10,7 +10,7 @@
                 <h1>Descubre Clubes <span class="badge expert">EXPERT UX</span></h1>
                 <p>Encuentra las mejores canchas cerca de ti y reserva al instante.</p>
             </div>
-            
+
             <div class="discovery-filters">
                 <div class="region-selector">
                     <span class="icon">📍</span>
@@ -44,7 +44,8 @@
                                 <span class="stars">★★★★★</span>
                                 <span class="score">4.9 (120 reviews)</span>
                             </div>
-                            <p class="location-txt"><i class="fas fa-map-marker-alt"></i> {{ club.direccion || 'Ubicación no especificada' }}</p>
+                            <p class="location-txt"><i class="fas fa-map-marker-alt"></i> {{ club.direccion ||
+                                'Ubicación no especificada' }}</p>
                         </div>
                         <div class="card-footer-action">
                             <span class="price-from">Desde $12.000 / hora</span>
@@ -63,7 +64,7 @@
 
         <!-- 3. CLUB DETAIL VIEW (BOOKING CENTER) -->
         <div class="club-center-container" *ngIf="selectedClub">
-            
+
             <!-- CLUB MASTER INFO BAR -->
             <div class="club-master-bar">
                 <button class="btn-back" (click)="selectedClub = null">← Volver</button>
@@ -89,15 +90,18 @@
             <!-- TABS SELECTOR (ELITE DESIGN) -->
             <div class="elite-tabs-wrapper">
                 <div class="elite-tabs">
-                    <button [class.active]="activeSubTab === 'reservar'" (click)="activeSubTab = 'reservar'">Reservar Cancha</button>
-                    <button [class.active]="activeSubTab === 'torneos'" (click)="activeSubTab = 'torneos'">Próximos Torneos</button>
-                    <button [class.active]="activeSubTab === 'americanos'" (click)="activeSubTab = 'americanos'">Americanos</button>
+                    <button [class.active]="activeSubTab === 'reservar'" (click)="activeSubTab = 'reservar'">Reservar
+                        Cancha</button>
+                    <button [class.active]="activeSubTab === 'torneos'" (click)="activeSubTab = 'torneos'">Próximos
+                        Torneos</button>
+                    <button [class.active]="activeSubTab === 'americanos'"
+                        (click)="activeSubTab = 'americanos'">Americanos</button>
                 </div>
             </div>
 
             <!-- SUBTAB: RESERVAR CANCHA -->
             <div class="subtab-content" *ngIf="activeSubTab === 'reservar'">
-                
+
                 <!-- PLAYTOMIC DATE SCROLLER -->
                 <div class="playtomic-date-picker">
                     <div class="picker-header">
@@ -107,10 +111,8 @@
                     <div class="picker-controls">
                         <button class="ctrl-btn" (click)="scrollDates(-1)">‹</button>
                         <div class="dates-scroller" #dateContainerRef>
-                            <div *ngFor="let day of weekDays" 
-                                class="date-item"
-                                [class.active]="selectedFecha === day.fullDate"
-                                (click)="onSelectDate(day.fullDate)">
+                            <div *ngFor="let day of weekDays" class="date-item"
+                                [class.active]="selectedFecha === day.fullDate" (click)="onSelectDate(day.fullDate)">
                                 <span class="d-n">{{ day.nombre }}</span>
                                 <span class="d-v">{{ day.numero }}</span>
                             </div>
@@ -124,14 +126,13 @@
                     <div class="matrix-sidebar">
                         <div class="cancha-selector-title">CANCHAS</div>
                         <div class="cancha-list-vertical">
-                            <button *ngFor="let c of canchas" 
-                                [class.active]="selectedCancha?.id === c.id"
+                            <button *ngFor="let c of canchas" [class.active]="selectedCancha?.id === c.id"
                                 (click)="onSelectCancha(c)">
                                 {{ c.nombre }}
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="matrix-main">
                         <div class="matrix-header">
                             <div class="title">Disponibilidad para el {{ selectedFecha | date:'dd/MM' }}</div>
@@ -139,13 +140,11 @@
                                 <label><input type="checkbox" [(ngModel)]="showOnlyAvailable"> Solo libres</label>
                             </div>
                         </div>
-                        
+
                         <div class="time-slots-grid">
                             <ng-container *ngFor="let h of horarios">
-                                <div *ngIf="!showOnlyAvailable || h.disponible"
-                                     class="time-slot-card"
-                                     [class.occupied]="!h.disponible"
-                                     (click)="reservar(h)">
+                                <div *ngIf="!showOnlyAvailable || h.disponible" class="time-slot-card"
+                                    [class.occupied]="!h.disponible" (click)="reservar(h)">
                                     <div class="slot-time">{{ h.hora_inicio.slice(0, 5) }}</div>
                                     <div class="slot-price">$12.00</div>
                                     <span class="slot-status">{{ h.disponible ? 'LIBRE' : 'OCUPADO' }}</span>

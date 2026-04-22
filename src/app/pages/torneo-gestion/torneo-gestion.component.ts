@@ -94,12 +94,12 @@ export class TorneoGestionComponent implements OnInit {
 
     onTabChange(tab: any) {
         this.activeDetailTab = tab;
-        
+
         // Always DEFAULT to "All Tournament" when entering these tabs
         if (tab === 'generar' || tab === 'resumen' || tab === 'programacion') {
             const previousCat = this.selectedCategoria;
             this.selectedCategoria = null;
-            
+
             // If we previously had a filter, we must reload all inscriptions and stats
             if (previousCat && this.selectedTorneo) {
                 this.loadCategorias(this.selectedTorneo.id);
@@ -129,12 +129,12 @@ export class TorneoGestionComponent implements OnInit {
 
     getCategoryColor(name: string): string {
         if (!name) return '#64748b';
-        
+
         const normalized = name.toLowerCase().trim();
-        
+
         // 1. Try to find in presets
-        const cat = this.presetCategories.find(p => 
-            p.nombre.toLowerCase().trim() === normalized || 
+        const cat = this.presetCategories.find(p =>
+            p.nombre.toLowerCase().trim() === normalized ||
             normalized.includes(p.nombre.toLowerCase().trim())
         );
         if (cat) return cat.color;
@@ -144,12 +144,12 @@ export class TorneoGestionComponent implements OnInit {
         for (let i = 0; i < normalized.length; i++) {
             hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
         }
-        
+
         // Golden ratio constant (~0.618) helps distribute values as far as possible
         const goldenRatio = 0.618033988749895;
         let h = (Math.abs(hash) * goldenRatio) % 1;
         const hue = Math.floor(h * 360);
-        
+
         // Return professional HSL (Saturation 75%, Lightness 50% for vibrancy)
         return `hsl(${hue}, 75%, 50%)`;
     }
@@ -170,10 +170,10 @@ export class TorneoGestionComponent implements OnInit {
 
     selectBracketCategory(id: number) {
         this.selectedBracketCategoryId = id;
-        
+
         // Priority 1: If we have simulated matches, use them
         const simMatches = this.matchesToSchedule.filter(m => m.categoryId == id && m.id < -1000);
-        
+
         if (simMatches.length > 0) {
             this.playoffMatches = simMatches;
             this.organizeBracket(simMatches);
@@ -355,7 +355,7 @@ export class TorneoGestionComponent implements OnInit {
                 });
 
                 this.inscripciones = simulationData.flat();
-                
+
                 // Initialize grid if empty
                 if (this.gridDays.length === 0) {
                     this.initAvailabilityGrid();
@@ -496,7 +496,7 @@ export class TorneoGestionComponent implements OnInit {
         slots.sort((a, b) => a.timestamp - b.timestamp);
         let slotIndex = 0;
         const allGroupMatches: any[] = [];
-        
+
         // Use a map to collect playoff matches by round across ALL categories
         const playoffRoundsMap: { [key: string]: any[] } = {
             'Dieciseisavos': [],
@@ -571,7 +571,7 @@ export class TorneoGestionComponent implements OnInit {
 
         // 3. Sequential Phased Scheduling with Mixed Categories
         // Order: Groups -> Dieciseisavos -> Octavos -> Cuartos -> Semi -> Final
-        
+
         const scheduleBatch = (batch: any[]) => {
             // SHUFFLE the batch to interleave categories within the same round
             const shuffled = batch.sort(() => Math.random() - 0.5);
@@ -602,7 +602,7 @@ export class TorneoGestionComponent implements OnInit {
         // 4. Update Views
         // Update the bracket backing array so *ngIf="playoffMatches.length > 0" passes
         this.playoffMatches = this.matchesToSchedule.filter(m => m.id < -1000);
-        
+
         // Auto-select first category if none selected to show visual content immediately
         if (this.categorias.length > 0 && !this.selectedBracketCategoryId) {
             this.selectedBracketCategoryId = this.categorias[0].id;
@@ -746,7 +746,7 @@ export class TorneoGestionComponent implements OnInit {
 
         // 2. Helper to distribute rounds
         const distributeRound = (roundMatches: any[], targetKey: string) => {
-            roundMatches.sort((a,b) => a.id - b.id);
+            roundMatches.sort((a, b) => a.id - b.id);
             const mid = Math.ceil(roundMatches.length / 2);
             this.playoffRounds.left[targetKey] = roundMatches.slice(0, mid);
             this.playoffRounds.right[targetKey] = roundMatches.slice(mid);
@@ -864,6 +864,11 @@ export class TorneoGestionComponent implements OnInit {
 
     // Unificar partidos
     prepareScheduleData() {
+        if (!this.selectedCategoria) {
+            console.warn('No hay categoría seleccionada para preparar datos');
+            return;
+        }
+
         if (!this.groupMatches.length) this.loadGroupData(this.selectedCategoria.id);
         if (!this.playoffMatches.length) this.loadPlayoffs(this.selectedCategoria.id);
 
@@ -902,7 +907,7 @@ export class TorneoGestionComponent implements OnInit {
         // Convert to array and sort
         this.calendarDays = Object.keys(groups).sort().map(date => {
             const dayMatches = groups[date];
-            
+
             // Group by hour for the timeline-v3 view
             const hourGroupsMap: { [key: string]: any[] } = {};
             dayMatches.forEach((m: any) => {
@@ -911,7 +916,7 @@ export class TorneoGestionComponent implements OnInit {
                 hourGroupsMap[hour].push(m);
             });
 
-            const hourGroups = Object.keys(hourGroupsMap).sort((a,b) => a.localeCompare(b)).map(h => ({
+            const hourGroups = Object.keys(hourGroupsMap).sort((a, b) => a.localeCompare(b)).map(h => ({
                 hour: h,
                 matches: hourGroupsMap[h]
             }));

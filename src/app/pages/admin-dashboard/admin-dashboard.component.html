@@ -1,10 +1,10 @@
 <div class="admin-layout" [class.sidebar-open]="isSidebarOpen">
     <!-- Mobile Toggle -->
-    <button class="mobile-toggle" (click)="toggleSidebar()">
+    <button class="mobile-nav-toggle" (click)="toggleSidebar()">
         <span>{{ isSidebarOpen ? '✕' : '☰' }}</span>
     </button>
 
-    <!-- Sidebar -->
+    <!-- Sidebar: High Growth Focus -->
     <aside class="admin-sidebar" [class.open]="isSidebarOpen">
         <div class="sidebar-header">
             <img src="assets/images/logo-circular.png" class="logo-icon" alt="PadelManager" />
@@ -12,7 +12,7 @@
         </div>
 
         <nav class="sidebar-nav">
-            <div class="sidebar-player-widget" *ngIf="adminFoto">
+            <div class="sidebar-player-widget"  *ngIf="adminFoto">
                 <img [src]="adminFoto || 'assets/images/placeholder_avatar.png'" class="avatar-img-large" alt="Admin" />
             </div>
             <div class="admin-name-tag">{{ adminNombre }}</div>
@@ -30,6 +30,10 @@
                 <a class="nav-item" [class.active]="activeTab === 'analiticas'" (click)="switchTab('analiticas')">
                     <span class="icon">📈</span>
                     <span>ANÁLISIS DE TRÁFICO</span>
+                </a>
+                <a class="nav-item" [class.active]="activeTab === 'clubes'" (click)="switchTab('clubes')">
+                    <span class="icon">🏟️</span>
+                    <span>GESTIÓN DE SEDES</span>
                 </a>
                 <a class="nav-item" [class.active]="activeTab === 'config'" (click)="switchTab('config')">
                     <span class="icon">⚙️</span>
@@ -52,39 +56,39 @@
 
     <header class="app-header">
         <div class="header-content">
-            <h1 class="page-title">PadelManager Hub</h1>
+            <h1 class="page-title">PadelManager Admin Center</h1>
         </div>
     </header>
 
-    <!-- BLOQUEO POR SUSCRIPCIÓN -->
-    <div class="billing-overlay animate-fade" *ngIf="isBlocked" style="position:fixed; top:0; left:0; width:100%; height:100vh; background: rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter: blur(12px); color:#fff; text-align:center; padding: 20px;">
-        <div style="font-size: 80px; margin-bottom: 20px;">🚧</div>
-        <h2 style="font-size: 32px; font-weight: 950; margin-bottom: 10px; color:#ccff00;">TU PERIODO DE PRUEBA HA FINALIZADO</h2>
-        <p style="font-size: 18px; color: #ccc; max-width: 500px; margin-bottom: 30px;">
-        Para seguir utilizando <b>PadelManager</b> y gestionar tus clases, debes elegir tu plan definitivo y asociar un método de pago seguro.
+    <!-- PRO SUBSCRIPTION LOCK -->
+    <div class="billing-overlay animate-fade" *ngIf="isBlocked">
+        <div class="overlay-icon">🔒</div>
+        <h2 class="overlay-title">ACCESO RESTRINGIDO</h2>
+        <p class="overlay-text">
+            Esta cuenta no tiene una suscripción activa. Para acceder al panel de administración global, debes activar un plan profesional.
         </p>
-        <button (click)="goToBilling()" style="background:#ccff00; color:#111; padding: 18px 40px; border-radius: 50px; border:none; font-weight: 950; font-size: 16px; cursor:pointer; text-transform:uppercase; letter-spacing:1px; box-shadow: 0 10px 30px rgba(204,255,0,0.3);">
-        💎 VINCULAR MI TARJETA AHORA
+        <button (click)="goToBilling()" class="btn-billing-action">
+            VER PLANES DISPONIBLES
         </button>
-        <p style="margin-top: 20px; font-size: 12px; opacity:0.5;">Tus datos y alumnos siguen seguros y se desbloquearán al asociar tu cuenta.</p>
+        <p class="overlay-footer">PadelManager Cloud Platform v2.5</p>
     </div>
 
     <main class="main-content">
-        <div class="dashboard-grid fade-in">
+        <div class="dashboard-wrapper fade-in">
 
-            <!-- TAB: RESUMEN -->
+            <!-- TAB: RESUMEN EJECUTIVO -->
             <ng-container *ngIf="activeTab === 'resumen'">
-                <div class="page-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-                    <div>
-                        <h1 class="premium-title">BIENVENIDO, {{ adminNombre }}</h1>
-                        <p class="premium-subtitle">Ecosistema PadelManager: Control Global & Crecimiento.</p>
+                <div class="page-header-v2">
+                    <div class="title-block">
+                        <h1 class="premium-title-v2">PANEL DE <span>CONTROL</span></h1>
+                        <p class="premium-subtitle-v2">Ecosistema PadelManager: Métricas consolidadas.</p>
                     </div>
 
-                    <div class="filter-controls-pm d-flex gap-2">
-                        <select [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select">
+                    <div class="header-filters">
+                        <select [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select-modern">
                             <option *ngFor="let m of months" [value]="m.value">{{ m.label }}</option>
                         </select>
-                        <select [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select">
+                        <select [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select-modern">
                             <option *ngFor="let y of years" [value]="y">{{ y }}</option>
                         </select>
                     </div>
@@ -92,99 +96,102 @@
 
                 <div class="stats-cards-grid" *ngIf="!isLoading && stats">
                     <!-- Ingresos -->
-                    <div class="stat-card glass-card gold-border">
-                        <div class="icon">💰</div>
+                    <div class="stat-card urgent">
+                        <div class="icon-container">💰</div>
                         <div class="stat-info">
-                            <span class="label">INGRESOS MENSUALES</span>
-                            <span class="value">${{ stats.ingresos_packs | number:'1.0-0' }}</span>
-                            <span class="growth-tag pos">+4.5% vs mes ant.</span>
+                            <span class="label">COMISIONES ACUMULADAS</span>
+                            <div class="value-wrapper">
+                                <span class="value">${{ stats.ingresos_packs | number:'1.0-0' }}</span>
+                                <span class="trend up">+4.2%</span>
+                            </div>
+                            <span class="subtext">Ingresos por venta de suscripciones</span>
                         </div>
+                        <div class="pulse-dot"></div>
                     </div>
 
-                    <!-- Entrenadores Growth -->
-                    <div class="stat-card glass-card">
-                        <div class="icon" style="color: #ccff00;">🎾</div>
+                    <!-- Coaches -->
+                    <div class="stat-card">
+                        <div class="icon-container">🎾</div>
                         <div class="stat-info" *ngIf="growthStats">
-                            <span class="label">COACHES REGISTRADOS</span>
-                            <div class="value-row">
+                            <span class="label">COACHES TOTALES</span>
+                            <div class="value-wrapper">
                                 <span class="value">{{ stats.total_entrenadores }}</span>
-                                <span class="growth-badge" [class.pos]="growthStats.entrenadores.porcentaje >= 0">
+                                <span class="trend" [class.up]="growthStats.entrenadores.porcentaje >= 0">
                                     {{ growthStats.entrenadores.porcentaje > 0 ? '+' : '' }}{{ growthStats.entrenadores.porcentaje | number:'1.0-1' }}%
                                 </span>
                             </div>
-                            <span class="sub-label">{{ growthStats.entrenadores.actual }} nuevos este mes</span>
+                            <span class="subtext">{{ growthStats.entrenadores.actual }} registrados este mes</span>
                         </div>
                     </div>
 
-                    <!-- Jugadores Growth -->
-                    <div class="stat-card glass-card">
-                        <div class="icon" style="color: #4a90e2;">👥</div>
+                    <!-- Jugadores -->
+                    <div class="stat-card">
+                        <div class="icon-container">👥</div>
                         <div class="stat-info" *ngIf="growthStats">
-                            <span class="label">JUGADORES ACTIVOS</span>
-                            <div class="value-row">
+                            <span class="label">JUGADORES EN RED</span>
+                            <div class="value-wrapper">
                                 <span class="value">{{ stats.total_jugadores }}</span>
-                                <span class="growth-badge" [class.pos]="growthStats.jugadores.porcentaje >= 0">
+                                <span class="trend" [class.up]="growthStats.jugadores.porcentaje >= 0">
                                     {{ growthStats.jugadores.porcentaje > 0 ? '+' : '' }}{{ growthStats.jugadores.porcentaje | number:'1.0-1' }}%
                                 </span>
                             </div>
-                            <span class="sub-label">{{ growthStats.jugadores.actual }} nuevos este mes</span>
+                            <span class="subtext">{{ growthStats.jugadores.actual }} altas recientemente</span>
                         </div>
                     </div>
 
-                    <!-- Online Now (REAL-TIME) -->
-                    <div class="stat-card glass-card pulse-border">
-                        <div class="icon-live">
-                            <span class="pulse-dot"></span>
-                            ⚡
-                        </div>
+                    <!-- Traffic -->
+                    <div class="stat-card" style="border-right: 4px solid var(--pm-primary);">
+                        <div class="icon-container" style="background: #000; color: #ccff00;">⚡</div>
                         <div class="stat-info">
-                            <span class="label">TRÁFICO EN VIVO</span>
-                            <span class="value">{{ stats.online_now || 0 }}</span>
-                            <span class="sub-label">Usuarios en los últimos 10 min.</span>
+                            <span class="label">TRÁFICO ACTUAL</span>
+                            <div class="value-wrapper">
+                                <span class="value">{{ stats.online_now || 0 }}</span>
+                                <span class="trend">ACTIVE</span>
+                            </div>
+                            <span class="subtext">Usuarios navegando en vivo</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- SOCIAL INTEGRATION SECTION -->
-                <div class="social-header-pm mt-5">
-                    <h3>SOCIAL MEDIA MONITORING 📱</h3>
-                    <p>Métricas de audiencia en tu plataforma principal.</p>
-                </div>
-                <div class="social-grid-pm" *ngIf="socialStats" style="grid-template-columns: 1fr;">
-                    <div class="social-card instagram" (click)="navigateExternal('https://www.instagram.com/padelmanager/')">
-                        <div class="social-icon">📸</div>
-                        <div class="social-meta">
-                            <span class="platform">INSTAGRAM OFICIAL</span>
+                <!-- SOCIAL SECTION -->
+                <section class="social-section" *ngIf="socialStats">
+                    <div class="section-header">
+                        <h3>Métricas de Audiencia</h3>
+                    </div>
+                    <div class="social-card-pm">
+                        <div class="social-left">
+                            <span class="platform-tag">INSTAGRAM</span>
                             <span class="handle">@padelmanager</span>
+                            <button class="btn-visit" (click)="navigateExternal('https://www.instagram.com/padelmanager/')">Ver Cuenta</button>
                         </div>
-                        <div class="social-stats-row">
-                            <div class="s-item">
-                                <span class="s-value">{{ socialStats.instagram.seguidores }}</span>
-                                <span class="s-label">Seguidores</span>
+                        <div class="social-right">
+                            <div class="stat-box">
+                                <span class="s-val">{{ socialStats.instagram.seguidores }}</span>
+                                <span class="s-lab">Fans</span>
                             </div>
-                            <div class="s-item">
-                                <span class="s-value">{{ socialStats.instagram.engagement }}</span>
-                                <span class="s-label">Engagement</span>
-                            </div>
-                            <div class="s-item">
-                                <span class="s-value">{{ socialStats.instagram.posts_mes }}</span>
-                                <span class="s-label">Posts este mes</span>
+                            <div class="stat-box">
+                                <span class="s-val">{{ socialStats.instagram.engagement }}</span>
+                                <span class="s-lab">Engagement</span>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="charts-section fade-in mt-5" *ngIf="!isLoading">
-                    <div class="charts-row">
-                        <div class="chart-container">
-                            <h3>Rendimiento de Ingresos ($)</h3>
-                            <div class="canvas-wrapper">
+                <div class="charts-section-v2" *ngIf="!isLoading">
+                    <div class="charts-row-pm">
+                        <div class="chart-container-pm">
+                            <div class="chart-header">
+                                <h3>Flujo de Ingresos</h3>
+                            </div>
+                            <div class="canvas-box">
                                 <canvas id="revenueChart"></canvas>
                             </div>
                         </div>
-                        <div class="chart-container">
-                            <h3>Crecimiento de Usuarios</h3>
-                            <div class="canvas-wrapper">
+                        <div class="chart-container-pm">
+                             <div class="chart-header">
+                                <h3>Adquisición de Usuarios</h3>
+                            </div>
+                            <div class="canvas-box">
                                 <canvas id="usersPacksChart"></canvas>
                             </div>
                         </div>
@@ -192,259 +199,97 @@
                 </div>
             </ng-container>
 
-            <!-- TAB: ANALÍTICAS DE TRÁFICO -->
-            <ng-container *ngIf="activeTab === 'analiticas'">
-                <div class="page-intro">
-                    <h1>PADELMANAGER ANALYTICS 📈</h1>
-                    <p>Análisis de comportamiento, geografía y tecnología.</p>
-                </div>
-
-                <div class="chart-container mb-5">
-                    <h3>Tráfico de Visitas Diarias</h3>
-                    <div class="canvas-wrapper">
-                        <canvas id="trafficChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="analytics-charts-grid mb-5">
-                    <div class="chart-container mini-chart">
-                        <h3>Plataformas (PC vs Mobile)</h3>
-                        <div class="canvas-wrapper-small">
-                            <canvas id="deviceChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container mini-chart">
-                        <h3>Distribución por Género</h3>
-                        <div class="canvas-wrapper-small">
-                            <canvas id="genderChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container mini-chart">
-                        <h3>Top Regiones Activación</h3>
-                        <div class="canvas-wrapper-small">
-                            <canvas id="regionChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container mini-chart">
-                        <h3>Top Comunas Activación</h3>
-                        <div class="canvas-wrapper-small">
-                            <canvas id="communeChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="analytics-grid-pm mt-5">
-                    <div class="card-pm analytics-table-card">
-                        <h3>Páginas más visitadas (Top 5)</h3>
-                        <div class="analytics-table">
-                            <div class="table-row-head">
-                                <span>PÁGINA</span>
-                                <span>VISITAS TOTALES</span>
-                                <span>RELEVANCIA</span>
-                            </div>
-                            <div class="table-row" *ngFor="let item of analyticsData; let i = index">
-                                <span class="page-name">{{ item.pagina }}</span>
-                                <span class="visit-count">{{ item.visitas }}</span>
-                                <div class="relevance-bar-bg">
-                                    <div class="relevance-bar" [style.width.%]="(item.visitas / analyticsData[0].visitas) * 100"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-pm info-box-pm">
-                        <h3>ℹ️ DATA INSIGHT</h3>
-                        <p>Tus usuarios prefieren el acceso rápido desde dispositivos móviles (82% del tráfico total).</p>
-                        <div class="insight-stat">
-                            <span class="i-val">2.8m</span>
-                            <span class="i-lab">Tiempo Prom. Sesión</span>
-                        </div>
-                    </div>
-                </div>
-            </ng-container>
-
-            <!-- TAB: ENTRENADORES -->
+            <!-- TAB: COACHES HUB -->
             <ng-container *ngIf="activeTab === 'entrenadores'">
-                <div class="page-intro">
-                    <h1>GESTIÓN DE COACHES 🎾</h1>
-                    <p>Monitoreo de actividad, stats y configuración de academia.</p>
+                <div class="page-intro-v2">
+                    <h1 class="premium-title-v2">COACHES <span>HUB</span></h1>
+                    <p class="premium-subtitle-v2">Gestión y monitoreo de academias activas.</p>
                 </div>
 
-                <div class="admin-split-view" *ngIf="!loadingEntrenadores">
-                    <!-- LISTA IZQUIERDA -->
-                    <div class="coach-list-sidebar glass-card">
-                        <div class="sidebar-search">
-                            <input type="text" placeholder="Buscar coach..." class="pm-input-small">
+                <div class="admin-split-view-v2">
+                    <div class="coach-list-v2">
+                        <div class="search-box">
+                            <input type="text" [(ngModel)]="coachSearchQuery" placeholder="Buscar coach..." class="filter-select-modern" style="width: 100%;">
                         </div>
-                        <div class="coach-items-container">
-                             <div class="coach-item" 
-                                  *ngFor="let e of entrenadores" 
-                                  [class.active]="selectedEntrenador?.id === e.id"
-                                  (click)="verDetalle(e)">
-                                 <img [src]="e.foto_perfil || e.foto || 'assets/images/placeholder_avatar.png'" alt="Avatar" />
-                                 <div class="c-info">
-                                     <span class="c-name">{{ e.nombre }}</span>
-                                     <span class="c-category">{{ e.categoria || 'Coach' }}</span>
-                                     <div class="c-mini-stats">
-                                         <span>👥 {{ e.total_alumnos || 0 }}</span>
-                                         <span>📦 {{ e.packs_vendidos || 0 }}</span>
-                                     </div>
-                                 </div>
-                                 <div class="c-badge" *ngIf="e.transbank_activo == 1">⚡</div>
-                             </div>
+                        <div class="coach-scrollable">
+                            <div class="coach-item-mini" *ngFor="let e of filteredEntrenadores" 
+                                 [class.active]="selectedEntrenador?.id === e.id" (click)="verDetalle(e)">
+                                <img [src]="e.foto_perfil || 'assets/images/placeholder_avatar.png'" alt="">
+                                <div class="c-meta">
+                                    <span class="c-name">{{ e.nombre }}</span>
+                                    <span class="c-sub">{{ e.total_alumnos || 0 }} alumnos</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- DETALLE DERECHA -->
-                    <div class="coach-detail-panel" *ngIf="selectedEntrenador">
-                        
-                        <!-- Header del Coach -->
-                        <div class="coach-detail-header glass-card">
-                            <div class="header-main">
-                                <img [src]="selectedEntrenador.foto_perfil || selectedEntrenador.foto || 'assets/images/placeholder_avatar.png'" class="coach-big-avatar" alt="Avatar" />
-                                <div class="coach-identity">
-                                    <h2 class="premium-title">{{ selectedEntrenador.nombre }}</h2>
-                                    <p class="coach-meta">{{ selectedEntrenador.usuario }} • {{ selectedEntrenador.telefono || 'Sin teléfono' }}</p>
-                                    <div class="coach-badges">
-                                        <span class="badge-premium" *ngIf="selectedEntrenador.transbank_activo == 1">PLATINUM</span>
-                                        <span class="badge-standard" *ngIf="selectedEntrenador.transbank_activo != 1">STANDARD</span>
-                                        <span class="badge-status online" *ngIf="entrenadorStats?.conectividad.mercadopago">BILLING ACTIVE</span>
-                                    </div>
+                    <div class="coach-detail-v2" *ngIf="selectedEntrenador">
+                        <div class="detail-card main-hero">
+                             <div class="hero-left">
+                                <img [src]="selectedEntrenador.foto_perfil || 'assets/images/placeholder_avatar.png'" class="big-avatar" alt="">
+                                <div class="hero-text">
+                                    <h2>{{ selectedEntrenador.nombre }}</h2>
+                                    <span class="tag">@{{ selectedEntrenador.usuario }}</span>
                                 </div>
-                            </div>
-                            <div class="header-actions">
-                                <button class="btn-action" (click)="verDatosBancarios(selectedEntrenador)">💳 PAGOS</button>
-                                <button class="btn-action outline">✉️ MENSAJE</button>
-                            </div>
+                             </div>
+                             <div class="hero-actions">
+                                <button class="btn-config" (click)="switchTab('config')">Configurar</button>
+                             </div>
                         </div>
 
-                        <!-- Stats Grid -->
-                        <div class="coach-stats-grid" *ngIf="entrenadorStats">
-                            <div class="mini-stat-card">
-                                <span class="s-label">ALUMNOS</span>
-                                <span class="s-value">{{ entrenadorStats.alumnos }}</span>
-                                <span class="s-sub">Comunidad única</span>
+                        <div class="detail-grids-pm mt-6">
+                            <div class="grid-stat-pm">
+                                <span class="l">Alumnos</span>
+                                <span class="v">{{ selectedEntrenador.total_alumnos || 0 }}</span>
                             </div>
-                            <div class="mini-stat-card">
-                                <span class="s-label">PACKS CREADOS</span>
-                                <span class="s-value">{{ entrenadorStats.packs.total }}</span>
-                                <span class="s-sub">{{ entrenadorStats.packs.activos }} Activos</span>
+                            <div class="grid-stat-pm">
+                                <span class="l">Packs Vendidos</span>
+                                <span class="v">{{ selectedEntrenador.total_packs || 0 }}</span>
                             </div>
-                            <div class="mini-stat-card">
-                                <span class="s-label">PACKS VENDIDOS</span>
-                                <span class="s-value">{{ entrenadorStats.ventas.packs_vendidos }}</span>
-                                <span class="s-sub">${{ entrenadorStats.ventas.ingresos_totales | number:'1.0-0' }}</span>
+                            <div class="grid-stat-pm">
+                                <span class="l">Estado</span>
+                                <span class="v statusonline">Activo</span>
                             </div>
-                             <div class="mini-stat-card">
-                                 <span class="s-label">RES. REALIZADAS</span>
-                                 <span class="s-value">{{ entrenadorStats.reservas.pasadas }}</span>
-                                 <span class="s-sub">Historial completado</span>
-                             </div>
-                             <div class="mini-stat-card highlight-pm">
-                                 <span class="s-label">GANANCIA PADELMANAGER</span>
-                                 <span class="s-value">{{ entrenadorStats.ventas.total_comision || 0 | number:'1.0-0' }}</span>
-                                 <span class="s-sub">Tus comisiones (CLP EQ)</span>
-                             </div>
-                             <div class="mini-stat-card">
-                                 <span class="s-label">SALDO COACH</span>
-                                 <span class="s-value">{{ (entrenadorStats.ventas.ingresos_totales - entrenadorStats.ventas.total_comision) || 0 | number:'1.0-0' }}</span>
-                                 <span class="s-sub">Neto a transferir</span>
-                             </div>
-                             <div class="mini-stat-card">
-                                 <span class="s-label">USD / PAYPAL</span>
-                                 <span class="s-value color-usd">${{ entrenadorStats.ventas.ingresos_usd || 0 | number:'1.2-2' }}</span>
-                                 <span class="s-sub">Ventas internacionales</span>
-                             </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-detail-v2" *ngIf="!selectedEntrenador">
+                         <div class="empty-message">
+                            <span class="icon">🎾</span>
+                            <p>Selecciona un coach para ver su reporte detallado.</p>
                          </div>
-
-                        <!-- Config & Connect -->
-                        <div class="coach-config-row">
-                            <div class="config-card glass-card">
-                                <h3>⚙️ CONFIGURACIÓN</h3>
-                                <div class="control-pm-row">
-                                    <span>PAGOS AUTOMÁTICOS</span>
-                                    <div class="toggle-switch" [class.active]="selectedEntrenador.transbank_activo == 1" (click)="toggleTransbank(selectedEntrenador)">
-                                        <div class="toggle-thumb"></div>
-                                    </div>
-                                </div>
-                                <div class="control-pm-row">
-                                    <span>COMISIÓN APP (%)</span>
-                                    <input type="number" class="pm-input-mini" [(ngModel)]="selectedEntrenador.comision_porcentaje" (blur)="updateComision(selectedEntrenador)">
-                                </div>
-                            </div>
-
-                            <div class="config-card glass-card">
-                                <h3>🔗 CONECTIVIDAD</h3>
-                                <div class="status-item-pm">
-                                    <span class="dot" [class.active]="entrenadorStats?.conectividad.mercadopago"></span>
-                                    <span>MERCADO PAGO (Split): <b>{{ selectedEntrenador.mp_collector_id || 'SIN VINCULAR' }}</b></span>
-                                </div>
-                                <div class="status-item-pm">
-                                    <span class="dot" [class.active]="entrenadorStats?.conectividad.banco"></span>
-                                    <span>DATOS BANCARIOS: <b>{{ selectedEntrenador.banco_rut ? 'REGISTRADO' : 'PENDIENTE' }}</b></span>
-                                </div>
-                                <div class="status-item-pm">
-                                    <span class="dot" [class.active]="true"></span>
-                                    <span>PLAN SELECCIONADO: <b>PROFESSIONAL</b></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Loading State for Detail -->
-                        <div class="loading-overlay-stats" *ngIf="loadingStats">
-                            <div class="spinner-pm"></div>
-                            <span>Cargando analíticas...</span>
-                        </div>
-                    </div>
-
-                    <!-- EMPTY STATE -->
-                    <div class="coach-empty-state" *ngIf="!selectedEntrenador && !loadingEntrenadores">
-                        <div class="icon">🎾</div>
-                        <h2>Selecciona un Coach</h2>
-                        <p>Haz clic en un profesor para ver su rendimiento y configurar su cuenta.</p>
                     </div>
                 </div>
             </ng-container>
 
-            <!-- TAB: CONFIGURACIÓN GLOBAL -->
-            <ng-container *ngIf="activeTab === 'config'">
-                <div class="page-intro">
-                    <h1>CONFIGURACIÓN GLOBAL ⚙️</h1>
-                    <p>Gestión de cuentas de recaudo para los planes de suscripción de PadelManager.</p>
+            <!-- TAB: ANALYTICS -->
+            <ng-container *ngIf="activeTab === 'analiticas'">
+                <div class="page-intro-v2">
+                    <h1 class="premium-title-v2">PLATFORM <span>METRICS</span></h1>
+                    <p class="premium-subtitle-v2">Demografía y comportamiento de uso.</p>
                 </div>
-                <div class="billing-main-grid" style="display: grid; grid-template-columns: 1fr; gap: 32px;">
-                    <div class="card-pm" style="padding: 40px;">
-                        <h3 style="font-size: 20px; font-weight: 950; margin-bottom: 24px;">🏦 CUENTA DE RECAUDACIÓN PRINCIPAL</h3>
-                        <p style="color: #666; margin-bottom: 32px;">Todos los pagos del <b>Plan PadelManager</b> realizados por los coaches llegarán a estas credenciales.</p>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 24px;">
-                            <div class="form-group">
-                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Modo de Transacción</label>
-                                <select class="filter-select" style="width: 100%; margin-top: 8px;">
-                                    <option value="test">Sandbox / Pruebas</option>
-                                    <option value="prod">Producción / En Vivo</option>
-                                </select>
-                            </div>
 
-                            <div class="form-group">
-                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Mercado Pago Public Key</label>
-                                <input type="text" class="swal2-input" placeholder="APP_USR-..." style="width: 100%; border: 1.5px solid #eee; border-radius: 12px; padding: 12px; margin: 8px 0; font-family: monospace;">
-                            </div>
-
-                            <div class="form-group">
-                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Mercado Pago Access Token</label>
-                                <input type="password" class="swal2-input" placeholder="TEST-..." style="width: 100%; border: 1.5px solid #eee; border-radius: 12px; padding: 12px; margin: 8px 0; font-family: monospace;">
-                            </div>
-                            
-                            <hr style="opacity: 0.1; margin: 24px 0;">
-
-                            <div class="form-group">
-                                <label style="font-size: 11px; font-weight: 900; color: #888; text-transform: uppercase;">Periodo de Prueba Global (Días)</label>
-                                <input type="number" class="swal2-input" value="90" style="width: 100%; border: 1.5px solid #eee; border-radius: 12px; padding: 12px; margin: 8px 0;">
-                            </div>
+                <div class="traffic-section-pm full">
+                     <div class="chart-container-pm">
+                        <h3>Tráfico Histórico</h3>
+                        <div class="canvas-box" style="height: 400px;">
+                            <canvas id="trafficChart"></canvas>
                         </div>
+                     </div>
+                </div>
 
-                        <button class="btn-save btn-glow mt-5" style="width: auto; padding: 16px 40px;">GUARDAR CAMBIOS 💾</button>
+                <div class="analytics-radial-grid mt-6">
+                    <div class="radial-card">
+                        <h3>Plataformas</h3>
+                        <div class="canvas-box-radial"><canvas id="deviceChart"></canvas></div>
+                    </div>
+                    <div class="radial-card">
+                        <h3>Audiencia por Género</h3>
+                        <div class="canvas-box-radial"><canvas id="genderChart"></canvas></div>
+                    </div>
+                    <div class="radial-card">
+                        <h3>Top Regiones</h3>
+                        <div class="canvas-box-radial"><canvas id="regionChart"></canvas></div>
                     </div>
                 </div>
             </ng-container>

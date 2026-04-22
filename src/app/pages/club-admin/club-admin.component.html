@@ -92,6 +92,41 @@
                                 <input type="email" [(ngModel)]="newClub.email" placeholder="contacto@club.com">
                             </div>
 
+                            <!-- NUEVA SECCIÓN: ACTIVACIÓN MODULAR -->
+                            <div class="form-section-divider"></div>
+                            <div class="module-activation-section">
+                                <label class="section-label">Configuración de Servicios</label>
+                                <div class="toggles-container">
+                                    <div class="toggle-item">
+                                        <div class="toggle-info">
+                                            <span class="icon">🎾</span>
+                                            <div class="text">
+                                                <strong>Reservas de Pistas</strong>
+                                                <small>Permitir arriendos al público</small>
+                                            </div>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" [(ngModel)]="newClub.reservas_activas" [checked]="newClub.reservas_activas === 1" (change)="newClub.reservas_activas = ($event.target.checked ? 1 : 0)">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-item">
+                                        <div class="toggle-info">
+                                            <span class="icon">🎓</span>
+                                            <div class="text">
+                                                <strong>Módulo de Academia</strong>
+                                                <small>Habilitar entrenadores y clases</small>
+                                            </div>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" [(ngModel)]="newClub.academia_activa" [checked]="newClub.academia_activa === 1" (change)="newClub.academia_activa = ($event.target.checked ? 1 : 0)">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="actions-footer-modal">
                                 <button class="btn-primary" (click)="createClub()">
                                     {{ isLoading ? 'Guardando...' : (editingClubId ? 'Guardar Cambios' : 'Crear Sede') }}

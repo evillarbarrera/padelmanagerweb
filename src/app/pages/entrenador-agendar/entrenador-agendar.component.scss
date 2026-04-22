@@ -4,6 +4,10 @@
 .admin-layout {
     display: flex; height: 100vh; background: #fff; color: #111; font-family: 'Inter', sans-serif; overflow: hidden;
 
+    app-sidebar {
+        z-index: 10001; // Higher than tutorial shadow (9999)
+    }
+
     .main-content {
         flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #fafafa;
     }
@@ -94,6 +98,63 @@
                     flex: 1;
                     min-width: 100px;
                     &:hover { background: #f9fafb; border-color: #d1d5db; }
+                }
+
+                .btn-tutorial-trigger {
+                    background: #ccff00;
+                    color: #111;
+                    border: none;
+                    padding: 10px 18px;
+                    border-radius: 12px;
+                    font-size: 11px;
+                    font-weight: 850;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(204, 255, 0, 0.2);
+                    &:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(204, 255, 0, 0.3); }
+                }
+            }
+        }
+
+        // --- PREMIUM TUTORIAL OVERLAY ---
+        .tutorial-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(15, 23, 42, 0.4); 
+            z-index: 10005; // Ensure it's above the highlight's shadow (10000)
+            pointer-events: none;
+
+            .tutorial-card {
+                position: absolute; /* Follows tutorialTop/Left */
+                pointer-events: auto;
+                background: #fff; width: 380px; border-radius: 24px; padding: 24px; 
+                text-align: left; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+                border: 2px solid #ccff00;
+                transition: none !important; /* Instant jump */
+                display: flex; flex-direction: column; gap: 16px;
+                z-index: 10006;
+                
+                .t-step-count { 
+                    font-size: 10px; font-weight: 950; color: #ccff00; background: #0f172a; 
+                    padding: 4px 12px; border-radius: 100px; display: inline-block; 
+                    width: fit-content; text-transform: uppercase; letter-spacing: 1px; 
+                }
+                
+                .t-content {
+                    h3 { font-size: 19px; font-weight: 950; margin: 0 0 8px; color: #111; letter-spacing: -0.5px; }
+                    p { font-size: 14px; color: #475569; line-height: 1.6; font-weight: 500; margin: 0; }
+                }
+                
+                .t-footer {
+                    display: flex; gap: 12px; margin-top: 8px;
+                    button { height: 48px; border-radius: 14px; font-weight: 900; font-size: 13px; cursor: pointer; transition: 0.3s; flex: 1; border: none; }
+                    .btn-skip { background: #f1f5f9; color: #64748b; &:hover { background: #e2e8f0; } }
+                    .btn-next { 
+                        background: #ccff00; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 8px;
+                        &:hover { transform: scale(1.02); box-shadow: 0 8px 20px rgba(204, 255, 0, 0.3); } 
+                    }
                 }
             }
         }
@@ -766,4 +827,20 @@
         color: #fff;
         &:hover { background: #c53030; }
     }
+}
+// --- GLOBAL TUTORIAL HIGHLIGHT ---
+.tutorial-highlight {
+    position: relative;
+    z-index: 10000 !important;
+    outline: 4px solid #ccff00 !important;
+    outline-offset: 6px;
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.75), 0 0 0 12px rgba(204, 255, 0, 0.2) !important;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+@keyframes tourPulse {
+    0% { outline-offset: 6px; outline-color: #ccff00; }
+    50% { outline-offset: 12px; outline-color: #fff; }
+    100% { outline-offset: 6px; outline-color: #ccff00; }
 }

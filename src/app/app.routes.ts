@@ -44,6 +44,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/mis-habilidades/mis-habilidades.component').then(m => m.MisHabilidadesComponent)
   },
   { path: 'mis-torneos', component: TorneoJugadorComponent },
+  {
+    path: 'mis-partidos',
+    loadComponent: () => import('./pages/jugador-partidos/jugador-partidos.component').then(m => m.JugadorPartidosComponent)
+  },
 
   // Trainer Routes
   { path: 'entrenador-home', component: EntrenadorHomeComponent },

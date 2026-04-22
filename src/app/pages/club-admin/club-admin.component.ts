@@ -46,7 +46,9 @@ export class ClubAdminComponent implements OnInit {
         telefono: '',
         instagram: '',
         email: '',
-        admin_id: 0
+        admin_id: 0,
+        reservas_activas: 0,
+        academia_activa: 1
     };
 
     regions = [
@@ -275,7 +277,9 @@ export class ClubAdminComponent implements OnInit {
             telefono: '',
             instagram: '',
             email: '',
-            admin_id: this.userId || 0
+            admin_id: this.userId || 0,
+            reservas_activas: 0,
+            academia_activa: 1
         };
         this.showClubModal = false;
         this.activeTab = 'list';
