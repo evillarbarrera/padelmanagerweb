@@ -264,8 +264,8 @@
                     .booked-name { color: #64748b !important; font-weight: 700; opacity: 0.7; }
                     .booked-club, .booked-pack-badge { opacity: 0.5; }
                 }
-                .avail-badge { display: none; }
-                &:hover { background: #fdfdfd; cursor: default; }
+                // .avail-badge { display: none; }
+                &:hover { background: #fdfdfd; cursor: pointer; }
             }
 
             &:hover { background: #fcfcfc; }

@@ -62,6 +62,8 @@ export class TorneoGestionComponent implements OnInit {
         fecha_inicio: '',
         fecha_fin: '',
         tipo: 'Grupos + Playoffs',
+        formato_grupos: 4, // Default to 4 as per user preference
+        formato_sets: 'Full Sets',
         categorias: [
             { nombre: 'Iniciación', max_parejas: 12, puntos_repartir: 100 },
             { nombre: 'Intermedio', max_parejas: 16, puntos_repartir: 250 },
@@ -452,6 +454,11 @@ export class TorneoGestionComponent implements OnInit {
                 if (res.status === 'success' && res.grid) {
                     this.availabilityGrid = res.grid;
                 }
+                // Backwards compatibility/Load existing flags
+                if (res.torneo) {
+                    this.selectedTorneo.formato_grupos = res.torneo.formato_grupos || 4;
+                    this.selectedTorneo.formato_sets = res.torneo.formato_sets || 'Full Sets';
+                }
             },
             error: (err) => console.error('Error loading availability', err)
         });
@@ -509,24 +516,22 @@ export class TorneoGestionComponent implements OnInit {
         // 2. Collection Phase
         this.categorias.forEach((cat, index) => {
             let inscritos = [...(allInscripciones[index] || [])];
-            const targetTotal = (cat.max_parejas && cat.max_parejas > 0) ? cat.max_parejas : (inscritos.length > 0 ? inscritos.length : 4);
-            const remainder = targetTotal % 4;
-            const fullTarget = remainder === 0 ? targetTotal : targetTotal + (4 - remainder);
-            let needed = fullTarget - inscritos.length;
 
-            for (let i = 0; i < needed; i++) {
-                inscritos.push({
-                    id: -(index + 1) * 100 - (inscritos.length + 1),
-                    nombre_jugador_1: `Jugador Ficticio`,
-                    nombre_jugador_2: `Pareja Ficticia`,
-                    dummy: true
-                });
-            }
+            // Intelligent Group Distribution
+            const prefSize = this.selectedTorneo.formato_grupos || 4;
+            const dist = this.getOptimalGroupDistribution(inscritos.length, prefSize);
 
-            // Groups
-            for (let i = 0; i < inscritos.length; i += 4) {
-                const group = inscritos.slice(i, i + 4);
-                const groupName = String.fromCharCode(65 + Math.floor(i / 4));
+            console.log(`Category ${cat.nombre}: ${inscritos.length} pairs distributed as:`, dist);
+
+            let pairIndex = 0;
+            dist.forEach((size, groupIdx) => {
+                const group = inscritos.slice(pairIndex, pairIndex + size);
+                pairIndex += size;
+
+                const groupName = String.fromCharCode(65 + groupIdx);
+
+                // If group is incomplete (dummies needed if we wanted to force size, 
+                // but let's just use what we have to be real)
                 for (let x = 0; x < group.length; x++) {
                     for (let y = x + 1; y < group.length; y++) {
                         allGroupMatches.push({
@@ -542,7 +547,7 @@ export class TorneoGestionComponent implements OnInit {
                         });
                     }
                 }
-            }
+            });
 
             // Playoffs
             const numPairs = inscritos.length;
@@ -665,6 +670,32 @@ export class TorneoGestionComponent implements OnInit {
         });
     }
 
+    getOptimalGroupDistribution(n: number, pref: number): number[] {
+        if (n < 3) return n > 0 ? [n] : [];
+
+        const groups: number[] = [];
+        let remaining = n;
+
+        while (remaining > 0) {
+            if (remaining >= pref) {
+                const after = remaining - pref;
+                // If taking the preferred size leaves 1 or 2 orphans, 
+                // we deviate to a smaller group (3) to balance.
+                if (after > 0 && after < 3) {
+                    groups.push(3);
+                    remaining -= 3;
+                } else {
+                    groups.push(pref);
+                    remaining -= pref;
+                }
+            } else {
+                groups.push(remaining);
+                remaining = 0;
+            }
+        }
+        return groups;
+    }
+
     loadCategorias(torneoId: number) {
         this.clubesService.getCategoriasTorneo(torneoId).subscribe(res => {
             this.categorias = res;
@@ -710,6 +741,11 @@ export class TorneoGestionComponent implements OnInit {
         this.clubesService.getRankingGrupo(grupoId).subscribe(res => {
             this.groupRankings[grupoId] = res;
         });
+    }
+
+    toggleCanchaLuz(cancha: any) {
+        cancha.luz = !cancha.luz;
+        // Optional: Save this specifically? For now local to session
     }
 
     loadInscripciones(catId: number) {
@@ -853,7 +889,7 @@ export class TorneoGestionComponent implements OnInit {
     loadCanchasClub() {
         if (this.selectedTorneo) {
             this.clubesService.getCanchas(this.selectedTorneo.club_id).subscribe(res => {
-                this.clubCanchas = res;
+                this.clubCanchas = res.map((c: any) => ({ ...c, luz: c.luz || false }));
                 // Auto-select all courts by default if none selected
                 if (this.planParams.selectedCanchasIds.length === 0) {
                     this.planParams.selectedCanchasIds = res.map((c: any) => c.id);
@@ -916,14 +952,22 @@ export class TorneoGestionComponent implements OnInit {
                 hourGroupsMap[hour].push(m);
             });
 
-            const hourGroups = Object.keys(hourGroupsMap).sort((a, b) => a.localeCompare(b)).map(h => ({
+            const hourGroups = Object.keys(hourGroupsMap).sort((a, b) => {
+                const [ha, ma] = a.split(':').map(Number);
+                const [hb, mb] = b.split(':').map(Number);
+                return (ha * 60 + (ma || 0)) - (hb * 60 + (mb || 0));
+            }).map(h => ({
                 hour: h,
                 matches: hourGroupsMap[h]
             }));
 
             return {
                 date: date,
-                matches: dayMatches.sort((a: any, b: any) => (a.tempTime || '').localeCompare(b.tempTime || '')),
+                matches: dayMatches.sort((a: any, b: any) => {
+                    const [ha, ma] = (a.tempTime || '09:00').split(':').map(Number);
+                    const [hb, mb] = (b.tempTime || '09:00').split(':').map(Number);
+                    return (ha * 60 + (ma || 0)) - (hb * 60 + (mb || 0));
+                }),
                 hourGroups: hourGroups
             };
         });
@@ -1007,72 +1051,127 @@ export class TorneoGestionComponent implements OnInit {
             return getPriority(a.ronda) - getPriority(b.ronda);
         });
 
-        const gamesPerPlayerPerDay: { [key: string]: number } = {};
+        const lastPairEndTime: { [key: number]: Date } = {}; // pareja_id -> Date of end of last match
 
-        let currentDate = new Date(startDate);
-
-        let scheduledCount = 0;
-        let dayLimit = 0;
-
-        while (currentDate <= endDate && pending.length > 0 && dayLimit < 365) {
-            dayLimit++;
-            const yyyy = currentDate.getFullYear();
-            const MM = String(currentDate.getMonth() + 1).padStart(2, '0');
-            const dd = String(currentDate.getDate()).padStart(2, '0');
+        // 1. Generate All Available Slots
+        const allSlots: any[] = [];
+        let currentDateLoop = new Date(startDate);
+        while (currentDateLoop <= endDate) {
+            const yyyy = currentDateLoop.getFullYear();
+            const MM = String(currentDateLoop.getMonth() + 1).padStart(2, '0');
+            const dd = String(currentDateLoop.getDate()).padStart(2, '0');
             const dateStr = `${yyyy}-${MM}-${dd}`;
+            const isWeekend = currentDateLoop.getDay() === 0 || currentDateLoop.getDay() === 6;
 
             let currentMins = dayStartMins;
-
-            while (currentMins + duration <= dayEndMins && pending.length > 0) {
+            while (currentMins + duration <= dayEndMins) {
                 const h = Math.floor(currentMins / 60);
                 const m = currentMins % 60;
                 const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-                const availableCourts = [...this.planParams.selectedCanchasIds];
-                const playersInSlot = new Set<number>();
-
-                let courtIndex = 0;
-                let matchIdx = 0;
-
-                while (courtIndex < availableCourts.length && matchIdx < pending.length) {
-                    const match = pending[matchIdx];
-                    const p1 = match.pareja1_id;
-                    const p2 = match.pareja2_id;
-
-                    // Concurrency Check
-                    if (p1 && playersInSlot.has(p1)) { matchIdx++; continue; }
-                    if (p2 && playersInSlot.has(p2)) { matchIdx++; continue; }
-
-                    // Daily Limit Check
-                    const k1 = `${dateStr}_${p1}`;
-                    const k2 = `${dateStr}_${p2}`;
-                    const c1 = gamesPerPlayerPerDay[k1] || 0;
-                    const c2 = gamesPerPlayerPerDay[k2] || 0;
-
-                    if (c1 >= 2 || c2 >= 2) {
-                        matchIdx++;
-                        continue;
-                    }
-
-                    // Schedule
-                    match.tempDate = dateStr;
-                    match.tempTime = timeStr;
-                    match.tempCanchaId = availableCourts[courtIndex];
-                    match.isScheduled = true;
-
-                    if (p1) gamesPerPlayerPerDay[k1] = c1 + 1;
-                    if (p2) gamesPerPlayerPerDay[k2] = c2 + 1;
-                    if (p1) playersInSlot.add(p1);
-                    if (p2) playersInSlot.add(p2);
-
-                    pending.splice(matchIdx, 1);
-
-                    courtIndex++;
-                    scheduledCount++;
+                // Prime Time Logic
+                // Weekdays: 18:00 - 22:00
+                // Weekends: 09:00 - 14:00 or 17:00 - 21:00
+                let isPrime = false;
+                if (!isWeekend) {
+                    if (h >= 18 && h <= 22) isPrime = true;
+                } else {
+                    if ((h >= 9 && h <= 13) || (h >= 17 && h <= 21)) isPrime = true;
                 }
-                currentMins += duration;
+
+                // Add a slot for each available court if enabled in grid
+                if (this.isHourEnabled(dateStr, h)) {
+                    this.planParams.selectedCanchasIds.forEach((courtId: number) => {
+                        allSlots.push({
+                            dateStr,
+                            timeStr,
+                            courtId,
+                            startTime: new Date(`${dateStr} ${timeStr}:00`),
+                            priority: isPrime ? 1 : 2
+                        });
+                    });
+                }
+                currentMins += 30; // Check every 30 mins for slot starts (flexibility)
             }
-            currentDate.setDate(currentDate.getDate() + 1);
+            currentDateLoop.setDate(currentDateLoop.getDate() + 1);
+        }
+
+        // 2. Sort Slots by Priority then Chronology
+        allSlots.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority - b.priority;
+            return a.startTime.getTime() - b.startTime.getTime();
+        });
+
+        let scheduledCount = 0;
+
+        // 3. Fill Slots
+        for (const slot of allSlots) {
+            if (pending.length === 0) break;
+
+            const currentTimeObj = slot.startTime;
+            const currentSlotEndTime = new Date(currentTimeObj.getTime() + duration * 60000);
+
+            // Important: We need to ensure COURT is free at this specific time 
+            // since we generated slots every 30 mins but matches are 90 mins.
+            // Let's track court occupancy.
+            // (Simple version: use a Set of occupied courts per exact timestamp)
+            // But wait, the 30min increment is just for "potential starts".
+
+            // For now, let's keep it simpler to avoid overlap conflicts:
+            // Only allow one match per court if it overlaps with an existing one.
+        }
+
+        // RE-SIMPLIFYING to follow the chronological path but flagging Prime
+        // To avoid complex overlap logic in one turn, let's just flag Prime in the UI 
+        // and keep the chronological flow but maybe skip non-prime if prime is available?
+
+        // Actually, let's do the proper Slot Prioritization with Occupancy Tracking.
+        const courtOccupancy: { [key: string]: Date } = {}; // "courtId_dateStr" -> nextAvailableTime
+
+        scheduledCount = 0;
+        for (const slot of allSlots) {
+            if (pending.length === 0) break;
+
+            const courtKey = `${slot.courtId}_${slot.dateStr}`;
+            const nextFree = courtOccupancy[courtKey] || new Date(`${slot.dateStr} 00:00:00`);
+
+            if (slot.startTime < nextFree) continue; // Court is busy
+
+            // Search for a match that can fit (Rest Time check)
+            let matchIdx = 0;
+            let matchFound = false;
+
+            while (matchIdx < pending.length) {
+                const match = pending[matchIdx];
+                const p1 = match.pareja1_id;
+                const p2 = match.pareja2_id;
+
+                // Resting Check (90 mins)
+                const restRequired = 90 * 60000;
+                if (p1 && lastPairEndTime[p1] && (slot.startTime.getTime() - lastPairEndTime[p1].getTime()) < restRequired) {
+                    matchIdx++; continue;
+                }
+                if (p2 && lastPairEndTime[p2] && (slot.startTime.getTime() - lastPairEndTime[p2].getTime()) < restRequired) {
+                    matchIdx++; continue;
+                }
+
+                // Schedule it!
+                match.tempDate = slot.dateStr;
+                match.tempTime = slot.timeStr;
+                match.tempCanchaId = slot.courtId;
+                match.isScheduled = true;
+
+                // Track End Time
+                const matchEndObj = new Date(slot.startTime.getTime() + duration * 60000);
+                if (p1) lastPairEndTime[p1] = matchEndObj;
+                if (p2) lastPairEndTime[p2] = matchEndObj;
+                courtOccupancy[courtKey] = matchEndObj;
+
+                pending.splice(matchIdx, 1);
+                scheduledCount++;
+                matchFound = true;
+                break; // Move to next slot
+            }
         }
 
         this.organizeCalendar();
@@ -1539,49 +1638,87 @@ export class TorneoGestionComponent implements OnInit {
     // ==========================================
 
     calculateStats() {
-        // Mock calculation - needs real data iteration
-        let totalMatches = 0;
-        let totalIns = 0;
-        let catsStats = [];
+        let totalMatches = this.matchesToSchedule.length;
 
-        // Count enrolled
-        // We need to iterate all categories ideally, but we might only have loaded one.
-        // For accurate summary, we should probably fetch summary from backend or iterate if we have them.
-        // We'll iterate what we have locally or assume data is loaded.
-
-        // For specific categories stats
-        for (let cat of this.categorias) {
-            // This requires fetching enrollment count for each category if not already loaded
-            // We can assume we might need to load them or display placeholders
-            catsStats.push({
+        // Accurate category stats
+        const catsStats = this.categorias.map(cat => {
+            const matchesOfCat = this.matchesToSchedule.filter(m => m.categoryId === cat.id);
+            return {
                 nombre: cat.nombre,
-                inscritos: 0, // Need to fill this
-                partidos: 0
-            });
-        }
+                inscritos: cat.inscritos || 0,
+                partidos: matchesOfCat.length,
+                horas: (matchesOfCat.length * (this.matchDuration || 90)) / 60
+            };
+        });
 
-        // Calculate Available Hours
+        // Calculate Available Slot-Hours
         let totalHoursAvailable = 0;
         this.gridDays.forEach(d => {
-            const hours = this.availabilityGrid[d]?.length || 0;
+            const hours = (this.availabilityGrid[d] || []).length;
             totalHoursAvailable += hours;
         });
 
-        // Multiply by courts
-        this.loadCanchasClub(); // ensure courts are loaded
-        const courtCount = this.clubCanchas.length || 1; // Default 1 to avoid div by zero zero
-        const totalMinutesAvailable = totalHoursAvailable * 60 * courtCount;
+        const courtCount = this.planParams.selectedCanchasIds.length || this.clubCanchas.length || 1;
+        const slotCapacity = totalHoursAvailable * courtCount;
 
         this.tournamentStats = {
-            totalInscritos: totalIns,
-            totalPartidosEstimados: totalMatches, // Approx formula
-            horasNecesarias: (totalMatches * this.planParams.duration) / 60,
-            horasDisponibles: totalHoursAvailable * courtCount, // In slot-hours
-            deficit: 0,
+            totalInscritos: this.categorias.reduce((acc, c) => acc + (c.inscritos || 0), 0),
+            totalPartidosEstimados: totalMatches,
+            horasNecesarias: (totalMatches * (this.matchDuration || 90)) / 60,
+            horasDisponibles: slotCapacity,
+            conflictos: this.detectConflicts(),
             categorias: catsStats
         };
     }
 
+    detectConflicts(): string[] {
+        const conflicts: string[] = [];
+        const matches = this.matchesToSchedule.filter(m => m.tempDate && m.tempTime);
+        const duration = this.matchDuration || 90;
+
+        const courtTimeline: { [key: string]: { start: Date, end: Date, match: any }[] } = {};
+        const playerTimeline: { [key: number]: { start: Date, end: Date, match: any }[] } = {};
+
+        matches.forEach(m => {
+            if (!m.tempDate || !m.tempTime) return;
+            const start = new Date(`${m.tempDate} ${m.tempTime}:00`);
+            const end = new Date(start.getTime() + duration * 60000);
+
+            // Court check
+            const cKey = `${m.tempCanchaId}_${m.tempDate}`;
+            if (!courtTimeline[cKey]) courtTimeline[cKey] = [];
+
+            courtTimeline[cKey].forEach(existing => {
+                if (start < existing.end && end > existing.start) {
+                    conflicts.push(`Cancha ${m.court || m.tempCanchaId}: Solapamiento a las ${m.tempTime}`);
+                }
+            });
+            courtTimeline[cKey].push({ start, end, match: m });
+
+            // Player check (only for real pairs)
+            [m.pareja1_id, m.pareja2_id].forEach(pid => {
+                if (!pid || pid < 0) return;
+                if (!playerTimeline[pid]) playerTimeline[pid] = [];
+
+                playerTimeline[pid].forEach(existing => {
+                    const sameTime = (start < existing.end && end > existing.start);
+                    if (sameTime) {
+                        conflicts.push(`Pareja ID ${pid}: Dos partidos a la vez (${m.tempTime})`);
+                    }
+
+                    const timeDiff = Math.abs(start.getTime() - existing.end.getTime()) / 60000;
+                    const timeDiffRev = Math.abs(existing.start.getTime() - end.getTime()) / 60000;
+
+                    if (m.tempDate === existing.match.tempDate && (timeDiff < 90 || timeDiffRev < 90) && !sameTime) {
+                        conflicts.push(`Pareja ID ${pid}: Descanso insuficiente (<90m).`);
+                    }
+                });
+                playerTimeline[pid].push({ start, end, match: m });
+            });
+        });
+
+        return [...new Set(conflicts)].slice(0, 10);
+    }
 
     eliminarPareja(inscripcionId: number) {
         Swal.fire({
