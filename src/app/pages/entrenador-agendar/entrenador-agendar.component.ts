@@ -504,11 +504,14 @@ export class EntrenadorAgendarComponent implements OnInit {
     mergeAgenda(agendaData: any) {
         if (!agendaData) return;
         const reservas = agendaData.reservas_tradicionales || [];
-        reservas.forEach((a: any) => this.applyToSlot(this.extractDate(a.fecha), a.hora_inicio.slice(0, 5), a));
+        reservas.forEach((a: any) => {
+            const h = a.hora_inicio ? a.hora_inicio.slice(0, 5) : '08:00';
+            this.applyToSlot(this.extractDate(a.fecha), h, a);
+        });
 
         const templates = agendaData.packs_grupales || [];
         templates.forEach((t: any) => {
-            const hora = t.hora_inicio.slice(0, 5);
+            const hora = t.hora_inicio ? t.hora_inicio.slice(0, 5) : '08:00';
             
             if (t.fecha) {
                 // Specific date session

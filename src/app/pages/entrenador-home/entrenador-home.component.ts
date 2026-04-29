@@ -158,7 +158,7 @@ export class EntrenadorHomeComponent implements OnInit {
           clases.push(...proximas.map((r: any) => ({
             fecha: r.fecha,
             diaLabel: r.fecha === fechaHoy ? 'Hoy' : 'Mañana',
-            hora: r.hora_inicio.substring(0, 5),
+            hora: (r.hora_inicio || '08:00:00').substring(0, 5),
             tipo: r.tipo === 'pack_grupal' ? 'Grupal' : 'Individual',
             titulo: r.jugador_nombre || 'Clase Grupal',
             subtitulo: r.pack_nombre,
@@ -169,17 +169,17 @@ export class EntrenadorHomeComponent implements OnInit {
         if (res.packs_grupales) {
           const grupHoy = res.packs_grupales.filter((g: any) =>
             Number(g.dia_semana) === diaSemanaHoy &&
-            !clases.some(c => c.fecha === fechaHoy && c.hora === g.hora_inicio.substring(0, 5))
+            !clases.some(c => c.fecha === fechaHoy && c.hora === (g.hora_inicio || '08:00:00').substring(0, 5))
           );
           const grupManana = res.packs_grupales.filter((g: any) =>
             Number(g.dia_semana) === diaSemanaManana &&
-            !clases.some(c => c.fecha === fechaManana && c.hora === g.hora_inicio.substring(0, 5))
+            !clases.some(c => c.fecha === fechaManana && c.hora === (g.hora_inicio || '08:00:00').substring(0, 5))
           );
 
           clases.push(...grupHoy.map((g: any) => ({
             fecha: fechaHoy,
             diaLabel: 'Hoy',
-            hora: g.hora_inicio.substring(0, 5),
+            hora: (g.hora_inicio || '08:00:00').substring(0, 5),
             tipo: 'Grupal',
             titulo: g.pack_nombre,
             subtitulo: `${g.inscritos_confirmados || 0} inscritos`,
@@ -189,7 +189,7 @@ export class EntrenadorHomeComponent implements OnInit {
           clases.push(...grupManana.map((g: any) => ({
             fecha: fechaManana,
             diaLabel: 'Mañana',
-            hora: g.hora_inicio.substring(0, 5),
+            hora: (g.hora_inicio || '08:00:00').substring(0, 5),
             tipo: 'Grupal',
             titulo: g.pack_nombre,
             subtitulo: `${g.inscritos_confirmados || 0} inscritos`,

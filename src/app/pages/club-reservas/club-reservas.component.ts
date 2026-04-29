@@ -399,8 +399,8 @@ export class ClubReservasComponent implements OnInit {
         }, 0);
 
         // Limpiar formatos de hora
-        this.newReserva.hora_inicio = res.hora_inicio.substring(0, 5);
-        this.newReserva.hora_fin = res.hora_fin.substring(0, 5);
+        this.newReserva.hora_inicio = (res.hora_inicio || '08:00:00').substring(0, 5);
+        this.newReserva.hora_fin = (res.hora_fin || '08:00:00').substring(0, 5);
 
         const [hS, mS] = this.newReserva.hora_inicio.split(':').map(Number);
         const [hE, mE] = this.newReserva.hora_fin.split(':').map(Number);
