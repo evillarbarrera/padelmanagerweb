@@ -439,6 +439,35 @@
                     </div>
                 </div>
 
+                <!-- PARTICIPANTS SECTION FOR GROUP SESSIONS -->
+                <div class="participants-section" *ngIf="selectedSlot?.slotData?.pack_id">
+                    <div class="ps-header">
+                        <b>PARTICIPANTES ({{ selectedSlot?.slotData?.inscritos?.length || 0 }} / {{ selectedSlot?.slotData?.capacidad_maxima || 6 }})</b>
+                    </div>
+                    <div class="ps-list">
+                        <div class="participant-item" *ngFor="let p of selectedSlot?.slotData?.inscritos">
+                            <img [src]="p.foto || 'https://ui-avatars.com/api/?name=' + p.nombre" class="p-avatar">
+                            <span>{{ p.nombre }}</span>
+                        </div>
+                        <div class="no-participants" *ngIf="!selectedSlot?.slotData?.inscritos?.length">
+                            No hay jugadores inscritos aún.
+                        </div>
+                    </div>
+
+                    <!-- ADD PLAYER TO GROUP -->
+                    <div class="add-player-box" *ngIf="selectedSlot?.slotData?.inscritos?.length < selectedSlot?.slotData?.capacidad_maxima">
+                        <label>AGREGAR JUGADOR MANUALMENTE</label>
+                        <div class="search-input-wrap">
+                            <input type="text" [(ngModel)]="filtroJugadoresModal" (input)="filtrarJugadoresModal()" placeholder="Buscar por nombre..." class="modal-search">
+                            <div class="search-results-mini" *ngIf="jugadoresFiltradosModal.length > 0">
+                                <div class="res-item" *ngFor="let a of jugadoresFiltradosModal" (click)="agregarJugadorAPack(a)">
+                                    {{ a.jugador_nombre }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- TECHNICAL DOSSIER VERTICAL -->
                 <div class="technical-dossier">
                     <div class="td-header">

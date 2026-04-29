@@ -574,46 +574,38 @@
                         </div>
 
                         <!-- RENDER FILTERED GRUPALES -->
-                        <ng-container *ngFor="let p of groupedPacksGrupales[activeGrupalPeriod]">
-                            <div class="pack-card fade-in">
-                                <div class="p-header" style="border-left: 5px solid #ccff00;">
-                                    <div class="p-title-wrap">
-                                        <h3>{{ p.pack_nombre }}</h3>
-                                        <p class="p-date">{{ p.fecha_inicio | date:'dd/MM/yyyy' }}</p>
-                                    </div>
-                                    <span class="p-pay-status" [ngClass]="p.estado_pago || 'pendiente'">
-                                        {{ (p.estado_pago === 'pagado') ? '✅ PAGADO' : '⏳ PENDIENTE' }}
-                                    </span>
-                                </div>
-                                <div class="p-body">
-                                    <div class="metric-row">
-                                        <span class="m-label">Clases Realizadas:</span>
-                                        <strong class="m-val">{{ p.sesiones_pasadas || 0 }} / {{ p.sesiones_totales }}</strong>
-                                    </div>
-                                    <div class="p-bar-bg"><div class="p-bar-fill" [style.width.%]="(p.sesiones_pasadas/p.sesiones_totales)*100"></div></div>
-                                    <div class="metric-row secondary">
-                                        <span class="m-label">Reservadas:</span>
-                                        <strong>{{ p.sesiones_reservadas || 0 }} / {{ p.sesiones_totales }}</strong>
-                                    </div>
-                                    <div class="p-details-row">
-                                        <div class="p-detail">
-                                            <span class="l">Total Pack:</span>
-                                            <span class="v">${{ (p.precio_pagado || 0) | number }}</span>
+                        <div class="packs-grid" *ngIf="activePacksSubTab === 'grupales'">
+                            <div class="grupal-card fade-in" *ngFor="let p of groupedPacksGrupales[activeGrupalPeriod]">
+                                <div class="grupal-indicator"></div>
+                                <div class="grupal-content">
+                                    <div class="grupal-header">
+                                        <div class="day-label">
+                                            <h3 class="text-uppercase">{{ p.dia_semana != null ? getDayName(p.dia_semana) : (p.fecha_inicio | date:'EEEE':'':'es') }} {{ p.fecha_inicio | date:'dd MMM' }}</h3>
                                         </div>
-                                        <div class="p-detail">
-                                            <span class="l">Estado Pack:</span>
-                                            <span class="v" [style.color]="p.estado_inscripcion === 'activo' ? '#10b981' : '#ef4444'">
-                                                {{ p.estado_inscripcion | uppercase }}
-                                            </span>
+                                        <div class="status-badge" [class.active]="p.estado === 'activo' || p.estado_inscripcion === 'activo'">
+                                            INSCRITO
                                         </div>
                                     </div>
-                                </div>
-                                <div class="p-footer" *ngIf="p.estado_pago !== 'pagado' && userRole === 'entrenador'">
-                                    <button class="btn-confirm-pay" (click)="marcarPagado(p)">✅ Marcar Pagado</button>
-                                    <button class="btn-remind-pay" (click)="enviarRecordatorioPago(p)">🔔 Aviso</button>
+                                    
+                                    <div class="grupal-details">
+                                        <div class="detail-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>{{ p.hora_inicio | slice:0:5 }} ({{ p.duracion_sesion_min || 120 }} MIN)</span>
+                                        </div>
+                                        <div class="pack-tag">
+                                            {{ p.pack_nombre || p.nombre }} • {{ p.categoria || 'Nivel Único' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="inscritos-row">
+                                        <div class="participants-badge">
+                                            <i class="fas fa-users"></i>
+                                            <span>Sesión Grupal: {{ p.cupos_ocupados || 0 }} / {{ p.capacidad_maxima || 6 }} Jugadores</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </ng-container>
+                        </div>
                     </div>
 
                     <!-- DISPLAY INDIVIDUALES -->

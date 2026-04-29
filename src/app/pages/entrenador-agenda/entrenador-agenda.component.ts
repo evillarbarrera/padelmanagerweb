@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { PopupService } from '../../services/popup.service';
+import { EntrenamientoService } from '../../services/entrenamientos.service';
 
 interface DiaAgenda {
   nombre: string;
@@ -25,6 +26,7 @@ export class EntrenadorAgendaComponent implements OnInit {
   coachFoto: string | null = null;
   isLoading = true;
   userId: number | null = null;
+  alumnosEncontrados: any[] = [];
 
   dias: DiaAgenda[] = [];
   diaSeleccionado: string = '';
@@ -32,7 +34,8 @@ export class EntrenadorAgendaComponent implements OnInit {
   constructor(
     private mysqlService: MysqlService,
     private router: Router,
-    private popupService: PopupService
+    private popupService: PopupService,
+    private entrenamientoService: EntrenamientoService
   ) { }
 
   ngOnInit(): void {
@@ -78,6 +81,43 @@ export class EntrenadorAgendaComponent implements OnInit {
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
     const d = date.getDate().toString().padStart(2, '0');
     return `${y}-${m}-${d}`;
+  }
+
+  buscarAlumnosAgenda(term: string) {
+    if (term.length < 3) {
+      this.alumnosEncontrados = [];
+      return;
+    }
+    this.mysqlService.searchAlumnos(term).subscribe({
+      next: (res: any[]) => this.alumnosEncontrados = res,
+      error: () => this.alumnosEncontrados = []
+    });
+  }
+
+  agregarAlumnoAClase(item: any, alumno: any) {
+    const packId = item.pack_id;
+    const jugadorId = alumno.id || alumno.jugador_id;
+
+    if (!packId || !jugadorId) {
+      this.popupService.error('Error', 'No se pudo identificar la clase o el alumno.');
+      return;
+    }
+
+    this.entrenamientoService.addJugadorAPack(packId, jugadorId).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.popupService.success('¡Agendado!', `${alumno.nombre} se ha unido a la clase.`);
+          item.showAddPlayer = false;
+          this.alumnosEncontrados = [];
+          this.loadAgenda();
+        } else {
+          this.popupService.error('Atención', res.error || 'No se pudo inscribir al alumno.');
+        }
+      },
+      error: (err) => {
+        this.popupService.error('Error', err.error?.error || 'Hubo un problema al inscribir al alumno.');
+      }
+    });
   }
 
   loadAgenda(): void {
@@ -135,14 +175,15 @@ export class EntrenadorAgendaComponent implements OnInit {
 
             return {
               ...pack,
+              pack_id: pack.pack_id || pack.id,
               reserva_id: pack.id || pack.pack_id,
-              fecha: null,
-              tipo: 'grupal_template',
+              fecha: pack.fecha || null,
+              tipo: 'grupal',
               estado: pack.estado_grupo,
               estado_grupo: pack.estado_grupo,
               inscritos: processedInscritos,
-              cupos_ocupados: pack.cupos_ocupados,
-              capacidad_maxima: pack.capacidad_maxima,
+              cupos_ocupados: pack.cupos_ocupados || processedInscritos.length || 0,
+              capacidad_maxima: pack.capacidad_maxima || 6,
               duracion_calculada: dur || pack.duracion_calculada || pack.duracion_dinamica || 60
             };
           });
@@ -152,7 +193,7 @@ export class EntrenadorAgendaComponent implements OnInit {
         this.dias.forEach(dia => {
           let diaBDFormato = dia.diaNumero;
 
-          const directReservations = todasReservas.filter(r => r.fecha === dia.fecha);
+          const directReservations = todasReservas.filter(r => r.fecha === dia.fecha && r.tipo !== 'grupal_template');
           const templatesForDay = todasReservas.filter(r =>
             r.tipo === 'grupal_template' &&
             Number(r.dia_semana) === diaBDFormato &&
@@ -210,17 +251,25 @@ export class EntrenadorAgendaComponent implements OnInit {
   }
 
   ejecutarCancelacion(item: any) {
-    this.mysqlService.cancelarReservaEntrenador(item.reserva_id, this.userId!).subscribe({
+    const isGrupal = item.tipo === 'grupal_template' || item.tipo === 'grupal_fecha' || item.tipo === 'pack_grupal';
+    const endpoint = isGrupal ? 'packs/eliminar_pack.php' : 'entrenador/cancelar_reserva.php';
+
+    this.mysqlService.postApi(endpoint, {
+      reserva_id: item.reserva_id,
+      pack_id: item.reserva_id,
+      id: item.reserva_id,
+      entrenador_id: this.userId!
+    }).subscribe({
       next: () => {
         this.popupService.success(
-          'Cancelado',
-          'El entrenamiento ha sido cancelado y el horario liberado.'
+          'Eliminado',
+          'El entrenamiento ha sido eliminado correctamente.'
         );
         this.loadAgenda();
       },
       error: (err) => {
-        console.error('Error al cancelar:', err);
-        this.popupService.error('Error', 'No se pudo cancelar la reserva.');
+        console.error('Error al eliminar:', err);
+        this.popupService.error('Error', 'No se pudo eliminar el entrenamiento.');
       }
     });
   }

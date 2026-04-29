@@ -38,22 +38,15 @@
 
         <div class="session-card animate-up" *ngFor="let item of agendaActual; let i = index"
           [style.animation-delay]="(i * 0.05) + 's'" [ngClass]="{
-            'pack-grupal': (item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template'),
-            'reserva-individual': (item.tipo !== 'grupal' && item.tipo !== 'pack_grupal' && item.tipo !== 'grupal_template'),
+            'pack-grupal': item.tipo === 'grupal',
+            'reserva-individual': item.tipo !== 'grupal',
             'full-capacity': item.cupos_ocupados >= item.capacidad_maxima
           }">
 
           <div class="card-header">
             <div class="time-badge">
               <span class="icon">🕒</span>
-              <ng-container
-                *ngIf="item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template'">
-                <span>{{ item.hora_inicio | slice:0:5 }} - {{ item.hora_fin | slice:0:5 }}</span>
-              </ng-container>
-              <ng-container
-                *ngIf="item.tipo !== 'grupal' && item.tipo !== 'pack_grupal' && item.tipo !== 'grupal_template'">
-                <span>{{ item.hora_inicio | slice:0:5 }} - {{ item.hora_fin | slice:0:5 }}</span>
-              </ng-container>
+              <span>{{ item.hora_inicio | slice:0:5 }} - {{ item.hora_fin | slice:0:5 }}</span>
             </div>
             <div class="status-tag" [ngClass]="getEstadoText(item).toLowerCase()">
               {{ getEstadoText(item) }}
@@ -62,7 +55,7 @@
 
           <div class="card-body">
             <!-- INDIVIDUAL -->
-            <div *ngIf="item.tipo !== 'grupal' && item.tipo !== 'pack_grupal' && item.tipo !== 'grupal_template'"
+            <div *ngIf="item.tipo !== 'grupal'"
               class="players-list">
               <div *ngFor="let jugador of item.inscritos" class="player-profile">
                 <div class="avatar-circle-small">
@@ -78,7 +71,7 @@
             </div>
 
             <!-- GRUPAL Info -->
-            <div *ngIf="item.tipo === 'grupal' || item.tipo === 'pack_grupal' || item.tipo === 'grupal_template'"
+            <div *ngIf="item.tipo === 'grupal'"
               class="grupal-info">
               <div class="grupal-header">
                 <div class="tipo-badge">👥 GRUPAL</div>
@@ -107,6 +100,39 @@
                     <div class="inscrito-detail">
                       <span class="full-name">{{ inscrito.nombre }}</span>
                       <span class="email-sub">{{ inscrito.email }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BUSCADOR DE ALUMNOS PARA AGREGAR -->
+              <div class="add-player-section" *ngIf="item.cupos_ocupados < item.capacidad_maxima">
+                <button class="btn-toggle-add" *ngIf="!item.showAddPlayer" (click)="item.showAddPlayer = true">
+                   + Agregar Alumno
+                </button>
+                
+                <div class="search-box-agenda animate-down" *ngIf="item.showAddPlayer">
+                  <div class="search-header-mini">
+                    <input type="text" 
+                           placeholder="Buscar alumno..." 
+                           class="mini-search-input"
+                           (input)="buscarAlumnosAgenda($any($event.target).value)"
+                           #searchInput>
+                    <button class="btn-close-mini" (click)="item.showAddPlayer = false">✕</button>
+                  </div>
+                  
+                  <div class="search-results-mini" *ngIf="alumnosEncontrados.length > 0">
+                    <div *ngFor="let alumno of alumnosEncontrados" 
+                         class="result-item-mini"
+                         (click)="agregarAlumnoAClase(item, alumno)">
+                      <div class="avatar-micro">
+                        <img *ngIf="alumno.foto_perfil" [src]="alumno.foto_perfil">
+                        <span *ngIf="!alumno.foto_perfil">👤</span>
+                      </div>
+                      <div class="result-info">
+                        <span class="res-name">{{ alumno.nombre }}</span>
+                      </div>
+                      <span class="plus-icon">+</span>
                     </div>
                   </div>
                 </div>

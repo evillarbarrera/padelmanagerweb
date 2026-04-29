@@ -517,53 +517,79 @@ export class JugadorReservasComponent implements OnInit {
       }
     });
 
-    // 2. Project recurring group classes from the 'packs' table
+    // 2. Project sessions from the 'packs' table (Specific dates or allowing inscription)
     packsList.forEach(p => {
-      if (p.tipo === 'grupal' && p.dia_semana && p.hora_inicio) {
-        // Map dia_semana: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7/0=Sun
-        const packDay = Number(p.dia_semana);
+      if (p.tipo === 'grupal' && p.hora_inicio && (p.fecha || p.dia_semana)) {
         const [h, m] = p.hora_inicio.split(':');
         const duration = Number(p.duracion_sesion_min || 60);
 
-        // Scan the next 30 days
-        for (let i = 0; i <= 30; i++) {
-          const checkDate = new Date();
-          checkDate.setDate(ahora.getDate() + i);
+        // CASE A: Specific Date (New Logic)
+        if (p.fecha) {
+          const start = new Date(p.fecha + 'T' + p.hora_inicio);
+          const end = new Date(start.getTime());
+          end.setMinutes(start.getMinutes() + duration);
 
-          let jsDay = checkDate.getDay(); // 0=Sun, 1=Mon...
-          // If the DB uses 0=Sun... 6=Sat, then jsDay is already correct.
-          // However, if the code previously had (jsDay === 0) jsDay = 7, it means it expected 1-7.
-          // Let's make it robust: try both if needed, but normally checkDate.getDay() is 0-6.
+          if (start >= ahora && start <= limite) {
+            const fechaStr = p.fecha;
+            const horaStr = start.toTimeString().slice(0, 5);
+            const timeKey = `${fechaStr}_${horaStr}`;
 
-          if (jsDay === packDay || (jsDay === 0 && packDay === 7)) {
-            const start = new Date(checkDate.getTime());
-            start.setHours(Number(h), Number(m), 0, 0);
+            if (!slotsMap.has(timeKey) || slotsMap.get(timeKey).tipo !== 'grupal') {
+              slotsMap.set(timeKey, {
+                fecha: fechaStr,
+                hora_inicio: start,
+                hora_fin: end,
+                ocupado: Number(p.cupos_ocupados) >= Number(p.capacidad_maxima),
+                inscritos: Number(p.cupos_ocupados || 0),
+                capacidad: Number(p.capacidad_maxima || 8),
+                cantidad_personas: Number(p.capacidad_maxima || 8),
+                tipo: 'grupal',
+                nombre: p.nombre,
+                categoria: p.categoria,
+                pack_id: p.id
+              });
+              if (!nuevasFechas.includes(fechaStr)) nuevasFechas.push(fechaStr);
+            }
+          }
+        }
+        // CASE B: Recurring (Only if explicitly allowed or limited projection)
+        else if (p.dia_semana) {
+          const packDay = Number(p.dia_semana);
+          for (let i = 0; i <= 7; i++) { // Limit to 7 days to avoid "repetitive" look
+            const checkDate = new Date();
+            checkDate.setDate(ahora.getDate() + i);
 
-            const end = new Date(start.getTime());
-            end.setMinutes(start.getMinutes() + duration);
+            let jsDay = checkDate.getDay();
+            if (jsDay === packDay || (jsDay === 0 && packDay === 7)) {
+              const start = new Date(checkDate.getTime());
+              start.setHours(Number(h), Number(m), 0, 0);
 
-            if (start >= ahora) {
-              const fechaStr = `${start.getFullYear()}-${(start.getMonth() + 1).toString().padStart(2, '0')}-${start.getDate().toString().padStart(2, '0')}`;
-              const horaStr = start.toTimeString().slice(0, 5);
-              const timeKey = `${fechaStr}_${horaStr}`;
+              const end = new Date(start.getTime());
+              end.setMinutes(start.getMinutes() + duration);
 
-              // Don't overwrite if there's already a group session (explicit or recurring) for this time
-              if (!slotsMap.has(timeKey) || slotsMap.get(timeKey).tipo !== 'grupal') {
-                slotsMap.set(timeKey, {
-                  fecha: fechaStr,
-                  hora_inicio: start,
-                  hora_fin: end,
-                  ocupado: Number(p.cupos_ocupados) >= Number(p.capacidad_maxima),
-                  inscritos: Number(p.cupos_ocupados || 0),
-                  capacidad: Number(p.capacidad_maxima || 8),
-                  cantidad_personas: Number(p.capacidad_maxima || 8),
-                  tipo: 'grupal',
-                  nombre: p.nombre,
-                  categoria: p.categoria,
-                  pack_id: p.id // This is crucial for reservation logic
-                });
-                if (!nuevasFechas.includes(fechaStr)) nuevasFechas.push(fechaStr);
+              if (start >= ahora) {
+                const fechaStr = `${start.getFullYear()}-${(start.getMonth() + 1).toString().padStart(2, '0')}-${start.getDate().toString().padStart(2, '0')}`;
+                const horaStr = start.toTimeString().slice(0, 5);
+                const timeKey = `${fechaStr}_${horaStr}`;
+
+                if (!slotsMap.has(timeKey) || slotsMap.get(timeKey).tipo !== 'grupal') {
+                  slotsMap.set(timeKey, {
+                    fecha: fechaStr,
+                    hora_inicio: start,
+                    hora_fin: end,
+                    ocupado: Number(p.cupos_ocupados) >= Number(p.capacidad_maxima),
+                    inscritos: Number(p.cupos_ocupados || 0),
+                    capacidad: Number(p.capacidad_maxima || 8),
+                    cantidad_personas: Number(p.capacidad_maxima || 8),
+                    tipo: 'grupal',
+                    nombre: p.nombre,
+                    categoria: p.categoria,
+                    pack_id: p.id
+                  });
+                  if (!nuevasFechas.includes(fechaStr)) nuevasFechas.push(fechaStr);
+                }
               }
+              break; // Only project the first one
             }
           }
         }

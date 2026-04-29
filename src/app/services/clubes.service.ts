@@ -254,8 +254,14 @@ export class ClubesService {
         });
     }
 
-    updateTorneo(id: number, data: any): Observable<any> {
-        return this.http.post(`${this.apiUrl}/torneos/update_torneo.php`, { id, ...data }, {
+    updateTorneo(idOrData: any, data?: any): Observable<any> {
+        let payload = {};
+        if (data) {
+            payload = { id: idOrData, ...data };
+        } else {
+            payload = idOrData;
+        }
+        return this.http.post(`${this.apiUrl}/torneos/update_torneo.php`, payload, {
             headers: this.getHeaders()
         });
     }
@@ -398,6 +404,31 @@ export class ClubesService {
         });
     }
     // REPORTES
+    updateInscripcionSiembra(id: number, es_seed: boolean, nro_siembra: number | null): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/update_inscripcion_siembra.php`, {
+            id,
+            es_semilla: es_seed ? 1 : 0,
+            nro_siembra: nro_siembra
+        }, {
+            headers: this.getHeaders()
+        });
+    }
+
+    subirPosterTorneo(file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('foto', file);
+        return this.http.post(`${this.apiUrl}/torneos/subir_poster_torneo.php`, formData, {
+            headers: this.getHeadersUpload()
+        });
+    }
+
+    private getHeadersUpload() {
+        const token = localStorage.getItem('token');
+        return new HttpHeaders({
+            'Authorization': `Bearer ${token}`
+        });
+    }
+
     getReporteVentas(clubId: number): Observable<any> {
         return this.http.get<any>(`${this.apiUrl}/reportes/get_reporte_ventas.php?club_id=${clubId}`, {
             headers: this.getHeaders()

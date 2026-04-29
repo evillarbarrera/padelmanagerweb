@@ -118,6 +118,12 @@ export class AlumnoClasesComponent implements OnInit {
         { target: '.tabs-row .tab-btn:nth-child(5)', title: '💰 Gestión de Pagos', content: 'Controla qué packs ha comprado el alumno, su estado de pago y envía recordatorios si es necesario.' }
     ];
 
+    getDayName(dayIndex: any): string {
+        if (dayIndex === null || dayIndex === undefined) return '';
+        const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        return days[dayIndex] || '';
+    }
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -388,6 +394,7 @@ export class AlumnoClasesComponent implements OnInit {
             // 3. EVOLUCIÓN LINEAL (General Average over time)
             this.storedLineLabels = evals.slice().reverse().map((e, idx) => {
                const date = new Date(e.fecha);
+               // AND p.fecha BETWEEN ? AND ?
                return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
             });
 

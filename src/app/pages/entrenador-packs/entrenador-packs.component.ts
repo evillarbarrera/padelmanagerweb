@@ -55,7 +55,9 @@ export class EntrenadorPacksComponent implements OnInit {
     categoria: '',
     rango_horario_inicio: null,
     rango_horario_fin: null,
-    cantidad_personas: 1
+    cantidad_personas: 1,
+    fecha: null,
+    permite_inscripcion: 1
   };
 
   constructor(

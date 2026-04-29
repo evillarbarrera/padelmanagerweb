@@ -509,52 +509,71 @@ export class EntrenadorAgendarComponent implements OnInit {
         const templates = agendaData.packs_grupales || [];
         templates.forEach((t: any) => {
             const hora = t.hora_inicio.slice(0, 5);
-            this.weekDates.forEach(date => {
-                const dayName = date.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase();
-                const dayRef = (t.dia_semana || '').toString().toLowerCase();
-                if (dayName === dayRef) {
-                    this.applyToSlot(this.formatDate(date), hora, t);
-                }
-            });
+            
+            if (t.fecha) {
+                // Specific date session
+                this.applyToSlot(t.fecha, hora, {
+                    ...t,
+                    reserva_id: t.pack_id,
+                    reserva_tipo: 'Entrenamiento Grupal',
+                    jugador_nombre: t.jugador_nombre || 'Abierto para inscripción'
+                });
+            } else {
+                // Recurring template
+                this.weekDates.forEach(date => {
+                    const dayIndex = date.getDay(); // 0 (Sun) - 6 (Sat)
+                    const dayName = date.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase();
+                    const dayRef = (t.dia_semana != null) ? t.dia_semana.toString().toLowerCase() : '';
+                    
+                    // Match by index or name
+                    const daysMap = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+                    if (dayRef === dayIndex.toString() || dayRef === dayName || dayRef === daysMap[dayIndex]) {
+                        this.applyToSlot(this.formatDate(date), hora, {
+                            ...t,
+                            reserva_id: t.pack_id,
+                            reserva_tipo: 'Entrenamiento Grupal (Recurrente)',
+                            jugador_nombre: 'Clase Grupal'
+                        });
+                    }
+                });
+            }
         });
     }
 
     applyToSlot(fecha: string, hora: string, data: any) {
         if (!this.slotsByDay[fecha]) this.slotsByDay[fecha] = [];
         let existing = this.slotsByDay[fecha].find(s => s.time === hora);
+        
+        const slotUpdate = {
+            ocupado: true,
+            reserva_id: data.reserva_id || data.id,
+            pack_id: data.pack_id || data.id, // Para clases grupales
+            jugador_nombre: data.jugador_nombre || data.nombre_jugador,
+            reserva_tipo: data.pack_nombre || data.tipo,
+            club_nombre: data.club_nombre,
+            club_id: data.club_id,
+            malla_nombre: data.malla_nombre,
+            malla_id: data.malla_id,
+            clase_id: data.clase_id,
+            clase_titulo: data.clase_titulo,
+            clase_contenido: data.clase_contenido,
+            clase_objetivo: data.clase_objetivo,
+            clase_calentamiento: data.clase_calentamiento,
+            clase_drills: data.clase_drills,
+            clase_juego: data.clase_juego,
+            clase_recursos: data.clase_recursos,
+            inscritos: data.inscritos || [],
+            capacidad_maxima: data.capacidad_maxima || 6,
+            cupos_ocupados: data.cupos_ocupados || (data.inscritos ? data.inscritos.length : 0)
+        };
+
         if (existing) {
-            existing.ocupado = true;
-            existing.reserva_id = data.reserva_id || data.id;
-            existing.jugador_nombre = data.jugador_nombre || data.nombre_jugador;
-            existing.reserva_tipo = data.pack_nombre || data.tipo;
-            existing.club_nombre = data.club_nombre;
-            existing.club_id = data.club_id;
-            existing.malla_nombre = data.malla_nombre;
-            existing.clase_titulo = data.clase_titulo;
-            existing.clase_contenido = data.clase_contenido;
-            existing.clase_objetivo = data.clase_objetivo;
-            existing.clase_calentamiento = data.clase_calentamiento;
-            existing.clase_drills = data.clase_drills;
-            existing.clase_juego = data.clase_juego;
-            existing.clase_recursos = data.clase_recursos;
+            Object.assign(existing, slotUpdate);
         } else {
             this.slotsByDay[fecha].push({
                 fecha_inicio: `${fecha} ${hora}:00`,
                 time: hora,
-                ocupado: true,
-                reserva_id: data.reserva_id || data.id,
-                jugador_nombre: data.jugador_nombre || data.nombre_jugador,
-                reserva_tipo: data.pack_nombre || data.tipo,
-                club_nombre: data.club_nombre,
-                club_id: data.club_id,
-                malla_nombre: data.malla_nombre,
-                clase_titulo: data.clase_titulo,
-                clase_contenido: data.clase_contenido,
-                clase_objetivo: data.clase_objetivo,
-                clase_calentamiento: data.clase_calentamiento,
-                clase_drills: data.clase_drills,
-                clase_juego: data.clase_juego,
-                clase_recursos: data.clase_recursos
+                ...slotUpdate
             });
         }
     }
@@ -600,14 +619,28 @@ export class EntrenadorAgendarComponent implements OnInit {
             return;
         }
 
-        this.entrenamientoService.cancelarReserva(resId).subscribe({
-            next: () => {
-                this.isLoading = false;
-                this.popupService.success('Cancelada', 'La clase ha sido eliminada.');
-                this.loadDisponibilidad();
-            },
-            error: (err: any) => this.handleError(err)
-        });
+        // Si tiene pack_id o el tipo es grupal, usamos la lógica de eliminar pack
+        const isGrupal = slot.pack_id || slot.reserva_tipo?.toLowerCase().includes('grupal') || slot.reserva_tipo?.toLowerCase().includes('warriors');
+
+        if (isGrupal) {
+            this.entrenamientoService.deletePack(resId).subscribe({
+                next: () => {
+                    this.isLoading = false;
+                    this.popupService.success('Eliminada', 'El entrenamiento grupal ha sido eliminado.');
+                    this.loadDisponibilidad();
+                },
+                error: (err: any) => this.handleError(err)
+            });
+        } else {
+            this.entrenamientoService.cancelarReserva(resId).subscribe({
+                next: () => {
+                    this.isLoading = false;
+                    this.popupService.success('Cancelada', 'La clase ha sido eliminada.');
+                    this.loadDisponibilidad();
+                },
+                error: (err: any) => this.handleError(err)
+            });
+        }
     }
 
     closeModal() {
@@ -617,10 +650,51 @@ export class EntrenadorAgendarComponent implements OnInit {
         this.selectedSlot = null;
         this.alumnoSeleccionado = null;
         this.alumnosSeleccionados = [];
-        this.planificacionId = null;
-        this.claseMallaId = null;
-        this.packAAsignar = null;
         this.mostrarOpcionPack = false;
+    }
+
+    filtroJugadoresModal: string = '';
+    jugadoresFiltradosModal: any[] = [];
+
+    filtrarJugadoresModal() {
+        if (!this.filtroJugadoresModal || this.filtroJugadoresModal.trim().length < 2) {
+            this.jugadoresFiltradosModal = [];
+            return;
+        }
+        const f = this.filtroJugadoresModal.toLowerCase();
+        this.jugadoresFiltradosModal = this.alumnos.filter(a => 
+            (a.jugador_nombre || '').toLowerCase().includes(f)
+        ).slice(0, 5);
+    }
+
+    agregarJugadorAPack(alumno: any) {
+        if (!this.selectedSlot?.slotData?.pack_id) return;
+        
+        const packId = this.selectedSlot.slotData.pack_id;
+        const jugadorId = alumno.jugador_id || alumno.id;
+
+        this.isLoading = true;
+        this.entrenamientoService.addJugadorAPack(packId, jugadorId).subscribe({
+            next: (res: any) => {
+                this.isLoading = false;
+                this.popupService.success('¡Agregado!', 'El jugador ha sido agregado al entrenamiento.');
+                this.filtroJugadoresModal = '';
+                this.jugadoresFiltradosModal = [];
+                this.loadDisponibilidad();
+                // Update local list if possible
+                if (this.selectedSlot.slotData.inscritos) {
+                    this.selectedSlot.slotData.inscritos.push({
+                        id: jugadorId,
+                        nombre: alumno.jugador_nombre,
+                        foto: alumno.foto_perfil || alumno.link_foto
+                    });
+                }
+            },
+            error: (err: any) => {
+                this.isLoading = false;
+                this.popupService.error('Error', err.error?.error || 'No se pudo agregar al jugador');
+            }
+        });
     }
 
     seleccionarAlumno(alumno: any) {
@@ -726,8 +800,17 @@ export class EntrenadorAgendarComponent implements OnInit {
     confirmarAgenda() {
         if (this.tipoClaseSeleccionado === 'individual') {
             if (!this.alumnoSeleccionado || !this.selectedSlot) return;
+        } else if (this.tipoClaseSeleccionado === 'grupal') {
+            // Permitir agendar sin alumnos para crear clase abierta
+            if (!this.selectedSlot) return;
         } else {
             if (this.alumnosSeleccionados.length === 0 || !this.selectedSlot) return;
+        }
+
+        // --- LÓGICA ESPECIAL PARA GRUPAL ---
+        if (this.tipoClaseSeleccionado === 'grupal') {
+            this.ejecutarAgendamientoGrupal();
+            return;
         }
 
         // --- SAFEGUARD: Validaciones de Pack ---
@@ -761,7 +844,7 @@ export class EntrenadorAgendarComponent implements OnInit {
         // If a new pack was manually selected from the dropdown, always purchase it.
         const needsPack = this.packAAsignar 
             ? true 
-            : (this.tipoClaseSeleccionado === 'multijugador' || this.tipoClaseSeleccionado === 'grupal'
+            : (this.tipoClaseSeleccionado === 'multijugador'
                 ? true
                 : (this.tipoClaseSeleccionado === 'individual' ? (primerJugador.sesiones_restantes || 0) <= 0 : false));
 
@@ -914,6 +997,71 @@ export class EntrenadorAgendarComponent implements OnInit {
                     },
                     error: (err: any) => this.handleError(err)
                 });
+            },
+            error: (err: any) => this.handleError(err)
+        });
+    }
+
+    ejecutarAgendamientoGrupal() {
+        if (!this.packAAsignar) {
+            Swal.fire('Selecciona Pack', 'Debes elegir un Pack Grupal (ej. Padel Warriors) para crear el entrenamiento.', 'warning');
+            return;
+        }
+
+        this.isLoading = true;
+        const template = this.packAAsignar;
+        const totalSemanas = this.recurrencia || 1;
+        const creationTasks: Observable<any>[] = [];
+
+        for (let i = 0; i < totalSemanas; i++) {
+            const targetDate = new Date(this.selectedSlot.date);
+            targetDate.setDate(targetDate.getDate() + (i * 7));
+            const dateStr = this.formatDate(targetDate);
+
+            const payloadPack = {
+                entrenador_id: this.entrenadorId,
+                nombre: template.nombre || template.titulo,
+                descripcion: template.descripcion || '',
+                tipo: 'grupal',
+                sesiones_totales: 1,
+                duracion_sesion_min: template.duracion_sesion_min || 60,
+                precio: template.precio || 0,
+                capacidad_minima: template.capacidad_minima || 4,
+                capacidad_maxima: template.capacidad_maxima || 6,
+                fecha: dateStr,
+                hora_inicio: this.selectedSlot.hour,
+                categoria: this.categoriaFiltro === 'todos' ? 'adulto' : this.categoriaFiltro,
+                permite_inscripcion: 1,
+                club_id: this.selectedSlot.slotData.club_id || 1
+            };
+
+            creationTasks.push(this.mysqlService.postApi('packs/create_pack.php', payloadPack));
+        }
+
+        forkJoin(creationTasks).subscribe({
+            next: (results: any[]) => {
+                const enrollmentTasks: Observable<any>[] = [];
+                
+                if (this.alumnosSeleccionados.length > 0) {
+                    results.forEach(res => {
+                        const newPackId = res.id;
+                        this.alumnosSeleccionados.forEach(alumno => {
+                            enrollmentTasks.push(this.entrenamientoService.addJugadorAPack(newPackId, alumno.jugador_id || alumno.id));
+                        });
+                    });
+                }
+
+                if (enrollmentTasks.length > 0) {
+                    forkJoin(enrollmentTasks).subscribe({
+                        next: () => this.postReservaExito(),
+                        error: (err) => {
+                            console.error('Error inscribiendo:', err);
+                            this.postReservaExito();
+                        }
+                    });
+                } else {
+                    this.postReservaExito();
+                }
             },
             error: (err: any) => this.handleError(err)
         });

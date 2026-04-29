@@ -91,28 +91,21 @@
                   class="form-input" />
               </div>
 
-              <div class="form-group">
-                <label>Día de Clase</label>
-                <select [(ngModel)]="nuevoPack.dia_semana" name="dia" class="form-input">
-                  <option [ngValue]="1">Lunes</option>
-                  <option [ngValue]="2">Martes</option>
-                  <option [ngValue]="3">Miércoles</option>
-                  <option [ngValue]="4">Jueves</option>
-                  <option [ngValue]="5">Viernes</option>
-                  <option [ngValue]="6">Sábado</option>
-                  <option [ngValue]="0">Domingo</option>
-                </select>
-              </div>
+
+
 
               <div class="form-group">
-                <label>Hora Inicio</label>
-                <input [(ngModel)]="nuevoPack.hora_inicio" name="hora" type="time" class="form-input" />
-              </div>
-
-              <div class="form-group span-2">
                 <label>Categoría</label>
                 <input [(ngModel)]="nuevoPack.categoria" name="categoria" type="text"
                   placeholder="Ej: Intermedio, Avanzado" class="form-input" />
+              </div>
+
+              <div class="form-group span-2">
+                <label class="checkbox-container">
+                  <input type="checkbox" [(ngModel)]="nuevoPack.permite_inscripcion" name="permite_ins" [checked]="nuevoPack.permite_inscripcion == 1" (change)="nuevoPack.permite_inscripcion = $any($event.target).checked ? 1 : 0">
+                  <span class="checkmark"></span>
+                  Permitir que los jugadores se inscriban ellos mismos (Dejar Abierto)
+                </label>
               </div>
             </ng-container>
 

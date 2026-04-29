@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -64,6 +64,7 @@ export class TorneoGestionComponent implements OnInit {
         tipo: 'Grupos + Playoffs',
         formato_grupos: 4, // Default to 4 as per user preference
         formato_sets: 'Full Sets',
+        poster_url: null,
         categorias: [
             { nombre: 'Iniciación', max_parejas: 12, puntos_repartir: 100 },
             { nombre: 'Intermedio', max_parejas: 16, puntos_repartir: 250 },
@@ -78,17 +79,17 @@ export class TorneoGestionComponent implements OnInit {
     simSubTab: 'agenda' | 'grupos' = 'agenda';
     viewMode: 'day' | 'week' = 'day';
     presetCategories: any[] = [
-        { nombre: '1ra Varones', type: 'varones', color: '#1e40af' },
-        { nombre: '2da Varones', type: 'varones', color: '#1d4ed8' },
-        { nombre: '3ra Varones', type: 'varones', color: '#2563eb' },
-        { nombre: '4ta Varones', type: 'varones', color: '#3b82f6' },
-        { nombre: '5ta Varones', type: 'varones', color: '#60a5fa' },
-        { nombre: '6ta Varones', type: 'varones', color: '#93c5fd' },
-        { nombre: 'Damas A', type: 'damas', color: '#be185d' },
-        { nombre: 'Damas B', type: 'damas', color: '#db2777' },
-        { nombre: 'Damas C', type: 'damas', color: '#e91e63' },
-        { nombre: 'Damas D', type: 'damas', color: '#f06292' },
-        { nombre: 'Damas E', type: 'damas', color: '#f48fb1' }
+        { nombre: '1ra Varones', type: 'varones', color: '#f59e0b' }, // Amber/Gold
+        { nombre: '2da Varones', type: 'varones', color: '#10b981' }, // Emerald
+        { nombre: '3ra Varones', type: 'varones', color: '#6366f1' }, // Indigo
+        { nombre: '4ta Varones', type: 'varones', color: '#f97316' }, // Orange
+        { nombre: '5ta Varones', type: 'varones', color: '#8b5cf6' }, // Violet
+        { nombre: '6ta Varones', type: 'varones', color: '#06b6d4' }, // Cyan
+        { nombre: 'Damas A', type: 'damas', color: '#ec4899' },      // Rose
+        { nombre: 'Damas B', type: 'damas', color: '#14b8a6' },      // Teal
+        { nombre: 'Damas C', type: 'damas', color: '#f43f5e' },      // Rose/Red
+        { nombre: 'Damas D', type: 'damas', color: '#84cc16' },      // Lime
+        { nombre: 'Damas E', type: 'damas', color: '#a855f7' }       // Purple
     ];
 
     simulatedGroupsSummary: any[] = [];
@@ -235,7 +236,8 @@ export class TorneoGestionComponent implements OnInit {
     constructor(
         private clubesService: ClubesService,
         private apiService: ApiService,
-        private router: Router
+        private router: Router,
+        private cdr: ChangeDetectorRef
     ) { }
 
     generateSchedule() {
@@ -433,8 +435,9 @@ export class TorneoGestionComponent implements OnInit {
 
     selectTorneo(torneo: any) {
         this.selectedTorneo = torneo;
+        this.selectedCategoria = null; // VISTA GLOBAL POR DEFECTO
         this.activeTab = 'list';
-        this.activeDetailTab = 'config';
+        this.activeDetailTab = 'resumen';
         this.loadCategorias(torneo.id);
 
         // Reset grid
@@ -478,22 +481,32 @@ export class TorneoGestionComponent implements OnInit {
 
         // Create a pool of "Assignable Slots"
         const slots: any[] = [];
+        const courtNextFree: { [key: number]: number } = {}; // courtId -> timestamp free
+        const durationMins = this.matchDuration || 90;
+
         this.gridDays.forEach(day => {
             if (this.availabilityGrid[day]) {
+                // Initialize courts for the new day
+                usableCourts.forEach(c => courtNextFree[c.id] = 0);
+
                 this.availabilityGrid[day].sort((a, b) => a - b).forEach(h => {
                     const parts = day.split('-');
-                    // month is 0-indexed in JS Date
-                    const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), h, 0, 0);
+                    const currentTimestamp = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), h, 0, 0).getTime();
 
                     usableCourts.forEach((court) => {
-                        slots.push({
-                            date: day,
-                            hour: h,
-                            courtId: court.id,
-                            courtName: court.nombre,
-                            timestamp: dObj.getTime(),
-                            label: `${day} ${h}:00 - ${court.nombre}`
-                        });
+                        // Only add slot if court is free
+                        if (currentTimestamp >= (courtNextFree[court.id] || 0)) {
+                            slots.push({
+                                date: day,
+                                hour: h,
+                                courtId: court.id,
+                                courtName: court.nombre,
+                                timestamp: currentTimestamp,
+                                label: `${day} ${h}:00 - ${court.nombre}`
+                            });
+                            // Mark when this court will be free again
+                            courtNextFree[court.id] = currentTimestamp + (durationMins * 60000);
+                        }
                     });
                 });
             }
@@ -512,6 +525,9 @@ export class TorneoGestionComponent implements OnInit {
             'Semi': [],
             'Final': []
         };
+
+        let groupMatchId = -5000;
+        let playoffMatchId = -8000;
 
         // 2. Collection Phase
         this.categorias.forEach((cat, index) => {
@@ -535,7 +551,7 @@ export class TorneoGestionComponent implements OnInit {
                 for (let x = 0; x < group.length; x++) {
                     for (let y = x + 1; y < group.length; y++) {
                         allGroupMatches.push({
-                            id: -1,
+                            id: groupMatchId--, // UNIQUE ID per group match
                             category: cat.nombre,
                             categoryId: cat.id,
                             ronda: `Grupo ${groupName}`,
@@ -561,7 +577,7 @@ export class TorneoGestionComponent implements OnInit {
                 const matchCount = round === 'Dieciseisavos' ? 16 : (round === 'Octavos' ? 8 : (round === 'Cuartos' ? 4 : (round === 'Semi' ? 2 : 1)));
                 for (let i = 0; i < matchCount; i++) {
                     playoffRoundsMap[round].push({
-                        id: -2000 - (index * 1000) - (rounds.indexOf(round) * 100) - i,
+                        id: playoffMatchId--, // UNIQUE ID for dummies
                         category: cat.nombre,
                         categoryId: cat.id,
                         ronda: round,
@@ -574,39 +590,53 @@ export class TorneoGestionComponent implements OnInit {
             });
         });
 
-        // 3. Sequential Phased Scheduling with Mixed Categories
-        // Order: Groups -> Dieciseisavos -> Octavos -> Cuartos -> Semi -> Final
+        // 3. Phased Scheduling (Groups -> Finals)
+        this.matchesToSchedule = [];
+        const lastDay = this.gridDays[this.gridDays.length - 1];
 
-        const scheduleBatch = (batch: any[]) => {
-            // SHUFFLE the batch to interleave categories within the same round
+        const sundayAfternoonCutoff = 15; // 3PM Sunday is for Finals/Semis
+        const regularPool = slots.filter(s => s.date !== lastDay || s.hour < sundayAfternoonCutoff);
+        const finalPool = slots.filter(s => s.date === lastDay && s.hour >= sundayAfternoonCutoff);
+
+        // Helper to schedule into specific slot pool
+        const scheduleInPool = (batch: any[], pool: any[], poolIdxRef: { val: number }) => {
             const shuffled = batch.sort(() => Math.random() - 0.5);
             shuffled.forEach(m => {
-                if (slotIndex < slots.length) {
-                    const slot = slots[slotIndex++];
+                if (poolIdxRef.val < pool.length) {
+                    const slot = pool[poolIdxRef.val++];
                     m.tempDate = slot.date;
                     m.tempTime = `${slot.hour}:00`;
+                    m.tempCanchaId = slot.courtId;
                     m.court = slot.courtName;
                     this.matchesToSchedule.push(m);
                 }
             });
         };
 
-        // Clear current schedule to avoid duplicates
-        this.matchesToSchedule = [];
+        const regIdx = { val: 0 };
+        const finIdx = { val: 0 };
 
-        // Execution of phases
-        scheduleBatch(allGroupMatches);
-        scheduleBatch(playoffRoundsMap['Dieciseisavos']);
-        scheduleBatch(playoffRoundsMap['Octavos']);
-        scheduleBatch(playoffRoundsMap['Cuartos']);
-        scheduleBatch(playoffRoundsMap['Semi']);
-        scheduleBatch(playoffRoundsMap['Final']);
+        // Groups: Use earlier slots (or all if only 1 day)
+        const gPool = regularPool.length > 0 ? regularPool : slots;
+        scheduleInPool(allGroupMatches, gPool, regIdx);
+        
+        // Earlier Playoff Rounds (Dieciseisavos, Octavos): Also use Group days if possible
+        scheduleInPool(playoffRoundsMap['Dieciseisavos'], gPool, regIdx);
+        scheduleInPool(playoffRoundsMap['Octavos'], gPool, regIdx);
+        
+        // Mid-Point (Cuartos): End of Group Days or Start of Final Day
+        scheduleInPool(playoffRoundsMap['Cuartos'], gPool, regIdx);
 
-        console.log('Matches scheduled in logical order and mixed by category.');
+        // Semis and Finals: ALWAYS LAST DAY (if tournament spans more than 1 day)
+        const fPool = finalPool.length > 0 ? finalPool : slots;
+        // If final day is crowded, they will take remaining slots
+        scheduleInPool(playoffRoundsMap['Semi'], fPool, finIdx);
+        scheduleInPool(playoffRoundsMap['Final'], fPool, finIdx);
+
+        console.log('Phased scheduling complete: Finals anchored to last day.');
 
         // 4. Update Views
-        // Update the bracket backing array so *ngIf="playoffMatches.length > 0" passes
-        this.playoffMatches = this.matchesToSchedule.filter(m => m.id < -1000);
+        this.playoffMatches = this.matchesToSchedule.filter(m => m.id <= -8000);
 
         // Auto-select first category if none selected to show visual content immediately
         if (this.categorias.length > 0 && !this.selectedBracketCategoryId) {
@@ -745,7 +775,7 @@ export class TorneoGestionComponent implements OnInit {
 
     toggleCanchaLuz(cancha: any) {
         cancha.luz = !cancha.luz;
-        // Optional: Save this specifically? For now local to session
+        this.calculateStats(); // Recalcular balance al cambiar disponibilidad de cancha
     }
 
     loadInscripciones(catId: number) {
@@ -976,8 +1006,6 @@ export class TorneoGestionComponent implements OnInit {
         this.selectedDayIndex = 0;
     }
 
-
-
     toggleCanchaSelection(canchaId: number) {
         if (this.planParams.selectedCanchasIds.includes(canchaId)) {
             this.planParams.selectedCanchasIds = this.planParams.selectedCanchasIds.filter((id: number) => id !== canchaId);
@@ -993,7 +1021,7 @@ export class TorneoGestionComponent implements OnInit {
             } else {
                 Swal.fire({
                     title: 'Error de Configuración',
-                    text: 'No hay canchas cargadas para este club. Por favor, asegúrate de que el club tenga canchas configuradas.',
+                    text: 'No hay canchas cargadas para este club.',
                     icon: 'error',
                     confirmButtonColor: '#0f172a'
                 });
@@ -1001,16 +1029,10 @@ export class TorneoGestionComponent implements OnInit {
             }
         }
         if (!this.planParams.startDate || !this.planParams.endDate) {
-            Swal.fire({
-                title: 'Fechas Requeridas',
-                text: 'Selecciona fecha de inicio y fin para la programación.',
-                icon: 'error',
-                confirmButtonColor: '#0f172a'
-            });
+            Swal.fire({ title: 'Fechas Requeridas', text: 'Selecciona fecha de inicio y fin.', icon: 'error', confirmButtonColor: '#0f172a' });
             return;
         }
 
-        // Fix timezone issue by parsing YYYY-MM-DD manually
         const [sy, sm, sd] = this.planParams.startDate.split('-').map(Number);
         const [ey, em, ed] = this.planParams.endDate.split('-').map(Number);
         const startDate = new Date(sy, sm - 1, sd);
@@ -1018,164 +1040,109 @@ export class TorneoGestionComponent implements OnInit {
 
         const [startH, startM] = this.planParams.startTime.split(':').map(Number);
         const [endH, endM] = this.planParams.endTime.split(':').map(Number);
-        const duration = this.planParams.duration; // minutes
-
-        // Calculate daily limits in minutes from midnight
         const dayStartMins = startH * 60 + startM;
         const dayEndMins = endH * 60 + endM;
+        const duration = this.matchDuration || 90; 
 
         let pending = this.matchesToSchedule.filter(m => !m.tempTime || m.tempTime === '');
-
         if (pending.length === 0) {
-            Swal.fire({
-                title: 'Sin Pendientes',
-                text: 'No hay partidos pendientes de programar en esta selección.',
-                icon: 'info',
-                confirmButtonColor: '#0f172a'
-            });
+            Swal.fire({ title: 'Sin Pendientes', text: 'No hay partidos pendientes.', icon: 'info', confirmButtonColor: '#0f172a' });
             return;
         }
 
-        // Sort pending matches by Priority: Groups -> Octavos -> Cuartos -> Semis -> Final
+        // 1. Priorizar rondas finales para el final
         pending.sort((a, b) => {
             const getPriority = (ronda: string) => {
                 const r = (ronda || '').toLowerCase();
                 if (r.includes('grupo')) return 1;
                 if (r.includes('32')) return 2;
                 if (r.includes('16') || r.includes('octavos')) return 3;
-                if (r.includes('cuartos') || r.includes('quarter')) return 4;
+                if (r.includes('cuartos')) return 4;
                 if (r.includes('semi')) return 5;
                 if (r.includes('final')) return 6;
-                return 99;
+                return 10;
             };
             return getPriority(a.ronda) - getPriority(b.ronda);
         });
 
-        const lastPairEndTime: { [key: number]: Date } = {}; // pareja_id -> Date of end of last match
+        const lastPairEndTime: { [key: number]: Date } = {}; 
+        const courtOccupancy: { [key: string]: Date } = {}; 
+        
+        this.matchesToSchedule.filter(m => m.tempDate && m.tempTime).forEach(m => {
+            const start = new Date(`${m.tempDate} ${m.tempTime}:00`);
+            const end = new Date(start.getTime() + duration * 60000);
+            const cKey = `${m.tempCanchaId}_${m.tempDate}`;
+            if (!courtOccupancy[cKey] || end > courtOccupancy[cKey]) courtOccupancy[cKey] = end;
+            if (m.pareja1_id && (!lastPairEndTime[m.pareja1_id] || end > lastPairEndTime[m.pareja1_id])) lastPairEndTime[m.pareja1_id] = end;
+            if (m.pareja2_id && (!lastPairEndTime[m.pareja2_id] || end > lastPairEndTime[m.pareja2_id])) lastPairEndTime[m.pareja2_id] = end;
+        });
 
-        // 1. Generate All Available Slots
         const allSlots: any[] = [];
         let currentDateLoop = new Date(startDate);
         while (currentDateLoop <= endDate) {
-            const yyyy = currentDateLoop.getFullYear();
-            const MM = String(currentDateLoop.getMonth() + 1).padStart(2, '0');
-            const dd = String(currentDateLoop.getDate()).padStart(2, '0');
-            const dateStr = `${yyyy}-${MM}-${dd}`;
-            const isWeekend = currentDateLoop.getDay() === 0 || currentDateLoop.getDay() === 6;
-
+            const dateStr = currentDateLoop.toISOString().split('T')[0];
             let currentMins = dayStartMins;
             while (currentMins + duration <= dayEndMins) {
                 const h = Math.floor(currentMins / 60);
                 const m = currentMins % 60;
                 const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-
-                // Prime Time Logic
-                // Weekdays: 18:00 - 22:00
-                // Weekends: 09:00 - 14:00 or 17:00 - 21:00
-                let isPrime = false;
-                if (!isWeekend) {
-                    if (h >= 18 && h <= 22) isPrime = true;
-                } else {
-                    if ((h >= 9 && h <= 13) || (h >= 17 && h <= 21)) isPrime = true;
-                }
-
-                // Add a slot for each available court if enabled in grid
-                if (this.isHourEnabled(dateStr, h)) {
+                
+                if (this.isHourEnabled(dateStr, h)) { // <--- RESTORED GRID CHECK
                     this.planParams.selectedCanchasIds.forEach((courtId: number) => {
                         allSlots.push({
                             dateStr,
                             timeStr,
                             courtId,
-                            startTime: new Date(`${dateStr} ${timeStr}:00`),
-                            priority: isPrime ? 1 : 2
+                            startTime: new Date(`${dateStr} ${timeStr}:00`)
                         });
                     });
                 }
-                currentMins += 30; // Check every 30 mins for slot starts (flexibility)
+                currentMins += 30; 
             }
             currentDateLoop.setDate(currentDateLoop.getDate() + 1);
         }
 
-        // 2. Sort Slots by Priority then Chronology
-        allSlots.sort((a, b) => {
-            if (a.priority !== b.priority) return a.priority - b.priority;
-            return a.startTime.getTime() - b.startTime.getTime();
-        });
+        allSlots.sort((a,b) => a.startTime.getTime() - b.startTime.getTime());
 
         let scheduledCount = 0;
-
-        // 3. Fill Slots
-        for (const slot of allSlots) {
-            if (pending.length === 0) break;
-
-            const currentTimeObj = slot.startTime;
-            const currentSlotEndTime = new Date(currentTimeObj.getTime() + duration * 60000);
-
-            // Important: We need to ensure COURT is free at this specific time 
-            // since we generated slots every 30 mins but matches are 90 mins.
-            // Let's track court occupancy.
-            // (Simple version: use a Set of occupied courts per exact timestamp)
-            // But wait, the 30min increment is just for "potential starts".
-
-            // For now, let's keep it simpler to avoid overlap conflicts:
-            // Only allow one match per court if it overlaps with an existing one.
-        }
-
-        // RE-SIMPLIFYING to follow the chronological path but flagging Prime
-        // To avoid complex overlap logic in one turn, let's just flag Prime in the UI 
-        // and keep the chronological flow but maybe skip non-prime if prime is available?
-
-        // Actually, let's do the proper Slot Prioritization with Occupancy Tracking.
-        const courtOccupancy: { [key: string]: Date } = {}; // "courtId_dateStr" -> nextAvailableTime
-
-        scheduledCount = 0;
         for (const slot of allSlots) {
             if (pending.length === 0) break;
 
             const courtKey = `${slot.courtId}_${slot.dateStr}`;
             const nextFree = courtOccupancy[courtKey] || new Date(`${slot.dateStr} 00:00:00`);
+            if (slot.startTime < nextFree) continue;
 
-            if (slot.startTime < nextFree) continue; // Court is busy
-
-            // Search for a match that can fit (Rest Time check)
             let matchIdx = 0;
-            let matchFound = false;
-
             while (matchIdx < pending.length) {
                 const match = pending[matchIdx];
-                const p1 = match.pareja1_id;
-                const p2 = match.pareja2_id;
-
-                // Resting Check (90 mins)
                 const restRequired = 90 * 60000;
-                if (p1 && lastPairEndTime[p1] && (slot.startTime.getTime() - lastPairEndTime[p1].getTime()) < restRequired) {
-                    matchIdx++; continue;
-                }
-                if (p2 && lastPairEndTime[p2] && (slot.startTime.getTime() - lastPairEndTime[p2].getTime()) < restRequired) {
-                    matchIdx++; continue;
+                
+                const p1End = lastPairEndTime[match.pareja1_id];
+                const p2End = lastPairEndTime[match.pareja2_id];
+
+                if ((p1End && (slot.startTime.getTime() - p1End.getTime()) < restRequired) ||
+                    (p2End && (slot.startTime.getTime() - p2End.getTime()) < restRequired)) {
+                    matchIdx++;
+                    continue;
                 }
 
-                // Schedule it!
                 match.tempDate = slot.dateStr;
                 match.tempTime = slot.timeStr;
                 match.tempCanchaId = slot.courtId;
                 match.isScheduled = true;
 
-                // Track End Time
                 const matchEndObj = new Date(slot.startTime.getTime() + duration * 60000);
-                if (p1) lastPairEndTime[p1] = matchEndObj;
-                if (p2) lastPairEndTime[p2] = matchEndObj;
+                if (match.pareja1_id) lastPairEndTime[match.pareja1_id] = matchEndObj;
+                if (match.pareja2_id) lastPairEndTime[match.pareja2_id] = matchEndObj;
                 courtOccupancy[courtKey] = matchEndObj;
 
                 pending.splice(matchIdx, 1);
                 scheduledCount++;
-                matchFound = true;
-                break; // Move to next slot
+                break;
             }
         }
 
         this.organizeCalendar();
-
         if (pending.length > 0) {
             Swal.fire({
                 title: 'Programación Parcial',
@@ -1467,6 +1434,105 @@ export class TorneoGestionComponent implements OnInit {
         });
     }
 
+    toggleInscripciones() {
+        if (!this.selectedTorneo) return;
+
+        const newState = !this.selectedTorneo.inscripciones_abiertas;
+        
+        Swal.fire({
+            title: newState ? '¿Abrir Inscripciones?' : '¿Cerrar Inscripciones?',
+            text: newState ? 'Los usuarios podrán ver y anotarse en este torneo.' : 'Nadie más podrá inscribirse.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cambiar',
+            cancelButtonText: 'Cancelar'
+        }).then(result => {
+            if (result.isConfirmed) {
+                this.clubesService.updateTorneo({
+                    id: this.selectedTorneo.id,
+                    inscripciones_abiertas: newState ? 1 : 0
+                }).subscribe({
+                    next: (res: any) => {
+                        this.selectedTorneo.inscripciones_abiertas = newState;
+                        Swal.fire('¡Actualizado!', res.message, 'success');
+                        this.cdr.detectChanges();
+                    },
+                    error: (err: any) => {
+                        Swal.fire('Error', 'No se pudo cambiar el estado.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    toggleSemilla(ins: any) {
+        if (!ins.es_semilla) {
+            // Activar Semilla
+            Swal.fire({
+                title: 'Asignar Cabecera de Serie',
+                text: 'Ingresa el número de siembra (ej: 1, 2, 3...)',
+                input: 'number',
+                inputAttributes: { min: '1', step: '1' },
+                showCancelButton: true,
+                confirmButtonText: 'Asignar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    const nro = result.value ? parseInt(result.value) : 1;
+                    this.clubesService.updateInscripcionSiembra(ins.id, true, nro).subscribe({
+                        next: () => {
+                            ins.es_semilla = 1;
+                            ins.nro_siembra = nro;
+                            this.cdr.detectChanges();
+                        }
+                    });
+                }
+            });
+        } else {
+            // Desactivar
+            this.clubesService.updateInscripcionSiembra(ins.id, false, null).subscribe({
+                next: () => {
+                    ins.es_semilla = 0;
+                    ins.nro_siembra = null;
+                    this.cdr.detectChanges();
+                }
+            });
+        }
+    }
+
+    onPosterSelected(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            // 1. Previsualización Local Instantánea
+            const reader = new FileReader();
+            reader.onload = (e: any) => {
+                this.newTorneo.poster_url = e.target.result;
+                this.cdr.detectChanges();
+            };
+            reader.readAsDataURL(file);
+
+            // 2. Subida al Servidor
+            Swal.fire({
+                title: 'Subiendo Afiche...',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false
+            });
+
+            this.clubesService.subirPosterTorneo(file).subscribe({
+                next: (res: any) => {
+                    // Actualizamos con la URL real del servidor una vez terminada la subida
+                    this.newTorneo.poster_url = res.foto_url;
+                    Swal.fire('¡Éxito!', 'Afiche cargado correctamente.', 'success');
+                },
+                error: (err: any) => {
+                    Swal.fire('Error', 'No se pudo subir la imagen al servidor.', 'error');
+                }
+            });
+        }
+    }
+
     anadirParejaManual() {
         Swal.fire({
             title: 'Añadir Pareja Manual',
@@ -1606,6 +1672,7 @@ export class TorneoGestionComponent implements OnInit {
 
     onMouseUp() {
         this.isDragging = false;
+        this.calculateStats(); // Recalcular balance al terminar de arrastrar/clicar
     }
 
     applyDragState(dateKey: string, hour: number) {
@@ -1639,31 +1706,63 @@ export class TorneoGestionComponent implements OnInit {
 
     calculateStats() {
         let totalMatches = this.matchesToSchedule.length;
+        let isEstimation = false;
 
-        // Accurate category stats
+        // Si no hay partidos generados, usamos la predicción inteligente
+        if (totalMatches === 0) {
+            isEstimation = true;
+            this.categorias.forEach(cat => {
+                // PREDICCIÓN: Si hay inscritos usa inscritos, si no, usa la capacidad máxima configurada
+                const plannedInscritos = (cat.inscritos && cat.inscritos > 1) ? cat.inscritos : (cat.max_parejas || 8);
+                
+                if (plannedInscritos > 1) {
+                    const groupSize = this.selectedTorneo?.formato_grupos || 4;
+                    const numGroups = Math.ceil(plannedInscritos / groupSize);
+                    const matchesPerGroup = (groupSize * (groupSize - 1)) / 2;
+                    const estimatedGroupMatches = numGroups * matchesPerGroup;
+                    const classified = numGroups * 2;
+                    const estimatedPlayoffMatches = classified > 1 ? (classified - 1) : 0;
+                    
+                    totalMatches += (estimatedGroupMatches + estimatedPlayoffMatches);
+                }
+            });
+        }
+
+        // Estadísticas detalladas por categoría
         const catsStats = this.categorias.map(cat => {
-            const matchesOfCat = this.matchesToSchedule.filter(m => m.categoryId === cat.id);
+            let matchesCount = this.matchesToSchedule.filter(m => m.categoryId === cat.id).length;
+            
+            if (matchesCount === 0) {
+                const pIns = (cat.inscritos && cat.inscritos > 1) ? cat.inscritos : (cat.max_parejas || 8);
+                const gS = this.selectedTorneo?.formato_grupos || 4;
+                const nG = Math.ceil(pIns / gS);
+                matchesCount = (nG * (gS * (gS - 1)) / 2) + (nG * 2 - 1);
+            }
+
             return {
                 nombre: cat.nombre,
                 inscritos: cat.inscritos || 0,
-                partidos: matchesOfCat.length,
-                horas: (matchesOfCat.length * (this.matchDuration || 90)) / 60
+                partidos: Math.round(matchesCount),
+                horas: (matchesCount * (this.matchDuration || 90)) / 60
             };
         });
 
-        // Calculate Available Slot-Hours
         let totalHoursAvailable = 0;
         this.gridDays.forEach(d => {
             const hours = (this.availabilityGrid[d] || []).length;
             totalHoursAvailable += hours;
         });
 
-        const courtCount = this.planParams.selectedCanchasIds.length || this.clubCanchas.length || 1;
+        // Prioritize courts with 'luz' active (selection)
+        const activeCourts = this.clubCanchas.filter(c => c.luz).length;
+        const courtCount = activeCourts || this.clubCanchas.length || 1;
         const slotCapacity = totalHoursAvailable * courtCount;
 
         this.tournamentStats = {
+            isEstimation: isEstimation,
             totalInscritos: this.categorias.reduce((acc, c) => acc + (c.inscritos || 0), 0),
-            totalPartidosEstimados: totalMatches,
+            totalCapacidad: this.categorias.reduce((acc, c) => acc + (c.max_parejas || 0), 0),
+            totalPartidosEstimados: Math.round(totalMatches),
             horasNecesarias: (totalMatches * (this.matchDuration || 90)) / 60,
             horasDisponibles: slotCapacity,
             conflictos: this.detectConflicts(),
@@ -1676,46 +1775,35 @@ export class TorneoGestionComponent implements OnInit {
         const matches = this.matchesToSchedule.filter(m => m.tempDate && m.tempTime);
         const duration = this.matchDuration || 90;
 
-        const courtTimeline: { [key: string]: { start: Date, end: Date, match: any }[] } = {};
-        const playerTimeline: { [key: number]: { start: Date, end: Date, match: any }[] } = {};
+        for (let i = 0; i < matches.length; i++) {
+            const m1 = matches[i];
+            const start1 = new Date(`${m1.tempDate} ${m1.tempTime}:00`);
+            const end1 = new Date(start1.getTime() + duration * 60000);
 
-        matches.forEach(m => {
-            if (!m.tempDate || !m.tempTime) return;
-            const start = new Date(`${m.tempDate} ${m.tempTime}:00`);
-            const end = new Date(start.getTime() + duration * 60000);
+            for (let j = i + 1; j < matches.length; j++) {
+                const m2 = matches[j];
+                const start2 = new Date(`${m2.tempDate} ${m2.tempTime}:00`);
+                const end2 = new Date(start2.getTime() + duration * 60000);
 
-            // Court check
-            const cKey = `${m.tempCanchaId}_${m.tempDate}`;
-            if (!courtTimeline[cKey]) courtTimeline[cKey] = [];
+                const overlaps = start1 < end2 && end1 > start2;
+                if (!overlaps) continue;
 
-            courtTimeline[cKey].forEach(existing => {
-                if (start < existing.end && end > existing.start) {
-                    conflicts.push(`Cancha ${m.court || m.tempCanchaId}: Solapamiento a las ${m.tempTime}`);
+                // 1. Court Conflict
+                if (m1.tempCanchaId === m2.tempCanchaId && m1.tempDate === m2.tempDate) {
+                    conflicts.push(`Cancha ${m1.court || m1.tempCanchaId}: ${m1.ronda} vs ${m2.ronda} a las ${m1.tempTime}`);
                 }
-            });
-            courtTimeline[cKey].push({ start, end, match: m });
 
-            // Player check (only for real pairs)
-            [m.pareja1_id, m.pareja2_id].forEach(pid => {
-                if (!pid || pid < 0) return;
-                if (!playerTimeline[pid]) playerTimeline[pid] = [];
-
-                playerTimeline[pid].forEach(existing => {
-                    const sameTime = (start < existing.end && end > existing.start);
-                    if (sameTime) {
-                        conflicts.push(`Pareja ID ${pid}: Dos partidos a la vez (${m.tempTime})`);
-                    }
-
-                    const timeDiff = Math.abs(start.getTime() - existing.end.getTime()) / 60000;
-                    const timeDiffRev = Math.abs(existing.start.getTime() - end.getTime()) / 60000;
-
-                    if (m.tempDate === existing.match.tempDate && (timeDiff < 90 || timeDiffRev < 90) && !sameTime) {
-                        conflicts.push(`Pareja ID ${pid}: Descanso insuficiente (<90m).`);
+                // 2. Player Conflict (if real IDs exist and match)
+                const p1_ids = [m1.pareja1_id, m1.pareja2_id].filter(id => id && id > 0);
+                const p2_ids = [m2.pareja1_id, m2.pareja2_id].filter(id => id && id > 0);
+                
+                p1_ids.forEach(id => {
+                    if (p2_ids.includes(id)) {
+                        conflicts.push(`Pareja ${id}: Doble partido (${m1.ronda} y ${m2.ronda})`);
                     }
                 });
-                playerTimeline[pid].push({ start, end, match: m });
-            });
-        });
+            }
+        }
 
         return [...new Set(conflicts)].slice(0, 10);
     }
