@@ -587,7 +587,16 @@ export class EntrenadorAgendarComponent implements OnInit {
     formatDate(date: Date): string { return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`; }
 
     openBooking(date: Date, hour: string, slotData: any) {
-        if (!slotData) return;
+        // If no slotData exists (availability not opened), create a virtual one for the coach
+        if (!slotData) {
+            slotData = {
+                fecha_inicio: `${this.formatDate(date)} ${hour}:00`,
+                time: hour,
+                club_id: 1, // Default club fallback
+                ocupado: false,
+                is_virtual: true // Flag to know it wasn't in the DB
+            };
+        }
         
         if (slotData.ocupado) {
             this.selectedSlot = { date, dateStr: this.formatDate(date), hour, slotData };
@@ -840,7 +849,7 @@ export class EntrenadorAgendarComponent implements OnInit {
             ? [this.alumnoSeleccionado] 
             : this.alumnosSeleccionados;
 
-        const primerJugador = jugadores[0];
+        const primerJugador = jugadores[0] || null;
         const jugadorIds = jugadores.map((j: any) => j.jugador_id || j.id);
 
         // Check if we need to assign a pack
@@ -849,9 +858,9 @@ export class EntrenadorAgendarComponent implements OnInit {
             ? true 
             : (this.tipoClaseSeleccionado === 'multijugador'
                 ? true
-                : (this.tipoClaseSeleccionado === 'individual' ? (primerJugador.sesiones_restantes || 0) <= 0 : false));
+                : (this.tipoClaseSeleccionado === 'individual' ? (primerJugador?.sesiones_restantes || 0) <= 0 : false));
 
-        const obsPack = (needsPack && this.packAAsignar)
+        const obsPack = (needsPack && this.packAAsignar && primerJugador)
             ? this.entrenamientoService.insertPack({
                 pack_id: this.packAAsignar.id || this.packAAsignar.pack_id,
                 jugador_id: primerJugador.jugador_id || primerJugador.id,
@@ -859,7 +868,7 @@ export class EntrenadorAgendarComponent implements OnInit {
                 metodo_pago: 'manual_entrenador'
               })
             : new Observable(obs => {
-                obs.next({ success: true, pack_jugador_id: primerJugador.pack_jugador_id });
+                obs.next({ success: true, pack_jugador_id: primerJugador?.pack_jugador_id || 0 });
                 obs.complete();
               });
 
@@ -972,7 +981,7 @@ export class EntrenadorAgendarComponent implements OnInit {
                     estado: 'reservado',
                     recurrencia: String(this.recurrencia || 1),
                     tipo: this.tipoClaseSeleccionado,
-                    club_id: String(this.selectedSlot.slotData.club_id || 1),
+                    club_id: String(this.selectedSlot.slotData?.club_id || 1),
                     malla_id: String(this.planificacionId || 0),
                     clase_id: String(this.claseMallaId || 0),
                     clase_titulo: this.selectedClaseToPreview?.titulo || ''

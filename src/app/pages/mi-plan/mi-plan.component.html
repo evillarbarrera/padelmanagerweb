@@ -24,7 +24,7 @@
       </div>
 
       <!-- NO ACTIVE PLAN STATE (Selection) -->
-      <section class="plan-selection animate-up" *ngIf="!isLoading && (!sub || sub.status === 'inactive')">
+      <section class="plan-selection animate-up" *ngIf="!isLoading && (!sub || sub.status === 'inactive' || sub.status === 'blocked' || sub.status === 'past_due')">
         <div class="empty-state card-pm plan-selection-header mb-5">
           <div class="icon-box">💎</div>
           <div class="txt">
@@ -54,7 +54,7 @@
       </section>
 
       <!-- ACTIVE SUBSCRIPTION VIEW -->
-      <div class="billing-content animate-up" *ngIf="!isLoading && sub && sub.status !== 'inactive'">
+      <div class="billing-content animate-up" *ngIf="!isLoading && sub && sub.status === 'active'">
         
         <!-- Stats Widgets -->
         <div class="overview-row">

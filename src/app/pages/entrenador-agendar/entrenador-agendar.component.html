@@ -97,7 +97,8 @@
                              class="month-day-cell" 
                              [class.today]="isToday(day)"
                              [class.past]="isPastDay(day)"
-                             [class.other-month]="day.getMonth() !== currentDate.getMonth()">
+                             [class.other-month]="day.getMonth() !== currentDate.getMonth()"
+                             (click)="currentDate = day; switchView('day')">
                             <span class="m-num">{{ day | date:'d' }}</span>
                             <div class="m-status-dots" *ngIf="getReservasCount(day) > 0">
                                 <span class="badge" style="background: #111; color: #ccff00; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">{{ getReservasCount(day) }} clases</span>

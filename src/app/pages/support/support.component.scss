@@ -1,0 +1,127 @@
+.support-container {
+  background: #000;
+  color: #fff;
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.simple-nav {
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #fff;
+    font-weight: 800;
+    
+    img { height: 30px; }
+  }
+}
+
+.support-header {
+  padding: 80px 0;
+  text-align: center;
+  background: linear-gradient(to bottom, #0a0a0a, #000);
+  
+  h1 {
+    font-size: 3.5rem;
+    font-weight: 950;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #fff, #888);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  p {
+    font-size: 1.2rem;
+    color: #888;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-bottom: 100px;
+}
+
+.support-card {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 40px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  text-align: center;
+  transition: 0.3s;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-5px);
+  }
+  
+  .icon { font-size: 3rem; margin-bottom: 20px; }
+  
+  h3 { font-size: 1.5rem; font-weight: 800; margin-bottom: 15px; }
+  
+  p { color: #666; margin-bottom: 25px; line-height: 1.5; }
+  
+  .btn-link {
+    background: #ccff00;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-block;
+  }
+}
+
+.faq-section {
+  max-width: 800px;
+  margin: 0 auto 100px;
+  
+  h2 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.faq-item {
+  h4 { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; color: #ccff00; }
+  p { color: #888; line-height: 1.6; }
+}
+
+.simple-footer {
+  padding: 40px 0;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #444;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .support-grid { grid-template-columns: 1fr; }
+  .support-header h1 { font-size: 2.5rem; }
+}

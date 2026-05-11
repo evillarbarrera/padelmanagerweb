@@ -32,7 +32,7 @@ export class TorneoGestionComponent implements OnInit {
 
     // UI State
     activeTab: 'create' | 'list' = 'list';
-    activeDetailTab: 'config' | 'inscripciones' | 'grupos' | 'playoffs' | 'programacion' | 'resumen' | 'generar' = 'config';
+    activeDetailTab: 'config' | 'inscripciones' | 'grupos' | 'playoffs' | 'programacion' | 'resumen' | 'generar' | 'editar' = 'config';
 
     // New Availability Grid Config
     // key: 'YYYY-MM-DD', value: array of hours [8, 9, 10, ... 23] enabled
@@ -65,6 +65,7 @@ export class TorneoGestionComponent implements OnInit {
         formato_grupos: 4, // Default to 4 as per user preference
         formato_sets: 'Full Sets',
         poster_url: null,
+        precio: 0,
         categorias: [
             { nombre: 'Iniciación', max_parejas: 12, puntos_repartir: 100 },
             { nombre: 'Intermedio', max_parejas: 16, puntos_repartir: 250 },
@@ -72,7 +73,7 @@ export class TorneoGestionComponent implements OnInit {
         ]
     };
 
-    matchDuration: number = 90; // Default match duration in minutes
+    matchDuration: number = 75; // Default match duration in minutes
 
     // UI & Features State
     activeConfigIndex: number = 0;
@@ -481,38 +482,59 @@ export class TorneoGestionComponent implements OnInit {
 
         // Create a pool of "Assignable Slots"
         const slots: any[] = [];
-        const courtNextFree: { [key: number]: number } = {}; // courtId -> timestamp free
-        const durationMins = this.matchDuration || 90;
+        const durationMins = this.matchDuration || 75;
 
         this.gridDays.forEach(day => {
             if (this.availabilityGrid[day]) {
-                // Initialize courts for the new day
-                usableCourts.forEach(c => courtNextFree[c.id] = 0);
+                const hours = this.availabilityGrid[day].sort((a, b) => a - b);
+                if (hours.length === 0) return;
 
-                this.availabilityGrid[day].sort((a, b) => a - b).forEach(h => {
-                    const parts = day.split('-');
-                    const currentTimestamp = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), h, 0, 0).getTime();
+                // 1a. Group discrete hours into continuous time blocks
+                let blocks = [];
+                let currentBlock = { start: hours[0], end: hours[0] + 1 };
+                
+                for (let i = 1; i < hours.length; i++) {
+                    if (hours[i] === currentBlock.end) {
+                        currentBlock.end = hours[i] + 1; // Extend block
+                    } else {
+                        blocks.push(currentBlock);
+                        currentBlock = { start: hours[i], end: hours[i] + 1 };
+                    }
+                }
+                blocks.push(currentBlock);
 
-                    usableCourts.forEach((court) => {
-                        // Only add slot if court is free
-                        if (currentTimestamp >= (courtNextFree[court.id] || 0)) {
+                // 1b. Fill each block with back-to-back matches of `durationMins`
+                usableCourts.forEach((court) => {
+                    blocks.forEach(block => {
+                        const parts = day.split('-');
+                        let currentTimestamp = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), block.start, 0, 0).getTime();
+                        const blockEndTimestamp = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), block.end, 0, 0).getTime();
+
+                        while (currentTimestamp + (durationMins * 60000) <= blockEndTimestamp) {
+                            const dateObj = new Date(currentTimestamp);
+                            const h = dateObj.getHours();
+                            const m = dateObj.getMinutes();
+                            const timeString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                            
                             slots.push({
                                 date: day,
                                 hour: h,
+                                timeString: timeString,
                                 courtId: court.id,
                                 courtName: court.nombre,
                                 timestamp: currentTimestamp,
-                                label: `${day} ${h}:00 - ${court.nombre}`
+                                label: `${day} ${timeString} - ${court.nombre}`
                             });
-                            // Mark when this court will be free again
-                            courtNextFree[court.id] = currentTimestamp + (durationMins * 60000);
+                            
+                            // Advance exactly by the duration of the match (e.g. 75 minutes)
+                            currentTimestamp += (durationMins * 60000);
                         }
                     });
                 });
             }
         });
 
-        // Sort slots by time
+        // Sort slots chronologically
         slots.sort((a, b) => a.timestamp - b.timestamp);
         let slotIndex = 0;
         const allGroupMatches: any[] = [];
@@ -565,13 +587,16 @@ export class TorneoGestionComponent implements OnInit {
                 }
             });
 
-            // Playoffs
-            const numPairs = inscritos.length;
+            // Playoffs - Expert Padel Logic
+            // In Padel, usually the top 2 from each group advance to the bracket.
+            const advancingPairs = dist.length * 2; // Number of groups * 2
             let rounds: string[] = [];
-            if (numPairs >= 32) rounds = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semi', 'Final'];
-            else if (numPairs >= 16) rounds = ['Octavos', 'Cuartos', 'Semi', 'Final'];
-            else if (numPairs >= 8) rounds = ['Cuartos', 'Semi', 'Final'];
-            else if (numPairs >= 4) rounds = ['Semi', 'Final'];
+            
+            if (advancingPairs > 16) rounds = ['Dieciseisavos', 'Octavos', 'Cuartos', 'Semi', 'Final'];
+            else if (advancingPairs > 8) rounds = ['Octavos', 'Cuartos', 'Semi', 'Final'];
+            else if (advancingPairs > 4) rounds = ['Cuartos', 'Semi', 'Final'];
+            else if (advancingPairs > 2) rounds = ['Semi', 'Final'];
+            else if (advancingPairs > 0) rounds = ['Final'];
 
             rounds.forEach(round => {
                 const matchCount = round === 'Dieciseisavos' ? 16 : (round === 'Octavos' ? 8 : (round === 'Cuartos' ? 4 : (round === 'Semi' ? 2 : 1)));
@@ -590,50 +615,202 @@ export class TorneoGestionComponent implements OnInit {
             });
         });
 
-        // 3. Phased Scheduling (Groups -> Finals)
+        // 3. Phased Scheduling - Expert Padel Distribution
         this.matchesToSchedule = [];
         const lastDay = this.gridDays[this.gridDays.length - 1];
 
-        const sundayAfternoonCutoff = 15; // 3PM Sunday is for Finals/Semis
-        const regularPool = slots.filter(s => s.date !== lastDay || s.hour < sundayAfternoonCutoff);
-        const finalPool = slots.filter(s => s.date === lastDay && s.hour >= sundayAfternoonCutoff);
+        const semiCount = playoffRoundsMap['Semi'].length;
+        const finalCount = playoffRoundsMap['Final'].length;
+        const requiredFinalSlots = semiCount + finalCount;
 
-        // Helper to schedule into specific slot pool
-        const scheduleInPool = (batch: any[], pool: any[], poolIdxRef: { val: number }) => {
-            const shuffled = batch.sort(() => Math.random() - 0.5);
-            shuffled.forEach(m => {
-                if (poolIdxRef.val < pool.length) {
-                    const slot = pool[poolIdxRef.val++];
-                    m.tempDate = slot.date;
-                    m.tempTime = `${slot.hour}:00`;
-                    m.tempCanchaId = slot.courtId;
-                    m.court = slot.courtName;
-                    this.matchesToSchedule.push(m);
+        const sundayAfternoonCutoff = 15; // 3PM Sunday is for Finals/Semis
+        const fPoolRaw = slots.filter(s => s.date === lastDay && s.hour >= sundayAfternoonCutoff);
+
+        // Reverse Priority Allocation: Ensure Semis and Finals ALWAYS get space at the end of the tournament
+        let fPool = [];
+        if (fPoolRaw.length >= requiredFinalSlots) {
+            fPool = fPoolRaw;
+        } else {
+            // Take exactly the number of slots needed from the very end of the tournament
+            fPool = slots.slice(-Math.max(requiredFinalSlots, fPoolRaw.length));
+        }
+
+        // rPool gets the remaining slots (everything not in fPool)
+        const rPool = slots.filter(s => !fPool.includes(s));
+
+        // Player Constraints Trackers
+        const playerDailyMatches: { [playerId: string]: { [date: string]: number } } = {};
+        const playerLastMatch: { [playerId: string]: number } = {};
+
+        const getPlayerIds = (m: any) => {
+            let ids = [];
+            if (m.team1 && m.team1.id) ids.push(m.team1.id);
+            if (m.team2 && m.team2.id) ids.push(m.team2.id);
+            // If playoff/dummy, track by category+round to prevent back-to-back in playoffs
+            if (ids.length === 0) {
+                ids.push(`${m.categoryId}_playoffs`);
+            }
+            return ids;
+        };
+
+        const canPlay = (m: any, slot: any) => {
+            const ids = getPlayerIds(m);
+            for (let id of ids) {
+                if (playerDailyMatches[id] && playerDailyMatches[id][slot.date] >= 2) return false;
+                // Minimum rest period: 1 match duration gap
+                if (playerLastMatch[id] && (slot.timestamp - playerLastMatch[id]) < (durationMins * 60000)) return false;
+            }
+            return true;
+        };
+
+        const violatesAmateurRestrictions = (m: any, slot: any) => {
+            // In amateur padel, players have day/time restrictions.
+            // We check if the team object has declared any restricted days.
+            const checkTeam = (team: any) => {
+                if (!team) return false;
+                // This gracefully handles generic restrictions if added to the team object in the future
+                // e.g. team.dias_restringidos = ['15-05-2026']
+                if (team.dias_restringidos && team.dias_restringidos.includes(slot.date)) return true;
+                
+                // Common amateur logic: If slot is weekday (Mon=1..Fri=5) and hour < 18:00, 
+                // and team explicitly marked "Solo tardes", we block it.
+                const dayOfWeek = new Date(slot.timestamp).getDay();
+                if (dayOfWeek >= 1 && dayOfWeek <= 5 && slot.hour < 18 && team.solo_tardes) return true;
+
+                return false;
+            };
+            return checkTeam(m.team1) || checkTeam(m.team2);
+        };
+
+        const recordPlay = (m: any, slot: any) => {
+            const ids = getPlayerIds(m);
+            for (let id of ids) {
+                if (!playerDailyMatches[id]) playerDailyMatches[id] = {};
+                playerDailyMatches[id][slot.date] = (playerDailyMatches[id][slot.date] || 0) + 1;
+                playerLastMatch[id] = slot.timestamp;
+            }
+        };
+
+        const mixCategories = (matches: any[]) => {
+            // Interleaving Algorithm: Distributes categories evenly to avoid clustering
+            const byCategory: { [catId: string]: any[] } = {};
+            matches.forEach(m => {
+                if (!byCategory[m.categoryId]) byCategory[m.categoryId] = [];
+                byCategory[m.categoryId].push(m);
+            });
+            const mixed = [];
+            let added = true;
+            while(added) {
+                added = false;
+                for (const catId in byCategory) {
+                    if (byCategory[catId].length > 0) {
+                        mixed.push(byCategory[catId].shift());
+                        added = true;
+                    }
                 }
+            }
+            return mixed;
+        };
+
+        const scheduleIntelligently = (batch: any[], primaryPool: any[], fallbackPool: any[]) => {
+            // Interleave categories to ensure visual and chronological variety
+            const mixedBatch = mixCategories(batch);
+
+            // Priority: Schedule groups first, then playoffs
+            mixedBatch.forEach(m => {
+                let assigned = false;
+                
+                // Pass 1: Strict constraints on Primary Pool (Ideal Phase)
+                for (let i = 0; i < primaryPool.length; i++) {
+                    const slot = primaryPool[i];
+                    if (!slot.used && canPlay(m, slot) && !violatesAmateurRestrictions(m, slot)) {
+                        slot.used = true;
+                        m.tempDate = slot.date;
+                        m.tempTime = slot.timeString;
+                        m.tempCanchaId = slot.courtId;
+                        m.court = slot.courtName;
+                        recordPlay(m, slot);
+                        assigned = true;
+                        break;
+                    }
+                }
+
+                // Pass 2: Strict constraints on Fallback Pool (If forced to overflow Phase)
+                if (!assigned && fallbackPool) {
+                    for (let i = 0; i < fallbackPool.length; i++) {
+                        const slot = fallbackPool[i];
+                        if (!slot.used && canPlay(m, slot) && !violatesAmateurRestrictions(m, slot)) {
+                            slot.used = true;
+                            m.tempDate = slot.date;
+                            m.tempTime = slot.timeString;
+                            m.tempCanchaId = slot.courtId;
+                            m.court = slot.courtName;
+                            recordPlay(m, slot);
+                            assigned = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Pass 3: Relax constraints on Fallback Pool (Force fit if tight on days, BUT still respect work hours)
+                if (!assigned && fallbackPool) {
+                    for (let i = 0; i < fallbackPool.length; i++) {
+                        const slot = fallbackPool[i];
+                        if (!slot.used && !violatesAmateurRestrictions(m, slot)) {
+                            slot.used = true;
+                            m.tempDate = slot.date;
+                            m.tempTime = slot.timeString;
+                            m.tempCanchaId = slot.courtId;
+                            m.court = slot.courtName;
+                            recordPlay(m, slot);
+                            assigned = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!assigned) {
+                    m.tempDate = '';
+                    m.tempTime = '';
+                    m.tempCanchaId = null;
+                    m.court = 'Sin Horario';
+                }
+                this.matchesToSchedule.push(m);
             });
         };
 
-        const regIdx = { val: 0 };
-        const finIdx = { val: 0 };
+        const earlyPlayoffMatches = [...playoffRoundsMap['Dieciseisavos'], ...playoffRoundsMap['Octavos']];
+        const midPlayoffMatches = playoffRoundsMap['Cuartos'];
 
-        // Groups: Use earlier slots (or all if only 1 day)
-        const gPool = regularPool.length > 0 ? regularPool : slots;
-        scheduleInPool(allGroupMatches, gPool, regIdx);
+        const groupCount = allGroupMatches.length;
+        const earlyCount = earlyPlayoffMatches.length;
+        const midCount = midPlayoffMatches.length;
+        const totalRegCount = groupCount + earlyCount + midCount;
+
+        // Phase-Based Distributed Allocation (Professional Pacing)
+        let groupPool = rPool;
+        let earlyPool = rPool;
+        let midPool = rPool;
+
+        if (rPool.length >= totalRegCount && totalRegCount > 0) {
+            const gSlots = Math.floor((groupCount / totalRegCount) * rPool.length);
+            const eSlots = Math.floor((earlyCount / totalRegCount) * rPool.length);
+            
+            groupPool = rPool.slice(0, gSlots);
+            earlyPool = rPool.slice(gSlots, gSlots + eSlots);
+            midPool = rPool.slice(gSlots + eSlots);
+        }
         
-        // Earlier Playoff Rounds (Dieciseisavos, Octavos): Also use Group days if possible
-        scheduleInPool(playoffRoundsMap['Dieciseisavos'], gPool, regIdx);
-        scheduleInPool(playoffRoundsMap['Octavos'], gPool, regIdx);
-        
-        // Mid-Point (Cuartos): End of Group Days or Start of Final Day
-        scheduleInPool(playoffRoundsMap['Cuartos'], gPool, regIdx);
+        // Intelligent Phase Loading (Try ideal phase first, fallback to entire week if constraints force it)
+        scheduleIntelligently(allGroupMatches, groupPool, rPool);
+        scheduleIntelligently(earlyPlayoffMatches, earlyPool, rPool);
+        scheduleIntelligently(midPlayoffMatches, midPool, rPool);
 
-        // Semis and Finals: ALWAYS LAST DAY (if tournament spans more than 1 day)
-        const fPool = finalPool.length > 0 ? finalPool : slots;
-        // If final day is crowded, they will take remaining slots
-        scheduleInPool(playoffRoundsMap['Semi'], fPool, finIdx);
-        scheduleInPool(playoffRoundsMap['Final'], fPool, finIdx);
+        // Semis and Finals always clustered at the very end
+        scheduleIntelligently(playoffRoundsMap['Semi'], fPool, fPool);
+        scheduleIntelligently(playoffRoundsMap['Final'], fPool, fPool);
 
-        console.log('Phased scheduling complete: Finals anchored to last day.');
+        console.log('Phased scheduling complete: Chronological proportional distribution applied.');
 
         // 4. Update Views
         this.playoffMatches = this.matchesToSchedule.filter(m => m.id <= -8000);
@@ -729,9 +906,8 @@ export class TorneoGestionComponent implements OnInit {
     loadCategorias(torneoId: number) {
         this.clubesService.getCategoriasTorneo(torneoId).subscribe(res => {
             this.categorias = res;
-            if (this.categorias.length > 0) {
-                this.selectCategoria(this.categorias[0]);
-            }
+            // Removed auto-selection of the first category to keep "Global View" active by default
+            this.calculateStats(); 
         });
     }
 
@@ -1042,7 +1218,7 @@ export class TorneoGestionComponent implements OnInit {
         const [endH, endM] = this.planParams.endTime.split(':').map(Number);
         const dayStartMins = startH * 60 + startM;
         const dayEndMins = endH * 60 + endM;
-        const duration = this.matchDuration || 90; 
+        const duration = this.matchDuration || 75; 
 
         let pending = this.matchesToSchedule.filter(m => !m.tempTime || m.tempTime === '');
         if (pending.length === 0) {
@@ -1284,6 +1460,48 @@ export class TorneoGestionComponent implements OnInit {
                 Swal.fire({
                     title: 'Error de Registro',
                     text: 'No se pudo crear el torneo. Verifica los datos e intenta nuevamente.',
+                    icon: 'error',
+                    confirmButtonColor: '#0f172a'
+                });
+            }
+        });
+    }
+
+    actualizarTorneo() {
+        if (!this.selectedTorneo.nombre || !this.selectedTorneo.fecha_inicio) {
+            Swal.fire({
+                title: 'Datos Incompletos',
+                text: 'El nombre del torneo y la fecha de inicio son campos obligatorios.',
+                icon: 'warning',
+                confirmButtonColor: '#0f172a'
+            });
+            return;
+        }
+
+        const payload = {
+            id: this.selectedTorneo.id,
+            nombre: this.selectedTorneo.nombre,
+            fecha_inicio: this.selectedTorneo.fecha_inicio,
+            fecha_fin: this.selectedTorneo.fecha_fin,
+            precio: this.selectedTorneo.precio,
+            formato_sets: this.selectedTorneo.formato_sets,
+            descripcion: this.selectedTorneo.descripcion
+        };
+
+        this.clubesService.updateTorneo(payload).subscribe({
+            next: (res) => {
+                Swal.fire({
+                    title: '¡Torneo Actualizado!',
+                    text: 'Los detalles del torneo han sido guardados.',
+                    icon: 'success',
+                    confirmButtonColor: '#0f172a'
+                });
+                this.loadInitialData(); // Reload tournament list
+            },
+            error: (err) => {
+                Swal.fire({
+                    title: 'Error de Actualización',
+                    text: 'No se pudo guardar la información. Intenta nuevamente.',
                     icon: 'error',
                     confirmButtonColor: '#0f172a'
                 });
@@ -1743,7 +1961,7 @@ export class TorneoGestionComponent implements OnInit {
                 nombre: cat.nombre,
                 inscritos: cat.inscritos || 0,
                 partidos: Math.round(matchesCount),
-                horas: (matchesCount * (this.matchDuration || 90)) / 60
+                horas: (matchesCount * (this.matchDuration || 75)) / 60
             };
         });
 
@@ -1763,7 +1981,7 @@ export class TorneoGestionComponent implements OnInit {
             totalInscritos: this.categorias.reduce((acc, c) => acc + (c.inscritos || 0), 0),
             totalCapacidad: this.categorias.reduce((acc, c) => acc + (c.max_parejas || 0), 0),
             totalPartidosEstimados: Math.round(totalMatches),
-            horasNecesarias: (totalMatches * (this.matchDuration || 90)) / 60,
+            horasNecesarias: (totalMatches * (this.matchDuration || 75)) / 60,
             horasDisponibles: slotCapacity,
             conflictos: this.detectConflicts(),
             categorias: catsStats
@@ -1773,7 +1991,7 @@ export class TorneoGestionComponent implements OnInit {
     detectConflicts(): string[] {
         const conflicts: string[] = [];
         const matches = this.matchesToSchedule.filter(m => m.tempDate && m.tempTime);
-        const duration = this.matchDuration || 90;
+        const duration = this.matchDuration || 75;
 
         for (let i = 0; i < matches.length; i++) {
             const m1 = matches[i];

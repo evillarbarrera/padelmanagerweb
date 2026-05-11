@@ -194,13 +194,7 @@ export class EntrenadorAgendaComponent implements OnInit {
           let diaBDFormato = dia.diaNumero;
 
           const directReservations = todasReservas.filter(r => r.fecha === dia.fecha && r.tipo !== 'grupal_template');
-          const templatesForDay = todasReservas.filter(r =>
-            r.tipo === 'grupal_template' &&
-            Number(r.dia_semana) === diaBDFormato &&
-            !directReservations.some(dr => dr.hora_inicio === r.hora_inicio)
-          );
-
-          dia.data = [...directReservations, ...templatesForDay];
+          dia.data = [...directReservations];
           dia.data.sort((a, b) => (a.hora_inicio || '').localeCompare(b.hora_inicio || ''));
         });
 

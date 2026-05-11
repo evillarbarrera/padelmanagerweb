@@ -229,7 +229,10 @@
                                 <img [src]="selectedEntrenador.foto_perfil || 'assets/images/placeholder_avatar.png'" class="big-avatar" alt="">
                                 <div class="hero-text">
                                     <h2>{{ selectedEntrenador.nombre }}</h2>
-                                    <span class="tag">@{{ selectedEntrenador.usuario }}</span>
+                                    <div class="hero-sub-tags">
+                                        <span class="tag">@{{ selectedEntrenador.usuario }}</span>
+                                        <span class="plan-tag-pm">{{ getPlanName(selectedEntrenador.plan_id) }}</span>
+                                    </div>
                                 </div>
                              </div>
                              <div class="hero-actions">
@@ -237,7 +240,7 @@
                              </div>
                         </div>
 
-                        <div class="detail-grids-pm mt-6">
+                        <div class="detail-grids-pm mt-6" *ngIf="entrenadorStats">
                             <div class="grid-stat-pm">
                                 <span class="l">Alumnos</span>
                                 <span class="v">{{ selectedEntrenador.total_alumnos || 0 }}</span>
@@ -247,9 +250,31 @@
                                 <span class="v">{{ selectedEntrenador.total_packs || 0 }}</span>
                             </div>
                             <div class="grid-stat-pm">
-                                <span class="l">Estado</span>
-                                <span class="v statusonline">Activo</span>
+                                <span class="l">Ingresos Totales</span>
+                                <span class="v">${{ (entrenadorStats.ventas?.ingresos_totales || 0) | number:'1.0-0' }}</span>
                             </div>
+                            <div class="grid-stat-pm">
+                                <span class="l">Reservas (F/P)</span>
+                                <span class="v">{{ entrenadorStats.reservas?.futuras || 0 }} / {{ entrenadorStats.reservas?.pasadas || 0 }}</span>
+                            </div>
+                            <div class="grid-stat-pm" [class.connected]="entrenadorStats.conectividad?.mercadopago">
+                                <span class="l">Mercado Pago</span>
+                                <span class="v">{{ entrenadorStats.conectividad?.mercadopago ? 'VINCULADO' : 'SIN VINCULAR' }}</span>
+                            </div>
+                            <div class="grid-stat-pm">
+                                <span class="l">Email</span>
+                                <span class="v small-text">{{ selectedEntrenador.email || 'N/A' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- ACTIONS SECTION -->
+                        <div class="action-footer-pm mt-6">
+                            <button class="btn-welcome-mail" (click)="enviarBienvenida(selectedEntrenador)">
+                                <span class="icon">📧</span> ENVIAR CORREO DE BIENVENIDA
+                            </button>
+                            <button class="btn-bank-data" (click)="verDatosBancarios(selectedEntrenador)">
+                                <span class="icon">💳</span> CONFIGURAR PAGOS
+                            </button>
                         </div>
                     </div>
 
@@ -290,6 +315,52 @@
                     <div class="radial-card">
                         <h3>Top Regiones</h3>
                         <div class="canvas-box-radial"><canvas id="regionChart"></canvas></div>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- TAB: GESTIÓN DE SEDES -->
+            <ng-container *ngIf="activeTab === 'clubes'">
+                <div class="page-intro-v2">
+                    <h1 class="premium-title-v2">GESTIÓN DE <span>SEDES</span></h1>
+                    <p class="premium-subtitle-v2">Administración y módulos activos por club.</p>
+                </div>
+
+                <div class="empty-detail-v2" *ngIf="loadingClubes">
+                    <div class="empty-message">
+                        <span class="icon">⌛</span>
+                        <p>Cargando sedes...</p>
+                    </div>
+                </div>
+
+                <div class="clubes-grid-pm mt-6" *ngIf="!loadingClubes">
+                    <div class="club-card-pm" *ngFor="let club of allClubes">
+                        <div class="c-header">
+                            <img [src]="club.logo || 'assets/images/placeholder_avatar.png'" alt="Logo Club" class="club-logo-pm">
+                            <div class="c-info">
+                                <h3>{{ club.nombre }}</h3>
+                                <p>{{ club.comuna }}, {{ club.region }}</p>
+                            </div>
+                        </div>
+                        <div class="c-body">
+                            <p class="c-address"><span class="icon">📍</span> {{ club.direccion }}</p>
+                        </div>
+                        <div class="c-modules">
+                            <div class="mod-toggle">
+                                <span>Reservas Activas</span>
+                                <label class="switch-pm">
+                                    <input type="checkbox" [checked]="club.reservas_activas == 1" (change)="toggleClubModule(club, 'reservas')">
+                                    <span class="slider-pm round"></span>
+                                </label>
+                            </div>
+                            <div class="mod-toggle">
+                                <span>Academia Activa</span>
+                                <label class="switch-pm">
+                                    <input type="checkbox" [checked]="club.academia_activa == 1" (change)="toggleClubModule(club, 'academia')">
+                                    <span class="slider-pm round"></span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </ng-container>

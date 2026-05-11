@@ -162,7 +162,17 @@ export class ClubesJugadorComponent implements OnInit {
     loadDisponibilidad() {
         if (!this.selectedCancha || !this.selectedFecha) return;
         this.clubesService.getDisponibilidadCancha(this.selectedCancha.id, this.selectedFecha).subscribe(res => {
-            this.horarios = res;
+            // Transform grouped response into flat slots for the selected cancha
+            this.horarios = res.map((item: any) => {
+                const canchaData = item.canchas.find((c: any) => c.cancha_id === this.selectedCancha.id);
+                return {
+                    hora_inicio: item.hora,
+                    hora_fin: canchaData?.hora_fin || '',
+                    disponible: canchaData ? canchaData.disponible : false,
+                    cancha_id: canchaData?.cancha_id,
+                    cancha_nombre: canchaData?.cancha_nombre
+                };
+            });
         });
     }
 

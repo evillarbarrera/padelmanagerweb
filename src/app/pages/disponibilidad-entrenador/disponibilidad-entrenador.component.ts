@@ -134,14 +134,15 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
-    const TOTAL_DIAS = 180; // Expand to 6 months
+    const TOTAL_DIAS_ATRAS = 60;
+    const TOTAL_DIAS_ADELANTE = 180;
     const nombresDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
     this.dias = [];
     this.mesesDisponibles = [];
 
-    for (let i = 0; i < TOTAL_DIAS; i++) {
+    for (let i = -TOTAL_DIAS_ATRAS; i < TOTAL_DIAS_ADELANTE; i++) {
         const fecha = new Date(hoy);
         fecha.setDate(hoy.getDate() + i);
         
@@ -160,7 +161,10 @@ export class DisponibilidadEntrenadorComponent implements OnInit {
     }
 
     if (this.mesesDisponibles.length > 0) {
-        this.selectedMonthLabel = this.mesesDisponibles[0].label;
+        // Por defecto seleccionamos el mes de hoy
+        const mHoy = `${nombresMeses[hoy.getMonth()]} ${hoy.getFullYear()}`;
+        this.selectedMonthLabel = this.mesesDisponibles.find(m => m.label === mHoy)?.label || this.mesesDisponibles[0].label;
+        this.diaSeleccionado = this.getLocalISODate(hoy);
         this.filtrarDiasPorMes();
     }
 }

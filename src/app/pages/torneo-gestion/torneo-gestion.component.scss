@@ -821,35 +821,35 @@
 .matches-container {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
 }
 
 .match-card-pm {
     background: #fff;
     border: 1px solid #e2e8f0;
-    border-left-width: 6px;
-    border-radius: 12px;
-    padding: 20px;
+    border-left-width: 4px;
+    border-radius: 8px;
+    padding: 12px 16px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 
     &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.1);
         z-index: 10;
         border-color: #0f172a;
     }
 
     .pm-header {
-        margin-bottom: 12px;
+        margin-bottom: 6px;
 
         .pm-category {
-            font-size: 9px;
+            font-size: 8px;
             font-weight: 1000;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             opacity: 0.9;
             text-transform: uppercase;
         }
@@ -857,34 +857,34 @@
 
     .pm-details {
         .pm-group {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 900;
             color: #0f172a;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             text-transform: uppercase;
         }
 
         .pm-ronda {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
             color: #64748b;
             text-transform: uppercase;
         }
 
         .pm-court {
-            margin-top: 12px;
-            font-size: 11px;
+            margin-top: 6px;
+            font-size: 10px;
             color: #475569;
             font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
     }
 
     .pm-footer {
-        margin-top: 15px;
-        padding-top: 15px;
+        margin-top: 10px;
+        padding-top: 10px;
         border-top: 1px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
@@ -892,11 +892,11 @@
 
         .pm-dots {
             display: flex;
-            gap: 5px;
+            gap: 4px;
 
             .dot {
-                width: 10px;
-                height: 10px;
+                width: 8px;
+                height: 8px;
                 border-radius: 50%;
                 background: #f1f5f9;
                 border: 1px solid #e2e8f0;
@@ -909,11 +909,11 @@
         }
 
         .pm-time {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 1000;
             color: #0f172a;
             background: #f8fafc;
-            padding: 4px 8px;
+            padding: 3px 6px;
             border-radius: 4px;
         }
     }

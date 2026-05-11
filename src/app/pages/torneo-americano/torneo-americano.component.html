@@ -113,6 +113,10 @@
                                     <label><span class="label-icon">⏱️</span> Minutos por Partido</label>
                                     <input type="number" [(ngModel)]="torneo.tiempo_por_partido" placeholder="20">
                                 </div>
+                                <div class="form-group">
+                                    <label><span class="label-icon">💵</span> Precio por Persona</label>
+                                    <input type="number" [(ngModel)]="torneo.precio" placeholder="Ej: 15000">
+                                </div>
                             </div>
 
                             <div class="points-config-header">
@@ -211,6 +215,10 @@
                     <div class="detail-column full-width" *ngIf="selectedTorneo">
                         <!-- SUB-TABS (ON TOP like main tabs) -->
                         <div class="main-tabs-nav">
+                            <button class="tab-btn" [class.active]="activeDetailTab === 'editar'"
+                                (click)="activeDetailTab = 'editar'">
+                                <span class="icon">✏️</span> Editar
+                            </button>
                             <button class="tab-btn" [class.active]="activeDetailTab === 'inscription'"
                                 (click)="activeDetailTab = 'inscription'">
                                 <span class="icon">📝</span> Inscripción
@@ -244,6 +252,41 @@
                                     <button class="btn-close-torneo" (click)="cerrarTorneo(selectedTorneo.id)">
                                         🏁 Cerrar Americano
                                     </button>
+                                </div>
+                            </div>
+
+                            <!-- TAB: EDITAR -->
+                            <div class="tab-content" *ngIf="activeDetailTab === 'editar'">
+                                <div class="management-section" *ngIf="!isCerrado">
+                                    <h3>Editar Torneo Americano</h3>
+                                    <div class="form-grid">
+                                        <div class="form-group" style="grid-column: span 2;">
+                                            <label>Nombre del Torneo</label>
+                                            <input type="text" [(ngModel)]="selectedTorneo.nombre">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Fecha</label>
+                                            <input type="date" [(ngModel)]="selectedTorneo.fecha">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Hora Inicio</label>
+                                            <input type="time" [(ngModel)]="selectedTorneo.hora_inicio">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Precio por Persona</label>
+                                            <input type="number" [(ngModel)]="selectedTorneo.precio">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Minutos por Partido</label>
+                                            <input type="number" [(ngModel)]="selectedTorneo.tiempo_por_partido">
+                                        </div>
+                                    </div>
+                                    <div class="form-footer" style="margin-top: 20px;">
+                                        <button class="btn-primary" (click)="actualizarAmericano()"><i class="fas fa-save"></i> Guardar Cambios</button>
+                                    </div>
+                                </div>
+                                <div *ngIf="isCerrado" class="empty-state">
+                                    El torneo está cerrado, no se puede editar.
                                 </div>
                             </div>
 

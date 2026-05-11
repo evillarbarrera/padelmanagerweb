@@ -45,6 +45,16 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         this.isSidebarOpen = !this.isSidebarOpen;
     }
 
+    getPlanName(id: number): string {
+        const plans: { [key: number]: string } = {
+            1: 'EMPRENDEDOR',
+            2: 'INICIAL 20',
+            3: 'PRO 40',
+            4: 'ELITE'
+        };
+        return plans[id] || 'SIN PLAN';
+    }
+
     get filteredEntrenadores() {
         if (!this.coachSearchQuery) return this.entrenadores;
         const query = this.coachSearchQuery.toLowerCase();
@@ -456,11 +466,55 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
                 this.loadingStats = false;
                 if (res.success) {
                     this.entrenadorStats = res.data;
+                    // Actualizar el objeto e con datos frescos si es necesario
+                    this.selectedEntrenador.mp_collector_id = res.data.trainer.mp_collector_id;
+                    this.selectedEntrenador.email = res.data.trainer.email;
                 }
             },
             error: (err) => {
                 this.loadingStats = false;
                 console.error('Error loading trainer stats', err);
+            }
+        });
+    }
+
+    enviarBienvenida(e: any) {
+        Swal.fire({
+            title: '¿Enviar correo de bienvenida?',
+            text: `Se enviará un correo a ${e.usuario || e.email} con la invitación a la reunión explicativa.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, enviar ahora',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ccff00',
+            cancelButtonColor: '#ff4d4d',
+            background: '#111',
+            color: '#fff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Enviando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                this.http.post<any>(`${this.apiUrl}/admin/send_welcome_email.php`, {
+                    entrenador_id: e.id
+                }, { headers: this.getHeaders() }).subscribe({
+                    next: (res) => {
+                        if (res.success) {
+                            Swal.fire('¡Enviado!', res.message, 'success');
+                        } else {
+                            Swal.fire('Error', res.error, 'error');
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Error enviando bienvenida:', err);
+                        Swal.fire('Error', 'No se pudo enviar el correo en este momento.', 'error');
+                    }
+                });
             }
         });
     }

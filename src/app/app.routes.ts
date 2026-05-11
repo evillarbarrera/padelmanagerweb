@@ -23,8 +23,10 @@ import { TorneoGestionComponent } from './pages/torneo-gestion/torneo-gestion.co
 import { TorneoJugadorComponent } from './pages/torneo-jugador/torneo-jugador.component';
 import { EntrenadorCuponesComponent } from './pages/entrenador-cupones/entrenador-cupones.component';
 import { ClubHomeComponent } from './pages/club-home/club-home.component';
+import { SupportComponent } from './pages/support/support.component';
 
 export const routes: Routes = [
+  { path: 'soporte', component: SupportComponent },
   { path: 'unete', component: AceptarInvitacionComponent },
   { path: 'entrenador-agendar', component: EntrenadorAgendarComponent },
   { path: 'reset-password', component: ResetPasswordComponent },

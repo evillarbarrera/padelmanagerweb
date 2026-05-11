@@ -93,6 +93,12 @@ export class ClubesService {
         });
     }
 
+    updateAmericano(torneoData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/torneos/update_americano.php`, torneoData, {
+            headers: this.getHeaders()
+        });
+    }
+
     joinTorneo(torneoId: number, usuarioId: number): Observable<any> {
         return this.http.post(`${this.apiUrl}/torneos/join_torneo.php`, { torneo_id: torneoId, usuario_id: usuarioId }, {
             headers: this.getHeaders()

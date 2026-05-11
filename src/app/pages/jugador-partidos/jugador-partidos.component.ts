@@ -4,13 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { MysqlService } from '../../services/mysql.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { Router } from '@angular/router';
+import { AssetService } from '../../services/asset.service';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-jugador-partidos',
   standalone: true,
   imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './jugador-partidos.component.html',
-  styleUrl: './jugador-partidos.component.css'
+  styleUrl: './jugador-partidos.component.scss'
 })
 export class JugadorPartidosComponent implements OnInit {
   userId = Number(localStorage.getItem('userId'));
@@ -51,8 +55,16 @@ export class JugadorPartidosComponent implements OnInit {
   set3B: number | null = null;
   
   idGanador: number | null = null;
+  
+  // Charts
+  winLossChart: any;
+  activityChart: any;
 
-  constructor(private mysql: MysqlService, private router: Router) {}
+  constructor(
+    public mysql: MysqlService, 
+    public router: Router,
+    public assetService: AssetService
+  ) {}
 
   ngOnInit() {
     this.loadPartidos();
@@ -76,8 +88,11 @@ export class JugadorPartidosComponent implements OnInit {
         this.clubesList = Array.from(cMap.entries()).map(([id, nombre]) => ({ id, nombre }));
 
         this.isLoading = false;
+        setTimeout(() => {
+          this.renderCharts();
+        }, 100);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading matches:', err);
         this.isLoading = false;
       }
@@ -168,6 +183,84 @@ export class JugadorPartidosComponent implements OnInit {
     this.mysql.saveMatchResult(payload).subscribe(() => {
         this.showResultModal = false;
         this.loadPartidos();
+    });
+  }
+
+  renderCharts() {
+    this.renderWinLossChart();
+    this.renderActivityChart();
+  }
+
+  renderWinLossChart() {
+    const ctx = document.getElementById('winLossChart') as HTMLCanvasElement;
+    if (!ctx) return;
+    if (this.winLossChart) this.winLossChart.destroy();
+
+    this.winLossChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Victorias', 'Derrotas'],
+        datasets: [{
+          data: [this.victorias, this.derrotas],
+          backgroundColor: ['#ccff00', '#111'],
+          borderWidth: 0,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { weight: 'bold' }, color: '#000' } }
+        },
+        cutout: '75%'
+      }
+    });
+  }
+
+  renderActivityChart() {
+    const ctx = document.getElementById('activityChart') as HTMLCanvasElement;
+    if (!ctx) return;
+    if (this.activityChart) this.activityChart.destroy();
+
+    // Prepare data (last 6 months)
+    const months: any = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const label = d.toLocaleString('es-ES', { month: 'short' });
+        months[label] = 0;
+    }
+
+    this.partidos.forEach(p => {
+        const d = new Date(p.fecha);
+        const label = d.toLocaleString('es-ES', { month: 'short' });
+        if (months[label] !== undefined) {
+            months[label]++;
+        }
+    });
+
+    this.activityChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(months),
+        datasets: [{
+          label: 'Partidos',
+          data: Object.values(months),
+          backgroundColor: '#ccff00',
+          borderRadius: 8,
+          barThickness: 25
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1 } },
+          x: { grid: { display: false } }
+        }
+      }
     });
   }
 }

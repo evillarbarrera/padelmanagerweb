@@ -284,8 +284,13 @@ export class EntrenadorHomeComponent implements OnInit {
             const localStep = this.steps.find(s => s.id === apiStep.id);
             if (localStep) localStep.done = apiStep.done;
           });
+          const previousProgress = this.onboardingProgress;
           this.onboardingProgress = res.progress;
           this.showOnboarding = this.onboardingProgress < 100;
+          
+          if (this.onboardingProgress === 100 && previousProgress < 100 && previousProgress !== 0) {
+            this.popupService.success('¡Felicidades!', 'Has completado tu configuración inicial. Un ejecutivo se contactará contigo para activar tus 30 días de regalo.');
+          }
         }
       },
       error: (err) => console.error('Error validation onboarding:', err)

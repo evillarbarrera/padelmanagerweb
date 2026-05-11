@@ -33,82 +33,90 @@
         </div>
       </header>
 
-      <!-- 🏟️ ADVANCED TACTICAL HUD: ONBOARDING v8 (Expert UX) -->
-      <section class="onboarding-tactical-hud fade-in" *ngIf="showOnboarding">
-        <div class="hud-container">
+      <!-- 🚀 TACTICAL HUD v8: COCKPIT LAYOUT (UX Optimized) -->
+      <section class="onboarding-tactical-hud cockpit-theme fade-in" *ngIf="showOnboarding">
+        
+        <div class="hud-cockpit-container">
           
-          <!-- LEFT: PADELMANAGER STRATEGIC CORNER -->
-          <div class="hud-sidebar">
-            <div class="boli-stage">
-              <div class="boli-spotlight"></div>
-              <div class="boli-mascot-v2" [class.happy]="onboardingProgress > 50">
-                <div class="bola-headband">PADELMANAGER</div>
-                <div class="mascot-seams"></div>
-                <div class="boli-eyes">
-                  <div class="eye left"><div class="pupil"></div></div>
-                  <div class="eye right"><div class="pupil"></div></div>
-                </div>
-                <!-- Limbs removed as per request -->
-              </div>
-            </div>
-            
-            <div class="hud-coach-info">
-              <div class="hud-badge shadow-sm">TACTICAL ASSISTANT</div>
-              <h2>Plan de Juego</h2>
-              <p>
-                <ng-container *ngIf="onboardingProgress === 0">¡Bienvenido! Iniciemos con el <strong>Saque</strong>.</ng-container>
-                <ng-container *ngIf="onboardingProgress > 0">Buen avance. Sigue las señales tácticas.</ng-container>
-              </p>
-              <div class="hud-stats">
-                  <div class="h-stat"><span>PROGRESO</span> <strong>{{ onboardingProgress }}%</strong></div>
-                  <div class="h-stat"><span>FASE</span> <strong>SET 1</strong></div>
-              </div>
+          <!-- OVERLAY WIDGET: STRATEGIC INFO (Top Left) -->
+          <div class="hud-widget floating-left animate-up">
+            <div class="hud-tag">TACTICAL ASSISTANT</div>
+            <h2 class="hud-title">Plan de Juego</h2>
+            <div class="hud-reward-badge animate-pulse">
+              <span class="gift-icon">🎁</span>
+              <span class="reward-text">+30 DÍAS GRATIS</span>
             </div>
           </div>
 
-          <!-- RIGHT: THE HIGH-FIDELITY NEON COURT -->
-          <div class="hud-main-view">
-             <div class="hud-glass-court shadow-2xl">
-                <!-- Authentic Lines with Neon Glow -->
-                <div class="hud-net"></div>
-                <div class="hud-line center-v"></div>
-                <div class="hud-line service-t"></div>
-                <div class="hud-line service-b"></div>
-                
-                <!-- Coordinate Indicators (Pro Look) -->
-                <div class="hud-coord coord-t">ZONA DE ATAQUE</div>
-                <div class="hud-coord coord-b">ZONA DE DEFENSA</div>
-
-                <!-- Interactive Tactical Nodes -->
-                <div class="hud-node" *ngFor="let step of steps" 
-                     [class.current]="isNextStep(step)" 
-                     [class.completed]="step.done"
-                     [class]="'hud-pos-' + step.id"
-                     (click)="navigate(step.route)">
-                    
-                    <div class="hud-node-marker">
-                       <span class="num" *ngIf="!step.done">{{ step.id }}</span>
-                       <span class="check" *ngIf="step.done">✓</span>
-                       <div class="hud-pulse" *ngIf="isNextStep(step)"></div>
-                    </div>
-                    
-                    <div class="hud-node-card-pro shadow-xl" 
-                         [class.hud-left]="step.id === 1 || step.id === 4"
-                         [class.hud-right]="step.id === 2 || step.id === 3"
-                         [class.hud-up]="step.id === 5">
-                       <div class="hud-node-badge" *ngIf="step.id === 1 && !step.done">¡COMIENZA AQUÍ!</div>
-                       <span class="hud-stroke">{{ getStepStroke(step.id) }}</span>
-                       <h4>{{ step.label }}</h4>
-                       <div class="hud-status-pill" [class.done]="step.done">
-                         {{ step.done ? '¡BIEN HECHO! ✅' : 'PENDIENTE' }}
-                       </div>
-                    </div>
+          <!-- OVERLAY WIDGET: MASCOT (Top Right) -->
+          <div class="hud-widget floating-right animate-up">
+             <div class="mascot-cockpit">
+               <div class="boli-head-v8 shadow-2xl">
+                  <div class="boli-headband">PADELMANAGER</div>
+                  <div class="boli-eyes">
+                     <div class="eye"><div class="pupil"></div></div>
+                     <div class="eye"><div class="pupil"></div></div>
+                  </div>
+               </div>
+             </div>
+             <div class="hud-summary-stats">
+                <div class="h-stat">
+                  <span class="h-label">PROGRESO</span>
+                  <span class="h-value">{{ onboardingProgress }}%</span>
+                </div>
+                <div class="h-stat">
+                  <span class="h-label">FASE</span>
+                  <span class="h-value">SET 1</span>
                 </div>
              </div>
           </div>
 
+          <!-- CENTRAL PIECE: NEON TACTICAL COURT -->
+          <div class="hud-court-view">
+             <div class="hud-neon-court shadow-2xl">
+                <!-- Court Markers -->
+                <div class="court-label top">ZONA DE ATAQUE</div>
+                <div class="court-label bottom">ZONA DE DEFENSA</div>
+
+                <div class="h-line center-v"></div>
+                <div class="h-line center-h"></div>
+                <div class="h-line service-l"></div>
+                <div class="h-line service-r"></div>
+
+                <!-- Tactical Nodes -->
+                <div class="hud-node" *ngFor="let step of steps"
+                     [class.active]="isNextStep(step)"
+                     [class.done]="step.done"
+                     [class]="'hud-p-' + step.id"
+                     (click)="navigate(step.route)">
+                  
+                  <div class="hud-marker">
+                    <span *ngIf="!step.done">{{ step.id }}</span>
+                    <span *ngIf="step.done">✓</span>
+                    <div class="hud-glow" *ngIf="isNextStep(step)"></div>
+                  </div>
+
+                  <!-- Tooltip (Only for active) -->
+                  <div class="hud-tooltip shadow-2xl" *ngIf="isNextStep(step)"
+                       [class.hud-down]="step.id === 2 || step.id === 3">
+                    <div class="tooltip-badge">¡COMIENZA AQUÍ!</div>
+                    <span class="tooltip-stroke">{{ getStepStroke(step.id) }}</span>
+                    <h4 class="tooltip-title">{{ step.label }}</h4>
+                    <div class="tooltip-status">PENDIENTE</div>
+                  </div>
+                </div>
+             </div>
+          </div>
+
+          <!-- BOTTOM CAPTION -->
+          <div class="hud-bottom-caption">
+            <p>Completa tu configuración para <strong>activar tus estadísticas</strong> y agenda.</p>
+          </div>
+
         </div>
+
       </section>
+
 
       <!-- Stats Summary Widgets (LOCKED BEHIND ONBOARDING) -->
       <div class="stats-row" *ngIf="onboardingDone">
@@ -215,12 +223,6 @@
         </div>
       </div>
 
-      <!-- LOCKED MESSAGE (OPTIONAL) -->
-      <div class="locked-dashboard-msg fade-in" *ngIf="!onboardingDone">
-        <div class="lock-icon">🔒</div>
-        <h4>Academia en Configuración</h4>
-        <p>Tus estadísticas y agenda se activarán una vez completes los pasos de arriba.</p>
-      </div>
 
     </div>
   </main>

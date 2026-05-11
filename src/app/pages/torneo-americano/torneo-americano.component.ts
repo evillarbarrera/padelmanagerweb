@@ -42,7 +42,7 @@ export class TorneoAmericanoComponent implements OnInit {
 
     // Tab State
     activeTab: 'create' | 'list' | 'history' = 'list';
-    activeDetailTab: 'inscription' | 'fixture' | 'ranking' = 'inscription';
+    activeDetailTab: 'inscription' | 'fixture' | 'ranking' | 'editar' = 'inscription';
     activeRoundTab: number = 1;
     activeFaseTab: string = '';
 
@@ -65,7 +65,8 @@ export class TorneoAmericanoComponent implements OnInit {
         tipo_torneo: 'estandar',
         modalidad: 'unicategoria',
         valor_suma: null,
-        genero: 'Varones'
+        genero: 'Varones',
+        precio: 0
     };
 
     constructor(
@@ -176,7 +177,8 @@ export class TorneoAmericanoComponent implements OnInit {
             num_canchas: 2,
             tiempo_por_partido: 20,
             tipo_torneo: 'estandar',
-            modalidad: 'unicategoria'
+            modalidad: 'unicategoria',
+            precio: 0
         };
     }
 
@@ -195,6 +197,32 @@ export class TorneoAmericanoComponent implements OnInit {
             },
             error: (err) => {
                 Swal.fire('Error', err.error?.error || 'No se pudo crear el torneo.', 'error');
+            }
+        });
+    }
+
+    actualizarAmericano() {
+        if (!this.selectedTorneo.nombre || !this.selectedTorneo.fecha || !this.selectedTorneo.hora_inicio) {
+            Swal.fire('Datos Incompletos', 'Nombre, fecha y hora son obligatorios.', 'warning');
+            return;
+        }
+
+        const payload = {
+            id: this.selectedTorneo.id,
+            nombre: this.selectedTorneo.nombre,
+            fecha: this.selectedTorneo.fecha,
+            hora_inicio: this.selectedTorneo.hora_inicio,
+            precio: this.selectedTorneo.precio,
+            tiempo_por_partido: this.selectedTorneo.tiempo_por_partido
+        };
+
+        this.clubesService.updateAmericano(payload).subscribe({
+            next: () => {
+                Swal.fire('¡Torneo Actualizado!', 'Los detalles han sido guardados.', 'success');
+                this.loadTorneos(this.userId);
+            },
+            error: (err) => {
+                Swal.fire('Error', 'No se pudo actualizar el torneo.', 'error');
             }
         });
     }

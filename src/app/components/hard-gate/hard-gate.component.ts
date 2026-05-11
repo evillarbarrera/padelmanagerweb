@@ -13,6 +13,7 @@ import { environment } from '../../../environments/environment';
 export class HardGateComponent implements OnInit {
   isLocked = false;
   isLoading = true;
+  message = '';
 
   constructor(private router: Router) {}
 
@@ -43,13 +44,10 @@ export class HardGateComponent implements OnInit {
     })
       .then(r => r.json())
       .then(res => {
-        // If status is 'inactive', it means they haven't registered a card/trial yet
-        if (res.status === 'inactive') {
+        // Bloquear si el status es inactive, blocked o past_due
+        if (res.status === 'inactive' || res.status === 'blocked' || res.status === 'past_due') {
           this.isLocked = true;
-        }
-        // If status is 'past_due', we might also want to lock or show a different message
-        if (res.status === 'past_due') {
-            this.isLocked = true;
+          this.message = res.message || 'Tu suscripción requiere atención.';
         }
         this.isLoading = false;
       })

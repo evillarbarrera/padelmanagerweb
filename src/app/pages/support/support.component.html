@@ -1,0 +1,58 @@
+<div class="support-container">
+  <nav class="simple-nav">
+    <div class="container">
+      <a routerLink="/" class="logo-link">
+        <img src="assets/images/logo-transparent.png" alt="Logo">
+        <span>PADELMANAGER</span>
+      </a>
+    </div>
+  </nav>
+
+  <header class="support-header">
+    <div class="container">
+      <h1>Centro de Soporte</h1>
+      <p>Estamos aquí para ayudarte a mejorar tu juego y la gestión de tu academia.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="support-grid">
+      <div class="support-card">
+        <div class="icon">📧</div>
+        <h3>Correo Electrónico</h3>
+        <p>Envíanos tus dudas y te responderemos en menos de 24 horas.</p>
+        <a [href]="'mailto:' + contactEmail" class="btn-link">{{ contactEmail }}</a>
+      </div>
+
+      <div class="support-card">
+        <div class="icon">📱</div>
+        <h3>App Móvil</h3>
+        <p>Si tienes problemas con la App Store o Google Play, revisa nuestra guía.</p>
+        <button class="btn-link">Ver Guía de Instalación</button>
+      </div>
+
+      <div class="support-card">
+        <div class="icon">🛡️</div>
+        <h3>Privacidad</h3>
+        <p>Conoce cómo protegemos tus datos personales y de tu academia.</p>
+        <button class="btn-link">Ver Políticas</button>
+      </div>
+    </section>
+
+    <section class="faq-section">
+      <h2>Preguntas Frecuentes</h2>
+      <div class="faq-list">
+        <div class="faq-item" *ngFor="let faq of faqs">
+          <h4>{{ faq.q }}</h4>
+          <p>{{ faq.a }}</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="simple-footer">
+    <div class="container">
+      <p>&copy; 2026 PadelManager AI Academy. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+</div>
